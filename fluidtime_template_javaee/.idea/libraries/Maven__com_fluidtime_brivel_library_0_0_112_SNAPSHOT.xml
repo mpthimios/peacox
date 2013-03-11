@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.fluidtime:brivel_library:0.0.112-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/fluidtime/brivel_library/0.0.112-SNAPSHOT/brivel_library-0.0.112-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/fluidtime/brivel_library/0.0.112-SNAPSHOT/brivel_library-0.0.112-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/fluidtime/brivel_library/0.0.112-SNAPSHOT/brivel_library-0.0.112-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

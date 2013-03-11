@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.fluidtime:servicepage_brivel:war:1.1.42">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/fluidtime/servicepage_brivel/1.1.42/servicepage_brivel-1.1.42.war!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/fluidtime/servicepage_brivel/1.1.42/servicepage_brivel-1.1.42-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/fluidtime/servicepage_brivel/1.1.42/servicepage_brivel-1.1.42-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

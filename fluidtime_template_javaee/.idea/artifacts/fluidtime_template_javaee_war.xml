@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="fluidtime_template_javaee:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="fluidtime_template_javaee.war">
+      <element id="artifact" artifact-name="fluidtime_template_javaee:war exploded" />
+    </root>
+  </artifact>
+</component>
