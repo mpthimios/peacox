@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.fluidtime.jpa.example.CyclistType;
-import com.fluidtime.jpa.example.CyclistTypeService;
 import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.brivel.route.json.response.JsonResponseRoute;
 
@@ -24,13 +22,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import com.peacox.recommender.UserPreferences;
+import com.peacox.recommender.repository.OwnedVehicles;
+//import com.peacox.recommender.repository.OwnedVehicles;
+//import com.peacox.recommender.repository.OwnedVehiclesTypeService;
+import com.peacox.recommender.repository.OwnedVehiclesService;
 
 @Controller
 @RequestMapping(value = "/")
 public class Webservice {
 
-	@Autowired
-	protected CyclistTypeService cyclistTypeService;
+	@Autowired	
+	protected OwnedVehiclesService ownedVehiclesService;
 
 	@RequestMapping(method = RequestMethod.GET)
 	public String home(Locale locale, Model model) {
@@ -56,6 +58,16 @@ public class Webservice {
 		UserPreferences userPreferences = gson.fromJson(body, UserPreferences.class);
 						
 		String json = gson.toJson(userPreferences);
+		
+		List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(1);
+		
+		int j = 0;
+		while (j < ownedVehicles.size()) {
+			System.out.println(ownedVehicles.get(j));
+			j++;
+		}
+		
+		//System.out.println(" owned vehicles: " + ownedVehicles.getType());
 		
 		try{
 			URL flu = new URL("http://dev.webservice.peacox.fluidtime.com/ws/1.0/getRoute?from=48.23748:16.38598:WGS84:AddressFrom&to=48.287035:16.419471:WGS84:AddressTo");
@@ -86,8 +98,7 @@ public class Webservice {
 	}
 
 	private void testJPA() throws Exception {
-		CyclistType cType = new CyclistType("test1", "test1");
-		cyclistTypeService.create(cType);
+		
 	}
 	
 	private void printRouteInfo(JsonResponseRoute route) { // for debugging

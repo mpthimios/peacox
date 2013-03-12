@@ -10,7 +10,7 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 		
 
-	<jpa:repositories base-package="com.fluidtime.jpa.example" />
+	<jpa:repositories base-package="com.peacox.recommender.repository" />
 
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
