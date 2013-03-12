@@ -247,6 +247,16 @@
 	        <artifactId>combinatronics</artifactId>
 	        <version>0.0.5</version>
 	    </dependency>
+	    <dependency>
+			<groupId>org.jruby</groupId>
+			<artifactId>jruby-complete</artifactId>
+			<version>1.7.2</version>
+	    </dependency>
+	    <dependency>
+	      <groupId>rubystats</groupId>
+	      <artifactId>rubystats</artifactId>
+	      <version>0.2.3</version>
+	    </dependency>
 	</dependencies>
 
 	<build>
