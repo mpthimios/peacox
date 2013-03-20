@@ -41,7 +41,7 @@ public class GetRecommendations{
         updateTotalWBDurationStats(routeResults);
         updateTotalEmissionStats(routeResults);
         
-        switch(((Integer)userPreferences.get("orderAlgorithm")).intValue()){
+        switch(((Double)userPreferences.get("orderAlgorithm")).intValue()){
             case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
                 break;
             case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
@@ -74,7 +74,7 @@ public class GetRecommendations{
                                 myArr.add(pos);
                                 RouteDto routeResult = (RouteDto) routeResults.get(pos);
                                 double routeUtility = 0.0;
-                                switch(((Integer)userPreferences.get("utilityAlgorithm"))){
+                                switch(((Double)userPreferences.get("utilityAlgorithm")).intValue()){
                                     case 0: routeUtility += routeUtilityCalulation(routeResult, userPreferences);                                        
                                         break;
                                     case 1: routeUtility += routeUtilityCalulation(routeResult, userPreferences);                                        
@@ -84,7 +84,9 @@ public class GetRecommendations{
                                     case 3: routeUtility += routeUtilityCalulationP3(routeResult, userPreferences);
                                         break;
                                     case 4: routeUtility += routeUtilityCalulationP4(routeResult, userPreferences);
-                                        break;                                        
+                                        break;
+                                    case 5: routeUtility += routeUtilityCalulationP5(routeResult, userPreferences);
+                                    break;
                                     default: routeUtility += routeUtilityCalulation(routeResult, userPreferences);
                                         break;                                        
                                 }
@@ -418,6 +420,63 @@ public class GetRecommendations{
   }
   
   public double routeUtilityCalulationP4(RouteDto routeResult, LinkedHashMap<String, Double> userPreferences){
+	double totalUtility = 0;
+	
+	double totalDuration = (double) this.getRouteTotalDuration(routeResult);
+        double totalEmissions = this.getRouteTotalEmissions(routeResult);
+	double durationCriterionValue = 0;
+	if (totalDuration <= 10){
+		durationCriterionValue = (Double)userPreferences.get("duration10min");
+	} 
+	else if (10 < totalDuration && totalDuration <= 30){
+		durationCriterionValue = (Double)userPreferences.get("duration30min");
+	}
+	else{
+		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+	}
+        
+        int numberOfChanges = routeResult.getTrips().size();
+        double comfortCriterionValue = 0;
+        
+        if (numberOfChanges <= 2){
+            comfortCriterionValue = (Double) userPreferences.get("comfortHigh");
+        }
+        else if (numberOfChanges > 2 && numberOfChanges <= 3){
+            comfortCriterionValue = (Double) userPreferences.get("comfortMedium");
+        }
+        else {
+            comfortCriterionValue = (Double) userPreferences.get("comfortLow");
+        }
+	
+	double wbDuration = (double) this.getRouteTotalWBDuration(routeResult);
+	double wbDurationCriterionValue = 0;
+	if (wbDuration <= 10){
+		wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+	} 
+	else if (10 < wbDuration && wbDuration <= 30){
+		wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+	}
+	else{
+		wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+	}
+		
+	totalUtility = durationCriterionValue*
+						((Double)userPreferences.get("durationImportance")) 
+						+ 
+						wbDurationCriterionValue*
+						((Double)userPreferences.get("wbtimeImportance"))
+                                                +
+                                                comfortCriterionValue*
+                				((Double)userPreferences.get("comfortImportance"))
+                                                ;
+        
+        if (true){
+            totalUtility = totalUtility * totalEmissions/((Double)sumValues.get("sumTotalEmissions"));
+        }
+	return totalUtility;
+  }
+  
+  public double routeUtilityCalulationP5(RouteDto routeResult, LinkedHashMap<String, Double> userPreferences){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) this.getRouteTotalDuration(routeResult);

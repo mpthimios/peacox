@@ -1,9 +1,32 @@
 package com.peacox.recommender;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import org.apache.commons.io.IOUtils;
+import org.jruby.RubyArray;
+import org.jruby.RubyHash;
+import org.jruby.util.JRubyFile;
+
+import com.fluidtime.routeExample.model.RouteDto;
+import com.fluidtime.routeExample.model.TripDto;
+import com.peacox.recommender.utils.SimulatedRoutes;
 
 public class UserPreferences{
 //get user preferences
+	
+	protected String EXTENDED = "ON";
 	
 	private double duration10min = 10.0;
 	private double duration30min = 4.0;
@@ -41,6 +64,31 @@ public class UserPreferences{
         userPreferences.put("comfortImportance", comfortImportance);
         userPreferences.put("orderAlgorithm", orderAlgorithm);
         userPreferences.put("utilityAlgorithm", utilityAlgorithm);
+        
+        if (EXTENDED.matches("ON")){
+        	//get jruby engine
+    	    ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
+    	    ArrayList<RouteDto> routes = null;
+    	    //process a ruby file    
+    	    try {	    	
+    			jruby.eval(new BufferedReader(new InputStreamReader(UserPreferences.class.
+    			    	getClassLoader().
+    			    	getResourceAsStream("fetch_user.rb"))));
+    			
+    			jruby.put("userid","53");    		    
+    			RubyHash result = (RubyHash) jruby.eval("get_preferences($userid)");
+    		    System.out.println("ruby result in preferences carAddict: " + result.get("carAddict"));
+    		    userPreferences.put("carPreference", (Double)result.get("carAddict"));
+    		    userPreferences.put("ptPreference", (Double)result.get("ptAddict"));
+    		    userPreferences.put("walkPreference", (Double)result.get("walkAddict"));
+    		    userPreferences.put("bikePreference", (Double)result.get("bikeAddict"));
+    		    
+    		} catch (Exception e) {
+    			// TODO Auto-generated catch block
+    			System.out.println("something really bad happened in preferences");
+    			e.printStackTrace();
+    		}
+        }
         
         return userPreferences;
     }
