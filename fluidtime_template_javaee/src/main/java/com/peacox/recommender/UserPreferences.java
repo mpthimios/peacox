@@ -36,16 +36,16 @@ public class UserPreferences{
 	private double WB30min = 4.0;
 	private double WB30plus = 1.0;	
 	
-	private double comfortHigh = 10.0;
-	private double comfortMedium = 4.0;
+	private double comfortHigh = 4.0;
+	private double comfortMedium = 10.0;
 	private double comfortLow = 1.0;
 	
-	private double durationImportance = 70.0/100.0;
+	private double durationImportance = 60.0/100.0;
 	private double wbtimeImportance = 20.0/100.0;
-	private double comfortImportance = 10.0/100.0;
+	private double comfortImportance = 20.0/100.0;
 	
 	private double orderAlgorithm = 1.0;
-	private double utilityAlgorithm = 4.0;
+	private double utilityAlgorithm = 5.0;
 		
     public LinkedHashMap getUserPreferences(){
 
@@ -82,6 +82,10 @@ public class UserPreferences{
     		    userPreferences.put("ptPreference", (Double)result.get("ptAddict"));
     		    userPreferences.put("walkPreference", (Double)result.get("walkAddict"));
     		    userPreferences.put("bikePreference", (Double)result.get("bikeAddict"));
+    		    userPreferences.put("emissionsLow", 1.0);
+    		    userPreferences.put("emissionsMedium", 3.0);
+    		    userPreferences.put("emissionsHigh", 6.0);
+    		    userPreferences.put("ecoAttitudeImportance", 0.2);
     		    
     		} catch (Exception e) {
     			// TODO Auto-generated catch block
@@ -91,6 +95,69 @@ public class UserPreferences{
         }
         
         return userPreferences;
+    }
+    
+    public void setSenario(int scenarioId){
+
+        double[][] scenariosArray = {
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 60.0, 20.0, 20.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 70.0, 10.0, 20.0},
+        		{1.0, 4.0, 10.0, 1.0, 4.0, 10.0, 4.0, 10.0, 1.0, 40.0, 0.0, 60.0},
+        		{10.0, 1.0, 4.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 60.0, 20.0, 20.0},
+        		{4.0, 10.0, 1.0, 1.0, 4.0, 10.0, 10.0, 4.0, 1.0, 20.0, 40.0, 40.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 60.0, 10.0, 30.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 60.0, 10.0, 30.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 60.0, 10.0, 30.0},
+        		{1.0, 4.0, 10.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 60.0, 10.0, 30.0},
+        		{4.0, 10.0, 1.0, 10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 60.0, 20.0, 20.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 70.0, 0.0, 30.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 60.0, 10.0, 30.0},
+        		{1.0, 4.0, 10.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 50.0, 20.0, 30.0},
+        		{1.0, 4.0, 10.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 50.0, 0.0, 50.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 60.0, 20.0, 20.0},
+        		{10.0, 4.0, 1.0, 10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 100.0, 0.0, 0.0},
+        		{1.0, 4.0, 10.0, 4.0, 10.0, 1.0, 4.0, 10.0, 1.0, 40.0, 40.0, 20.0},
+        		{10.0, 4.0, 1.0, 4.0, 10.0, 1.0, 4.0, 10.0, 1.0, 60.0, 20.0, 20.0}
+        };
+        
+        this.setDuration10min(scenariosArray[scenarioId][0]);
+        this.setDuration30min(scenariosArray[scenarioId][1]);
+        this.setDuration30plus(scenariosArray[scenarioId][2]);
+        this.setWB10min(scenariosArray[scenarioId][3]);
+        this.setWB30min(scenariosArray[scenarioId][4]);
+        this.setWB30plus(scenariosArray[scenarioId][5]);
+        this.setComfortHigh(scenariosArray[scenarioId][6]);
+        this.setComfortMedium(scenariosArray[scenarioId][7]);
+        this.setComfortLow(scenariosArray[scenarioId][8]);
+        this.setDurationImportance(scenariosArray[scenarioId][9]);
+        this.setWbtimeImportance(scenariosArray[scenarioId][10]);
+        this.setComfortImportance(scenariosArray[scenarioId][11]);
+    }
+    
+    public String[] getSenarioAddresses(int scenarioId){
+
+        String[][] addressesArray = {
+        		{"Webgasse 6",	"Universitatsring 1"},
+        		{"Webgasse 6",	"Modecenterstrasse 17"},
+        		{"Webgasse 6",	"Universitatsring 1"},
+        		{"Operngasse 25",	"Wahringer Strasse 59"},
+        		{"Webgasse 6",	"Donauinsel 1"},
+        		{"Haslingergasse 14",	"Modecenterstrasse 17"},
+        		{"Neumayrgasse 2",	"Kinderspitalgasse 15"},
+        		{"Neumayrgasse 2",	"Liebiggasse 5"},
+        		{"Neumayrgasse 2",	"Thugutstrasse 4"},
+        		{"Karl Benz Weg 91",	"Modecenterstrasse 17"},
+        		{"Modecenterstrasse 17",	"Schoppenhauerstrasse 49"},
+        		{"Karl Benz Weg 91",	"Wulzendorfstrasse 1"},
+        		{"Gentzgasse 52",	"Pramergasse 27"},
+        		{"Karl Benz Weg 91",	"Hoechstadtplatz 5"},
+        		{"Lindengasse 14",	"Modecenterstrasse 17"},
+        		{"Lindengasse 14",	"Vorgartenstrasse 134"},
+        		{"Beingasse 17",	"Hauffgasse 4"},
+        		{"Beingasse 17",	"Hadikgasse 28"}
+        };
+        
+        return addressesArray[scenarioId];
     }
 	
 	public double getDuration10min() {

@@ -18,7 +18,7 @@ public class OwnedVehicles {
 
 	protected Long id;
 	protected Date timestamp;
-	protected Integer userId;
+	protected Long userId;
 	protected String type;
 	protected String characteristics;
 
@@ -46,11 +46,11 @@ public class OwnedVehicles {
 	}
 	
 	@Column(name = "user_id")
-	public int getUserId() {
+	public Long getUserId() {
 		return userId;
 	}
 
-	public void setUserId(int userId) {
+	public void setUserId(Long userId) {
 		this.userId = userId;
 	}
 	

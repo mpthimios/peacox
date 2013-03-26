@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface OwnedVehiclesService {
 	
-	public List<OwnedVehicles> findOwnedVehiclesByUserId(int userId);
+	public List<OwnedVehicles> findOwnedVehiclesByUserId(Long userId);
 	public OwnedVehicles create(OwnedVehicles ownedVehicle);
 }

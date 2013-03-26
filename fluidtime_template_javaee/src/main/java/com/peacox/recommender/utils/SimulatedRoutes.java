@@ -7,7 +7,7 @@ package com.peacox.recommender.utils;
 import com.fluidtime.routeExample.Route;
 import com.fluidtime.routeExample.model.RouteDto;
 import com.fluidtime.routeExample.model.TripDto;
-import com.peacox.recommender.GetRecommendations;
+import com.peacox.recommender.GetRecommendationsRouteDto;
 import com.peacox.recommender.UserPreferences;
 
 import java.io.BufferedReader;
@@ -50,7 +50,7 @@ public class SimulatedRoutes {
 	
     UserPreferences userPreferences= new UserPreferences();
     
-    GetRecommendations recommendations = new GetRecommendations();
+    GetRecommendationsRouteDto recommendations = new GetRecommendationsRouteDto();
     LinkedHashMap<Integer, HashMap> finalRouteResults = recommendations.getRecommendations(userPreferences.getUserPreferences(), routes);
     
     System.out.println("**********Printing Routes**********");

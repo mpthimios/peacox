@@ -73,8 +73,8 @@ public class Coordinates
         {
             case "ok":
                 String[] result = new String[2];
-                result[0] = lon;
-                result[1] = lat;
+                result[0] = lat;
+                result[1] = lon;
                 return result;                
             case "zero_results":
                 return null;

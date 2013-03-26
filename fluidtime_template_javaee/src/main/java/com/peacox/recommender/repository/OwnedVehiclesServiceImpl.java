@@ -40,7 +40,7 @@ public class OwnedVehiclesServiceImpl implements OwnedVehiclesService {
 //		return repository.count();
 //	}
 //	
-	public List<OwnedVehicles> findOwnedVehiclesByUserId(int userId) {
+	public List<OwnedVehicles> findOwnedVehiclesByUserId(Long userId) {
 		TypedQuery query = em.createQuery("select a from OwnedVehicles a where a.userId = ?1", OwnedVehicles.class);
 	    query.setParameter(1, userId);
 	 
