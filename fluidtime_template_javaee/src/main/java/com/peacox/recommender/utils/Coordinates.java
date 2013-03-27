@@ -69,18 +69,38 @@ public class Coordinates
 
         //String status = xmlDoc.DocumentElement.SelectSingleNode("status").InnerText;
         String status = "ok";
-        switch (status)
+        int statusInt = 0;
+        if (status.matches("ok")){
+        	statusInt = 0;
+        }
+        else if (status.matches("zero_results")){
+        	statusInt = 1;
+        }
+        else if (status.matches("over_query_limit")){
+        	statusInt = 2;
+        }
+        else if (status.matches("invalid_request")){
+        	statusInt = 3;
+        }
+        else if (status.matches("request_denied")){
+        	statusInt = 4;
+        }
+        else{
+        	
+        }
+        
+        switch (statusInt)
         {
-            case "ok":
+            case 0:
                 String[] result = new String[2];
                 result[0] = lat;
                 result[1] = lon;
                 return result;                
-            case "zero_results":
+            case 1:
                 return null;
-            case "over_query_limit":
-            case "invalid_request":
-            case "request_denied":                
+            case 2:
+            case 3:
+            case 4:
         }
 
 //        XmlNodeList nodeCol = xmlDoc.DocumentElement.SelectNodes("result");
