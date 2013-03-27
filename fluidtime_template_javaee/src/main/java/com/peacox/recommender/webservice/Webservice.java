@@ -25,6 +25,7 @@ import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.library.model.json.JsonSegment;
 import com.fluidtime.library.model.json.JsonTrip;
 import com.fluidtime.library.model.json.FeatureTypes.JsonFeature;
+import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.fluidtime.brivel.route.json.response.JsonResponseRouteTrip;
 import com.fluidtime.brivel.route.json.response.JsonResponseSegment;
@@ -137,8 +138,6 @@ public class Webservice {
 		        	response += inputLine;
 		        in.close();		        		        
 		       
-		        model.addAttribute("serverTime", response);
-		        
 		        System.out.println(response);
 		        
 		        JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(response);
@@ -149,7 +148,7 @@ public class Webservice {
 		        		       
 		        GetRecommendations recommendations = new GetRecommendations();
 		        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences.getUserPreferences(), routeList);
-		        
+		        List<JsonTrip> newTrips = new ArrayList();
 		        for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
 		            Integer key = entry.getKey();
 		            HashMap<JsonTrip,Double> value = entry.getValue();
@@ -159,8 +158,15 @@ public class Webservice {
 		            JsonTrip trip = element.getKey();
 		            System.out.println("Trip Info:");
 		            printTripInfo(trip);
+		            newTrips.add(trip);
 		            System.out.println("*********** END Found Trip ***********");
-		        }		        
+		        }
+		        
+		        route.setTrips(newTrips);
+		        
+		        String json = RouteParser.routeToJson(route);
+		        
+		        model.addAttribute("serverResponse", json);
 				
 			}
 			else {

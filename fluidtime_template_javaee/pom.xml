@@ -240,7 +240,7 @@
 		<dependency>
             <groupId>com.fluidtime</groupId>
             <artifactId>brivel_route_json</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
 	        <groupId>combinatronics</groupId>
