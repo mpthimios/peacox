@@ -35,6 +35,7 @@ import com.google.gson.GsonBuilder;
 
 import com.peacox.recommender.GetRecommendations;
 import com.peacox.recommender.GetRecommendationsRouteDto;
+import com.peacox.recommender.RouteRequest;
 import com.peacox.recommender.UserPreferences;
 import com.peacox.recommender.repository.OwnedVehicles;
 import com.peacox.recommender.repository.User;
@@ -86,13 +87,11 @@ public class Webservice {
 		
 		System.out.println(body);
 		
-		//Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();//Gson();
-		//UserPreferences userPreferences = gson.fromJson(body, UserPreferences.class);				
-		//String json = gson.toJson(userPreferences);
+		Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();//Gson();
+		RouteRequest routeRequest = gson.fromJson(body, RouteRequest.class);				
+		log.debug("user: " + routeRequest.getUserId());
 		
-		String fromAddress = "";
-		String toAddress = "";
-		Long userId = 1L;
+		Long userId = Long.parseLong(routeRequest.getUserId());
 		UserPreferences userPreferences = new UserPreferences();
 		int scenarioId = 1;
 		String modeOfTransport = "pt";
@@ -119,8 +118,20 @@ public class Webservice {
 				//runSimulation();
 			}
 			else if (MODE.matches("TESTING")){
-				String[] fromCoordinates = Coordinates.GeocodeAddress("Wien, Webgasse 6");
-		        String[] toCoordinates = Coordinates.GeocodeAddress("Wien, Universitatsring 65");
+				String[] fromCoordinates = new String[2];
+				String[] toCoordinates = new String[2];
+				if (routeRequest.getCoordinatesType().matches("WGS84")){
+					log.debug("address format: WGS84");
+					fromCoordinates[0] = routeRequest.getFromWGS84Lat();
+					fromCoordinates[1] = routeRequest.getFromWGS84Lon();
+					toCoordinates[0] = routeRequest.getToWGS84Lat();
+					toCoordinates[1] = routeRequest.getToWGS84Lon();
+				}
+				else{
+					log.debug("address format: plain");
+					fromCoordinates = Coordinates.GeocodeAddress(routeRequest.getFromStr());
+			        toCoordinates = Coordinates.GeocodeAddress(routeRequest.getToStr());
+				}								
 				
 		        String url = buildUrl(fromCoordinates, toCoordinates, modeOfTransport);
 		        //"bar|car|par|pt|walk|bike|bta"
