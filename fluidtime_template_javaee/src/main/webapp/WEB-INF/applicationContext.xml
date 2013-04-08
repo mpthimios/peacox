@@ -90,7 +90,7 @@
 		<property name="password" value="#{jdbcDefault.password}" />
 	</bean>
 
-	<context:component-scan base-package="com.fluidtime" />
+	<context:component-scan base-package="com.peacox" />
 	<tx:annotation-driven transaction-manager="transactionManager" />
 	<bean
 		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />

@@ -18,7 +18,10 @@
     <mvc:annotation-driven/>
 
     <!-- Forwards requests to the "/" resource to the "welcome" view -->
+	<mvc:view-controller path="/getRecommendationForRoute" view-name="getRecommendationForRoute"/>
+	<mvc:view-controller path="/getRecommendationForRequest" view-name="getRecommendationForRequest"/>
     <mvc:view-controller path="/" view-name="welcome"/>
+    
 
     <!-- Configures Handler Interceptors -->
     <mvc:interceptors>

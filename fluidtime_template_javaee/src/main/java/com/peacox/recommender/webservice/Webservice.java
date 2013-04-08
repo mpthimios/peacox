@@ -15,12 +15,16 @@ import java.io.*;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.library.model.json.JsonSegment;
 import com.fluidtime.library.model.json.JsonTrip;
@@ -33,6 +37,7 @@ import com.fluidtime.brivel.route.json.response.JsonResponseSegment;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.peacox.recommender.GetRecommendationForRequest;
 import com.peacox.recommender.GetRecommendations;
 import com.peacox.recommender.GetRecommendationsRouteDto;
 import com.peacox.recommender.RouteRequest;
@@ -56,6 +61,9 @@ public class Webservice {
 	@Autowired	
 	protected UserService userService;
 	
+	@Autowired
+	private ApplicationContext appContext;
+	
 	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION"
 	
 	protected String[] weatherTemp = {"cold", "mild", "hot"};
@@ -78,12 +86,61 @@ public class Webservice {
 		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG,
 				DateFormat.LONG, locale);
 		String formattedDate = dateFormat.format(date);
-		model.addAttribute("serverTime", formattedDate);
+		model.addAttribute("serverResponse", formattedDate);
+		User user = userService.findUserByUserId(3L);
+		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());	
+		List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(3L);
 		return "welcome";
 	}
 	
-	@RequestMapping(method = RequestMethod.POST)
-	public String postHandler(Locale locale, Model model, @RequestBody String body) {
+	@RequestMapping(value="getRecommendationForRequest", method = RequestMethod.POST)
+	public String getRecommendationForRequest (Locale locale, Model model, @RequestBody String body) {
+		try {
+			//testJPA();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		GetRecommendationForRequest requestRecommendation = 
+				(GetRecommendationForRequest) appContext.getBean("GetRecommendationForRequest");
+		//GetRecommendationForRequest requestRecommendation = new GetRecommendationForRequest();
+		model.addAttribute("serverResponse", requestRecommendation.getRecommendation(body));
+		
+		return "getRecommendationForRequest";
+	}
+	
+	@RequestMapping(value="getRecommendationForRoute", method = RequestMethod.POST)
+	public String getRecommendationForRoute(Locale locale, Model model, @RequestBody String body) {
+		
+		System.out.println(body);
+		
+		JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(body);
+				
+		String userIdStr = route.getAttribute(AttributeListKeys.KEY_ROUTE_USERID);
+		Long userId = 0L;
+		
+		if (userIdStr != null){
+			userId = Long.parseLong(userIdStr);
+		}
+		else{
+			userId = 3L;
+		}
+		UserPreferences userPreferences = new UserPreferences();
+		int scenarioId = 1;
+		
+		User user = userService.findUserByUserId(userId);
+		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
+		
+        String jsonResponse = recommendRoutes(route, userPreferences);
+        
+        model.addAttribute("serverResponse", jsonResponse);
+		
+		return "getRecommendationForRoute";
+	}
+	
+	@RequestMapping(value="getTestRecommendationForRoute", method = RequestMethod.POST)
+	public String getTestRecommendationForRoute(Locale locale, Model model, @RequestBody String body) {
 		
 		System.out.println(body);
 		
@@ -150,34 +207,10 @@ public class Webservice {
 		        in.close();		        		        
 		       
 		        System.out.println(response);
-		        
 		        JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(response);
-		        //printRouteInfo(route);
+		        String jsonResponse = recommendRoutes(route, userPreferences);
 		        
-		        ArrayList routeList = new ArrayList<JsonResponseRoute>();
-		        routeList.add(route);
-		        		       
-		        GetRecommendations recommendations = new GetRecommendations();
-		        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences.getUserPreferences(), routeList);
-		        List<JsonTrip> newTrips = new ArrayList();
-		        for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
-		            Integer key = entry.getKey();
-		            HashMap<JsonTrip,Double> value = entry.getValue();
-		            System.out.println("***********Found Trip: " + key + " ***********");
-		            Map.Entry<JsonTrip,Double> element = value.entrySet().iterator().next();
-		            System.out.println("entry utility: " + element.getValue());
-		            JsonTrip trip = element.getKey();
-		            System.out.println("Trip Info:");
-		            printTripInfo(trip);
-		            newTrips.add(trip);
-		            System.out.println("*********** END Found Trip ***********");
-		        }
-		        
-		        route.setTrips(newTrips);
-		        
-		        String json = RouteParser.routeToJson(route);
-		        
-		        model.addAttribute("serverResponse", json);
+		        model.addAttribute("serverResponse", jsonResponse);
 				
 			}
 			else {
@@ -188,7 +221,43 @@ public class Webservice {
 			e.printStackTrace();
 		}
 		
-		return "welcome";
+		return "getRecommendationForRoute";
+	}
+	
+	private String recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences){
+		
+        //printRouteInfo(route);
+        
+        
+        ArrayList routeList = new ArrayList<JsonResponseRoute>();
+        routeList.add(route);
+        		       
+        GetRecommendations recommendations = new GetRecommendations();
+        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences.getUserPreferences(), routeList);
+        List<JsonTrip> newTrips = new ArrayList();
+        for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
+            Integer key = entry.getKey();
+            HashMap<JsonTrip,Double> value = entry.getValue();
+            System.out.println("***********Found Trip: " + key + " ***********");
+            Map.Entry<JsonTrip,Double> element = value.entrySet().iterator().next();
+            double utility = element.getValue();
+            System.out.println("entry utility: " + element.getValue());
+            JsonTrip trip = element.getKey();
+            System.out.println("Trip Info:");
+            printTripInfo(trip);
+            newTrips.add(trip);
+            int tripIndex = route.getTrips().indexOf(trip);
+            log.debug("adding key index: " + Integer.toString(key) + " with utility: " + Double.toString(utility));
+            route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));
+            route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
+            System.out.println("*********** END Found Trip ***********");
+        }
+        
+        //route.setTrips(newTrips);
+        
+        String json = RouteParser.routeToJson(route);
+        
+        return json;
 	}
 
 	private void testJPA() throws Exception {
