@@ -144,6 +144,16 @@ public class Webservice {
 		
 		System.out.println(body);
 		
+		if(true){
+			try{
+				model.addAttribute("serverResponse", body);
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			return "getRecommendationForRoute";
+		}
+		
 		Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();//Gson();
 		RouteRequest routeRequest = gson.fromJson(body, RouteRequest.class);				
 		log.debug("user: " + routeRequest.getUserId());
@@ -171,6 +181,7 @@ public class Webservice {
 		try{
 			
 			if (MODE.matches("SIMULATION")){
+				
 				
 				//runSimulation();
 			}
@@ -233,7 +244,7 @@ public class Webservice {
         routeList.add(route);
         		       
         GetRecommendations recommendations = new GetRecommendations();
-        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences.getUserPreferences(), routeList);
+        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences, routeList);
         List<JsonTrip> newTrips = new ArrayList();
         for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
             Integer key = entry.getKey();

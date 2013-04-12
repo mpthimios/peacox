@@ -40,9 +40,16 @@ public class UserPreferences{
 	private double comfortMedium = 10.0;
 	private double comfortLow = 1.0;
 	
-	private double durationImportance = 60.0/100.0;
-	private double wbtimeImportance = 20.0/100.0;
+	private double durationImportance = 50.0/100.0;
+	private double wbtimeImportance = 10.0/100.0;
 	private double comfortImportance = 20.0/100.0;
+	private double ecoAttitudeImportance = 20.0/100;
+	
+	private double emissionsLow = 1.0;
+	private double emissionsMedium = 3.0;
+	private double emissionsHigh = 6.0;
+	
+	
 	
 	private double orderAlgorithm = 1.0;
 	private double utilityAlgorithm = 5.0;
@@ -254,6 +261,38 @@ public class UserPreferences{
 
 	public void setComfortImportance(double comfortImportance) {
 		this.comfortImportance = comfortImportance;
+	}
+	
+	public double getEmissionsLow() {
+		return emissionsLow;
+	}
+
+	public void setEmissionsLow(double emissionsLow) {
+		this.emissionsLow = emissionsLow;
+	}
+
+	public double getEmissionsMedium() {
+		return emissionsMedium;
+	}
+
+	public void setEmissionsMedium(double emissionsMedium) {
+		this.emissionsMedium = emissionsMedium;
+	}
+
+	public double getEmissionsHigh() {
+		return emissionsHigh;
+	}
+
+	public void setEmissionsHigh(double emissionsHigh) {
+		this.emissionsHigh = emissionsHigh;
+	}
+
+	public double getEcoAttitudeImportance() {
+		return ecoAttitudeImportance;
+	}
+
+	public void setEcoAttitudeImportance(double ecoAttitudeImportance) {
+		this.ecoAttitudeImportance = ecoAttitudeImportance;
 	}
 
 	public double getOrderAlgorithm() {

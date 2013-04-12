@@ -5,8 +5,12 @@ import com.fluidtime.library.model.json.JsonTrip;
 import com.fluidtime.routeExample.model.RouteDto;
 import com.fluidtime.routeExample.model.TripDto;
 import com.fluidtime.library.model.json.FeatureTypes.JsonFeature;
+import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
+import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.brivel.route.json.response.JsonResponseRouteTrip;
+import com.peacox.recommender.repository.UserRouteRequest;
+import com.peacox.recommender.repository.UserRouteRequestService;
 //import com.peacoxrmi.model.User;
 import de.bezier.math.combinatorics.Combination;
 import java.io.BufferedWriter;
@@ -25,7 +29,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component("GetRecommendations")
 public class GetRecommendations{
     
   //Stats
@@ -39,13 +46,15 @@ public class GetRecommendations{
   
   private String ownsVehicle = "";
   
-  public LinkedHashMap getRecommendations(LinkedHashMap userPreferences, ArrayList<JsonResponseRoute> routeResults){
+  @Autowired protected UserRouteRequestService routeRequestService;
+  
+  public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
         LinkedHashMap finalRouteResults;
         updateTotalDurationStats(routeResults);
         updateTotalWBDurationStats(routeResults);
         updateTotalEmissionStats(routeResults);
         
-        switch(((Double)userPreferences.get("orderAlgorithm")).intValue()){
+        switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
             case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
                 break;
             case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
@@ -55,8 +64,114 @@ public class GetRecommendations{
         }
         return finalRouteResults;
     }
+  
+  public LinkedHashMap getRecommendations(UserPreferences userPreferences, 
+		  ArrayList<JsonResponseRoute> routeResults, long user_id){
+	  
+      LinkedHashMap finalRouteResults;
+      updateTotalDurationStats(routeResults);
+      updateTotalWBDurationStats(routeResults);
+      updateTotalEmissionStats(routeResults);
+      
+      //get actual preferences the user has already set
+      UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
+      RequestGetRoute routeRequest = RouteParser
+              .routeRequestFromJson(userRouteRequest.getRequest());
+      
+      //set user preferences according to userRouteRequest
+      if (routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
+    		   &&
+    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10){
+
+    	  // this is a default option for comfortable?
+    	  
+    	  //comfortable?
+    	  userPreferences.setComfortHigh(4.0);
+    	  userPreferences.setComfortMedium(10.0);
+    	  userPreferences.setComfortLow(1.0);
+    	  userPreferences.setComfortImportance(0.4);
+    	  
+    	  //it means that I don't care much about the time
+    	  userPreferences.setDuration10min(4.0);
+    	  userPreferences.setDuration30min(10.0);
+    	  userPreferences.setDuration30plus(1.0);
+    	  userPreferences.setDurationImportance(0.2);
+    	  
+    	  //it means that I wouldn't mind walking a bit
+    	  userPreferences.setWB10min(4.0);
+    	  userPreferences.setWB30min(10.0);
+    	  userPreferences.setWB30plus(1.0);
+    	  userPreferences.setWbtimeImportance(0.2);
+    	  
+    	  userPreferences.setEcoAttitudeImportance(0.2);
+      }
+      
+      if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
+    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
+    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
+    	  
+    	  // this is a default option for barrier-free?
+    	  
+    	  //very comfortable?
+    	  userPreferences.setComfortHigh(10.0);
+    	  userPreferences.setComfortMedium(4.0);
+    	  userPreferences.setComfortLow(1.0);
+    	  userPreferences.setComfortImportance(0.5);
+    	  
+    	  //it means that I don't care much about the time
+    	  userPreferences.setDuration10min(1.0);
+    	  userPreferences.setDuration30min(4.0);
+    	  userPreferences.setDuration30plus(10.0);
+    	  userPreferences.setDurationImportance(0.1);
+    	  
+    	  //it means that I don't want to be walking or taking a bike
+    	  userPreferences.setWB10min(10.0);
+    	  userPreferences.setWB30min(4.0);
+    	  userPreferences.setWB30plus(1.0);
+    	  userPreferences.setWbtimeImportance(0.2);
+    	  
+    	  userPreferences.setEcoAttitudeImportance(0.2);
+      }
+      
+      if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
+    		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
+    	  
+    	  // this is a default option for fast?
+    	  
+    	  //I don't care about comfort?
+    	  userPreferences.setComfortHigh(1.0);
+    	  userPreferences.setComfortMedium(4.0);
+    	  userPreferences.setComfortLow(10.0);
+    	  userPreferences.setComfortImportance(0.3);
+    	  
+    	  //it means that I care much about the time, I want to to be the minimum possible
+    	  userPreferences.setDuration10min(10.0);
+    	  userPreferences.setDuration30min(4.0);
+    	  userPreferences.setDuration30plus(1.0);
+    	  userPreferences.setDurationImportance(0.4);
+    	  
+    	  //it means that I care about walking or taking a bicycle
+    	  userPreferences.setWB10min(10.0);
+    	  userPreferences.setWB30min(4.0);
+    	  userPreferences.setWB30plus(1.0);
+    	  userPreferences.setWbtimeImportance(0.1);
+    	  
+    	  userPreferences.setEcoAttitudeImportance(0.2);
+    	  
+      }
+      
+      switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
+          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
+              break;
+          case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
+              break;                                                                          
+          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
+              break;                                        
+      }
+      return finalRouteResults;
+  }
     
-    private LinkedHashMap methodForRecommendations1(LinkedHashMap userPreferences, 
+    private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
         ArrayList<JsonResponseRoute> routeResults){
     	
     	System.out.println("DEBUG: methodForRecommendations1");
@@ -88,7 +203,7 @@ public class GetRecommendations{
                         myArr.add(pos);
                         JsonTrip tripResult = (JsonTrip) tripsList.get(pos);
                         double tripUtility = 0.0;
-                        switch(((Double)userPreferences.get("utilityAlgorithm")).intValue()){
+                        switch(((Double)userPreferences.getUtilityAlgorithm()).intValue()){
                             case 0: tripUtility += routeUtilityCalulation(tripResult, userPreferences);                                        
                                 break;
                             case 1: tripUtility += routeUtilityCalulation(tripResult, userPreferences);                                        
@@ -202,7 +317,7 @@ public class GetRecommendations{
         return finalTripResults;
   }
    
-  private LinkedHashMap methodForRecommendations2(LinkedHashMap userPreferences, 
+  private LinkedHashMap methodForRecommendations2(UserPreferences userPreferences, 
 		  ArrayList<JsonResponseRoute> routeResults){
         
 	  System.out.println("DEBUG: methodForRecommendations2");
@@ -235,7 +350,7 @@ public class GetRecommendations{
 
                 double totalDuration = 0.0;
 
-                switch(((Integer)userPreferences.get("utilityAlgorithm")).intValue()){
+                switch(((Double)userPreferences.getUtilityAlgorithm()).intValue()){
                     case 0: utility += routeUtilityCalulation(tripResult, userPreferences);
                         break;
                     case 1: utility += routeUtilityCalulationP1(tripResult, userPreferences);
@@ -283,209 +398,209 @@ public class GetRecommendations{
       return finalTripResults;
   }
   
-   public double routeUtilityCalulation(JsonTrip tripResult, LinkedHashMap<String, Double> userPreferences){
+   public double routeUtilityCalulation(JsonTrip tripResult, UserPreferences userPreferences){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) getTripTotalDuration(tripResult);
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
-		durationCriterionValue = (Double)userPreferences.get("duration10min");
+		durationCriterionValue = (Double)userPreferences.getDuration10min();
 	} 
 	else if (10 < totalDuration && totalDuration <= 30){
-		durationCriterionValue = (Double)userPreferences.get("duration30min");
+		durationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+		durationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
 	
 	double wbDuration = (double) getTripTotalWBDuration(tripResult);
 	double wbDurationCriterionValue = 0;
 	if (wbDuration <= 10){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 	} 
 	else if (10 < wbDuration && wbDuration <= 30){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30min();
 	}
 	else{
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30plus();
 	}
 		
 	totalUtility = (1/totalDuration)* 
 					durationCriterionValue*
-					((Double)userPreferences.get("durationImportance")) 
+					((Double)userPreferences.getDurationImportance()) 
 					+ 
 					(1/wbDuration)* 
 					wbDurationCriterionValue*
-					((Double)userPreferences.get("wbtimeImportance"));
+					((Double)userPreferences.getWbtimeImportance());
 	
 	return totalUtility;
   }
 
-  public double routeUtilityCalulationP1(JsonTrip tripResult, LinkedHashMap<String, Double> userPreferences){
+  public double routeUtilityCalulationP1(JsonTrip tripResult, UserPreferences userPreferences){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) getTripTotalDuration(tripResult);
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
-		durationCriterionValue = (Double)userPreferences.get("duration10min");
+		durationCriterionValue = (Double)userPreferences.getDuration10min();
 	} 
 	else if (10 < totalDuration && totalDuration <= 30){
-		durationCriterionValue = (Double)userPreferences.get("duration30min");
+		durationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+		durationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
 	
 	double wbDuration = (double) getTripTotalWBDuration(tripResult);
 	double wbDurationCriterionValue = 0;
 	if (wbDuration <= 10){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 	} 
 	else if (10 < wbDuration && wbDuration <= 30){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30min();
 	}
 	else{
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30plus();
 	}
 		
 	totalUtility = (totalDuration/(Double)maxValues.get("maxTotalDuration"))* 
 						durationCriterionValue*
-						((Double)userPreferences.get("durationImportance")) 
+						((Double)userPreferences.getDurationImportance()) 
 						+ 
 						(wbDuration/(Double)maxValues.get("maxWBTotalDuration"))* 
 						wbDurationCriterionValue*
-						((Double)userPreferences.get("wbtimeImportance"));
+						((Double)userPreferences.getWbtimeImportance());
 	
 	return totalUtility;
   }
   
-  public double routeUtilityCalulationP2(JsonTrip tripResult, LinkedHashMap<String, Double> userPreferences){
+  public double routeUtilityCalulationP2(JsonTrip tripResult, UserPreferences userPreferences){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) getTripTotalDuration(tripResult);
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
-		durationCriterionValue = (Double)userPreferences.get("duration10min");
+		durationCriterionValue = (Double)userPreferences.getDuration10min();
 	} 
 	else if (10 < totalDuration && totalDuration <= 30){
-		durationCriterionValue = (Double)userPreferences.get("duration30min");
+		durationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+		durationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
 	
 	double wbDuration = (double) this.getTripTotalWBDuration(tripResult);
 	double wbDurationCriterionValue = 0;
 	if (wbDuration <= 10){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 	} 
 	else if (10 < wbDuration && wbDuration <= 30){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30min();
 	}
 	else{
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30plus();
 	}
 		
 	totalUtility = ((totalDuration - (Double)minValues.get("minTotalDuration"))/
                                     ((Double)maxValues.get("maxTotalDuration") - (Double)minValues.get("minTotalDuration")))*
                                                 durationCriterionValue*
-						((Double)userPreferences.get("durationImportance")) 
+						((Double)userPreferences.getDurationImportance()) 
 						+ 
 						((wbDuration - (Double)minValues.get("minWBTotalDuration"))/
                                     ((Double)maxValues.get("maxWBTotalDuration") - (Double)minValues.get("minWBTotalDuration")))*                                                
 						wbDurationCriterionValue*
-						((Double)userPreferences.get("wbtimeImportance"));
+						((Double)userPreferences.getWbtimeImportance());
 	
 	return totalUtility;
   }
   
-  public double routeUtilityCalulationP3(JsonTrip tripResult, LinkedHashMap<String, Double> userPreferences){
+  public double routeUtilityCalulationP3(JsonTrip tripResult, UserPreferences userPreferences){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) getTripTotalDuration(tripResult);
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
-		durationCriterionValue = (Double)userPreferences.get("duration10min");
+		durationCriterionValue = (Double)userPreferences.getDuration10min();
 	} 
 	else if (10 < totalDuration && totalDuration <= 30){
-		durationCriterionValue = (Double)userPreferences.get("duration30min");
+		durationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+		durationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
 	
 	double wbDuration = (double) this.getTripTotalWBDuration(tripResult);
 	double wbDurationCriterionValue = 0;
 	if (wbDuration <= 10){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 	} 
 	else if (10 < wbDuration && wbDuration <= 30){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 	}
 	else{
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+		wbDurationCriterionValue = (Double)userPreferences.getWB30plus();
 	}
 		
 	totalUtility = (totalDuration/(Double)sumValues.get("sumTotalDuration"))* 
 						durationCriterionValue*
-						((Double)userPreferences.get("durationImportance")) 
+						((Double)userPreferences.getDurationImportance()) 
 						+ 
 						(wbDuration/(Double)sumValues.get("sumWBTotalDuration"))* 
 						wbDurationCriterionValue*
-						((Double)userPreferences.get("wbtimeImportance"));
+						((Double)userPreferences.getWbtimeImportance());
 	
 	return totalUtility;
   }
   
-  public double routeUtilityCalulationP4(JsonTrip tripResult, LinkedHashMap<String, Double> userPreferences){
+  public double routeUtilityCalulationP4(JsonTrip tripResult, UserPreferences userPreferences){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) this.getTripTotalDuration(tripResult);
         double totalEmissions = this.getTripTotalEmissions(tripResult);
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
-		durationCriterionValue = (Double)userPreferences.get("duration10min");
+		durationCriterionValue = (Double)userPreferences.getDuration10min();
 	} 
 	else if (10 < totalDuration && totalDuration <= 30){
-		durationCriterionValue = (Double)userPreferences.get("duration30min");
+		durationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+		durationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
         
     int numberOfChanges = tripResult.getSegments().size();
     double comfortCriterionValue = 0;
     
     if (numberOfChanges <= 2){
-        comfortCriterionValue = (Double) userPreferences.get("comfortHigh");
+        comfortCriterionValue = (Double) userPreferences.getComfortHigh();
     }
     else if (numberOfChanges > 2 && numberOfChanges <= 3){
-        comfortCriterionValue = (Double) userPreferences.get("comfortMedium");
+        comfortCriterionValue = (Double) userPreferences.getComfortMedium();
     }
     else {
-        comfortCriterionValue = (Double) userPreferences.get("comfortLow");
+        comfortCriterionValue = (Double) userPreferences.getComfortLow();
     }
 	
 	double wbDuration = (double) this.getTripTotalWBDuration(tripResult);
 	double wbDurationCriterionValue = 0;
 	if (wbDuration <= 10){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+		wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 	} 
 	else if (10 < wbDuration && wbDuration <= 30){
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+		wbDurationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+		wbDurationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
 		
 	totalUtility = durationCriterionValue*
-						((Double)userPreferences.get("durationImportance")) 
+						((Double)userPreferences.getDurationImportance()) 
 						+ 
 						wbDurationCriterionValue*
-						((Double)userPreferences.get("wbtimeImportance"))
+						((Double)userPreferences.getWbtimeImportance())
                                                 +
                                                 comfortCriterionValue*
-                				((Double)userPreferences.get("comfortImportance"))
+                				((Double)userPreferences.getComfortImportance())
                                                 ;
         
         if (false){
@@ -494,7 +609,7 @@ public class GetRecommendations{
 	return totalUtility;
   }
   
-  public double routeUtilityCalulationP5(JsonTrip tripResult, LinkedHashMap<String, Double> userPreferences){
+  public double routeUtilityCalulationP5(JsonTrip tripResult, UserPreferences userPreferences){
 	double totalUtility = 0;
 		
 	double totalDuration = (double) this.getTripTotalDuration(tripResult);
@@ -505,65 +620,65 @@ public class GetRecommendations{
     
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
-		durationCriterionValue = (Double)userPreferences.get("duration10min");
+		durationCriterionValue = (Double)userPreferences.getDuration10min();
 	} 
 	else if (10 < totalDuration && totalDuration < 20){
-		durationCriterionValue = (Double)userPreferences.get("duration30min");
+		durationCriterionValue = (Double)userPreferences.getDuration30min();
 	}
 	else{
-		durationCriterionValue = (Double)userPreferences.get("duration30plus");
+		durationCriterionValue = (Double)userPreferences.getDuration30plus();
 	}
         
     int numberOfChanges = tripResult.getSegments().size();
     double comfortCriterionValue = 0;
     
     if (numberOfChanges <= 2){
-        comfortCriterionValue = (Double) userPreferences.get("comfortHigh");
+        comfortCriterionValue = (Double) userPreferences.getComfortHigh();
     }
     else if (numberOfChanges > 2 && numberOfChanges <= 3){
-        comfortCriterionValue = (Double) userPreferences.get("comfortMedium");
+        comfortCriterionValue = (Double) userPreferences.getComfortMedium();
     }
     else {
-        comfortCriterionValue = (Double) userPreferences.get("comfortLow");
+        comfortCriterionValue = (Double) userPreferences.getComfortLow();
     }
 	
 	double wbDuration = (double) this.getTripTotalWBDuration(tripResult);
 	double wbDurationCriterionValue = 0;
 	if (wbDuration > 0){
 		if (wbDuration <= 10){
-			wbDurationCriterionValue = (Double)userPreferences.get("WB10min");
+			wbDurationCriterionValue = (Double)userPreferences.getWB10min();
 		} 
 		else if (10 < wbDuration && wbDuration <= 30){
-			wbDurationCriterionValue = (Double)userPreferences.get("WB30min");
+			wbDurationCriterionValue = (Double)userPreferences.getWB30min();
 		}
 		else{
-			wbDurationCriterionValue = (Double)userPreferences.get("WB30plus");
+			wbDurationCriterionValue = (Double)userPreferences.getWB30plus();
 		}
 	}
 	
 	double emissionsCriterionValue = 0;
 	if (totalEmissions <= 1.0*nominalEmissions){
-		emissionsCriterionValue = (Double)userPreferences.get("emissionsLow");
+		emissionsCriterionValue = (Double)userPreferences.getEmissionsLow();
 	}
 	else if (totalEmissions > 1.0*nominalEmissions && totalEmissions <= 1.6*nominalEmissions){
-		emissionsCriterionValue = (Double)userPreferences.get("emissionsMedium");
+		emissionsCriterionValue = (Double)userPreferences.getEmissionsMedium();
 	}
 	else{
-		emissionsCriterionValue = (Double)userPreferences.get("emissionsHigh");
+		emissionsCriterionValue = (Double)userPreferences.getEmissionsHigh();
 	}
 		
 	totalUtility = durationCriterionValue*
-						((Double)userPreferences.get("durationImportance")) 
+						((Double)userPreferences.getDurationImportance()) 
 						+ 
 						wbDurationCriterionValue*
-						((Double)userPreferences.get("wbtimeImportance"))
+						((Double)userPreferences.getWbtimeImportance())
                                                 +
                                                 comfortCriterionValue*
-                				((Double)userPreferences.get("comfortImportance"))
+                				((Double)userPreferences.getComfortImportance())
                                                 ;
     
-	totalUtility = totalUtility*(1.0-(Double)userPreferences.get("ecoAttitudeImportance"))
-								- emissionsCriterionValue*(Double)userPreferences.get("ecoAttitudeImportance");
+	totalUtility = totalUtility*(1.0-(Double)userPreferences.getEcoAttitudeImportance())
+								- emissionsCriterionValue*(Double)userPreferences.getEcoAttitudeImportance();
 	return totalUtility;
   }
   
