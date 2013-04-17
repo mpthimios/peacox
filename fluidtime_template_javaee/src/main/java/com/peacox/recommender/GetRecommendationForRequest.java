@@ -48,20 +48,30 @@ public class GetRecommendationForRequest {
 	                .routeRequestFromJson(request);
 		
 		Long userId = 46L;
+		try{
+			userId = Long.parseLong(routeRequest.getDetails().getClientId());
+		}
+		catch (Exception e){
+			log.error("Could not load ClientId");
+		}
 		
-		UserRouteRequest newRouteRequest = new UserRouteRequest();
-		newRouteRequest.setUser_id(userId);
-		newRouteRequest.setTimestamp(new Date());
-		newRouteRequest.setRequest(request);
-		routeRequestService.create(newRouteRequest);
+		try{
+			UserRouteRequest newRouteRequest = new UserRouteRequest();
+			newRouteRequest.setUser_id(userId);
+			newRouteRequest.setTimestamp(new Date());
+			newRouteRequest.setRequest(request);
+			routeRequestService.create(newRouteRequest);
+		}catch(Exception e){
+			log.error("Could not store routeRequest in the database");
+		}
 		
 		//log.debug("route from: " + routeRequest.getFromName());
 		//routeRequest.setModality(modality)
 		//RequestDetails requestDetails = routeRequest.getDetails();
 		
-		HashSet<String> modalities = routeRequest.getModality();
+		HashSet<String> requestedModalities = routeRequest.getModality();
 				
-		routeRequest.setModality(fillModalities(modalities, userId));
+		routeRequest.setModality(fillModalities(requestedModalities, userId));
 		
 		RequestOptionRoute requestOptions = routeRequest.getOptionsRoute();
 		requestOptions.setPtMobilityConstraints(fillDisabilities(requestOptions.getPtMobilityConstraints(), userId));
@@ -95,6 +105,9 @@ public class GetRecommendationForRequest {
 		
 		try{
 			//fetch user vehicles
+			// this is for bike and par only
+			// if the user owns a bicycle include the bicycle [2]
+			// if the user has requested a car - include the par [4] 
 			List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(userId);
 			
 			int j = 0;
@@ -113,15 +126,17 @@ public class GetRecommendationForRequest {
 					}				
 				}
 				if(ownedVehicles.get(j).getType().matches(availableModalities[1])){ //car
-					if (!modalities.contains(availableModalities[1])){
-						modalities.add(availableModalities[1]);
-					}
-					if (!modalities.contains(availableModalities[4])){
+					if (modalities.contains(availableModalities[1])){ // add the park and ride option if the user owns a car						
 						modalities.add(availableModalities[4]);
 					}					
 				}
 				j++;
 			}
+			
+			if (modalities.contains(availableModalities[1])){ // add the park and ride option if the user owns a car						
+				modalities.add(availableModalities[4]);
+			}					
+			
 		}catch (Exception e){
 			log.debug("could not load vehicles for user id: " + userId);
 			log.debug("check exception below:");

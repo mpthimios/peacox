@@ -30,7 +30,7 @@ public class User {
 	}
 
 
-	@Id	
+	@Id
 	public Long getId() {
 		return id;
 	}

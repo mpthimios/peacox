@@ -124,7 +124,7 @@ public class Webservice {
 			userId = Long.parseLong(userIdStr);
 		}
 		else{
-			userId = 3L;
+			userId = 103L;
 		}
 		UserPreferences userPreferences = new UserPreferences();
 		int scenarioId = 1;
