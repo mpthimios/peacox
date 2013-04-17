@@ -95,6 +95,10 @@ public class Webservice {
 	
 	@RequestMapping(value="getRecommendationForRequest", method = RequestMethod.POST)
 	public String getRecommendationForRequest (Locale locale, Model model, @RequestBody String body) {
+		
+		log.debug("getRecommendationForRequest");
+		log.debug("received new RecommendationForRequest: " + body);
+		
 		try {
 			//testJPA();
 		} catch (Exception e) {
@@ -113,7 +117,8 @@ public class Webservice {
 	@RequestMapping(value="getRecommendationForRoute", method = RequestMethod.POST)
 	public String getRecommendationForRoute(Locale locale, Model model, @RequestBody String body) {
 		
-		System.out.println(body);
+		log.debug("getRecommendationForRoute");
+		log.debug(body);
 		
 		JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(body);
 				

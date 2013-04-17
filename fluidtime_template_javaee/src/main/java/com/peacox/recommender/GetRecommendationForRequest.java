@@ -47,6 +47,8 @@ public class GetRecommendationForRequest {
 		RequestGetRoute routeRequest = RouteParser
 	                .routeRequestFromJson(request);
 		
+		log.debug("start processing RecommendationForRequest");
+		
 		Long userId = 46L;
 		try{
 			userId = Long.parseLong(routeRequest.getDetails().getClientId());
@@ -79,7 +81,8 @@ public class GetRecommendationForRequest {
 		requestOptions = setContext(requestOptions);
 		
 		String json = RouteParser.routeRequestToJson(routeRequest);
-		log.debug("route to: " + json);		
+		
+		log.debug("finished processing RecommendationForRequest. The result is: " + json);		
 		 
 		return json;
 	}
