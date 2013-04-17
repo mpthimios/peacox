@@ -7,10 +7,12 @@ import com.fluidtime.routeExample.model.TripDto;
 import com.fluidtime.library.model.json.FeatureTypes.JsonFeature;
 import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
+import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.brivel.route.json.response.JsonResponseRouteTrip;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
+import com.peacox.recommender.webservice.Webservice;
 //import com.peacoxrmi.model.User;
 import de.bezier.math.combinatorics.Combination;
 import java.io.BufferedWriter;
@@ -28,6 +30,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import jline.internal.Log;
+
+import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -45,6 +51,8 @@ public class GetRecommendations{
   private double sumValue = 0;
   
   private String ownsVehicle = "";
+  
+  protected Logger log = Logger.getLogger(GetRecommendations.class);
   
   @Autowired protected UserRouteRequestService routeRequestService;
   
@@ -174,13 +182,15 @@ public class GetRecommendations{
     private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
         ArrayList<JsonResponseRoute> routeResults){
     	
-    	System.out.println("DEBUG: methodForRecommendations1");
+		log.debug("DEBUG: methodForRecommendations1");
         
     	ArrayList tripsList = new ArrayList<JsonTrip>();
     	
     	for(JsonResponseRoute route : routeResults){
       	  for(JsonTrip trip : route.getTrips()){
-      		tripsList.add(trip);
+      		  
+      		  log.debug("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+      		  tripsList.add(trip);
       	  }
       	}
     	
@@ -326,6 +336,7 @@ public class GetRecommendations{
   	
   		for(JsonResponseRoute route : routeResults){
     	  for(JsonTrip trip : route.getTrips()){
+    		log.debug("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
     		tripsList.add(trip);
     	  }
     	}
