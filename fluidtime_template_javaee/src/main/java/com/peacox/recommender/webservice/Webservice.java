@@ -159,6 +159,8 @@ public class Webservice {
 		
         String jsonResponse = recommendRoutes(route, userPreferences);
         
+        log.debug("jsonResponse: " + jsonResponse);
+        
         model.addAttribute("serverResponse", jsonResponse);
 		
 		return "getRecommendationForRoute";
