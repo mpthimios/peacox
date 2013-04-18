@@ -44,6 +44,10 @@ import com.peacox.recommender.RouteRequest;
 import com.peacox.recommender.UserPreferences;
 import com.peacox.recommender.repository.OwnedVehicles;
 import com.peacox.recommender.repository.User;
+import com.peacox.recommender.repository.UserRouteRequest;
+import com.peacox.recommender.repository.UserRouteRequestService;
+import com.peacox.recommender.repository.UserRouteResult;
+import com.peacox.recommender.repository.UserRouteResultService;
 import com.peacox.recommender.repository.UserService;
 //import com.peacox.recommender.repository.OwnedVehicles;
 //import com.peacox.recommender.repository.OwnedVehiclesTypeService;
@@ -63,6 +67,9 @@ public class Webservice {
 	
 	@Autowired
 	private ApplicationContext appContext;
+	
+	@Autowired
+	private UserRouteResultService routeResultService;
 	
 	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION"
 	
@@ -118,7 +125,17 @@ public class Webservice {
 	public String getRecommendationForRoute(Locale locale, Model model, @RequestBody String body) {
 		
 		log.debug("getRecommendationForRoute");
-		log.debug(body);
+		log.debug("received new RecommendationForRequest: " + body);
+		
+		try{
+			UserRouteResult newRouteResult = new UserRouteResult();
+			newRouteResult.setUser_id(45);
+			newRouteResult.setTimestamp(new Date());
+			newRouteResult.setResult(body);
+			routeResultService.create(newRouteResult);
+		}catch(Exception e){
+			log.error("Could not store routeRequest in the database");
+		}
 		
 		JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(body);
 				
@@ -131,6 +148,9 @@ public class Webservice {
 		else{
 			userId = 103L;
 		}
+		
+		
+		
 		UserPreferences userPreferences = new UserPreferences();
 		int scenarioId = 1;
 		
@@ -244,7 +264,6 @@ public class Webservice {
 		
         //printRouteInfo(route);
         
-        
         ArrayList routeList = new ArrayList<JsonResponseRoute>();
         routeList.add(route);
         		       
@@ -254,19 +273,19 @@ public class Webservice {
         for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
             Integer key = entry.getKey();
             HashMap<JsonTrip,Double> value = entry.getValue();
-            System.out.println("***********Found Trip: " + key + " ***********");
+            log.debug("***********Found Trip: " + key + " ***********");
             Map.Entry<JsonTrip,Double> element = value.entrySet().iterator().next();
             double utility = element.getValue();
-            System.out.println("entry utility: " + element.getValue());
+            log.debug("entry utility: " + element.getValue());
             JsonTrip trip = element.getKey();
-            System.out.println("Trip Info:");
+            log.debug("Trip Info:");
             printTripInfo(trip);
             newTrips.add(trip);
-            int tripIndex = route.getTrips().indexOf(trip);
-            log.debug("adding key index: " + Integer.toString(key) + " with utility: " + Double.toString(utility));
-            route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));
+            int tripIndex = route.getTrips().indexOf(trip);            
+            route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));                      
             route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
-            System.out.println("*********** END Found Trip ***********");
+            log.debug("adding trip_index: " + Integer.toString(key) + " to trip " + tripIndex + " with RECOMMENDATION_FACTOR: " + Double.toString(utility));
+            log.debug("*********** END Found Trip ***********");
         }
         
         //route.setTrips(newTrips);
@@ -285,13 +304,13 @@ public class Webservice {
 	}
 	
 	private void printRouteInfo(JsonResponseRoute route) { // for debugging
-		System.out.println("routeid: " + route.getId());
-		System.out.println("trips: " + route.getTrips().size());
+		log.debug("routeid: " + route.getId());
+		log.debug("trips: " + route.getTrips().size());
 		List<JsonTrip> trips = route.getTrips();
 		int j = 0;
 		
 		while (j < trips.size()) {
-			System.out.println("*******" + " New Trip Found " + "*******");
+			log.debug("*******" + " New Trip Found " + "*******");
 			JsonTrip trip = trips.get(j);
 			printTripInfo(trip);
 			j++;
@@ -299,18 +318,18 @@ public class Webservice {
 	}
 	
 	private void printTripInfo(JsonTrip trip) { // for debugging				
-		System.out.println("modality: " + trip.getModality() + 
+		log.debug("modality: " + trip.getModality() + 
 				" - Total Distance: " + trip.getDistanceMeter() + " meters" +
 				" - Total Duration " + trip.getDurationMinutes() + " minutes");			
 		List<JsonSegment> segments = trip.getSegments();
 		int k = 0;
 		while (k < segments.size()) {
-			System.out.println(" Segment: " + k + ":");
+			log.debug(" Segment: " + k + ":");
 			JsonSegment segment = segments.get(k);
 			printSegmentInfo(segment);
 			k++;
 		}
-		System.out.println("*******" + " END New Trip Found " + "*******");		
+		log.debug("*******" + " END New Trip Found " + "*******");		
 	}
 	
 	private void printSegmentInfo(JsonSegment segment) { // for debugging				
@@ -326,7 +345,7 @@ public class Webservice {
 					&& !(segment.getLocationTo().getProperties().getName() == null)) 
 					to = segment.getLocationTo().getProperties().getName();
 			
-			System.out.println(" mode of transport: " + segment.getType() + " - " + 
+			log.debug(" mode of transport: " + segment.getType() + " - " + 
 					"From: " + from +
 					" To: " + to +
 					" - distance: " + segment.getDistanceMeter() + " meters " + 

@@ -57,7 +57,10 @@ public class GetRecommendations{
   @Autowired protected UserRouteRequestService routeRequestService;
   
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
-        LinkedHashMap finalRouteResults;
+        
+	  log.debug("Start processing RouteRecommendations");
+	  
+	  LinkedHashMap finalRouteResults;
         updateTotalDurationStats(routeResults);
         updateTotalWBDurationStats(routeResults);
         updateTotalEmissionStats(routeResults);
@@ -182,7 +185,7 @@ public class GetRecommendations{
     private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
         ArrayList<JsonResponseRoute> routeResults){
     	
-		log.debug("DEBUG: methodForRecommendations1");
+		log.debug("methodForRecommendations1");
         
     	ArrayList tripsList = new ArrayList<JsonTrip>();
     	
@@ -202,13 +205,13 @@ public class GetRecommendations{
         try{ 
             while (combination.hasMore()){
                     int[] combi = combination.next();
-                    System.out.println("new combination found");
+                    log.debug("new combination found");
                     double utility = 0.0;
                     ArrayList<Integer> myArr = new ArrayList<Integer>();
 
                     double totalDuration = 0.0;
                     for (int temp = 0; temp < combi.length; temp++){
-                        System.out.println(" combi: " + combi[temp]);
+                    	log.debug(" combi: " + combi[temp]);
                         int pos = combi[temp];
                         myArr.add(pos);
                         JsonTrip tripResult = (JsonTrip) tripsList.get(pos);
@@ -237,7 +240,7 @@ public class GetRecommendations{
                         totalDuration += (double)getTripTotalDuration(tripResult);
                     }                    
                     combinationsAndUtilities.put(myArr, utility); //howMany should be replaced by utility
-                    System.out.println("Route List no: " + howMany + " - utility: " + utility);
+                    log.debug("Route List no: " + howMany + " - utility: " + utility);
                     combinationsAndUtilities.put(myArr, utility);
                     howMany++;
             }
@@ -246,19 +249,19 @@ public class GetRecommendations{
                 e.printStackTrace();	
         }
         
-        System.out.println("combinationsAndUtilities size: " + combinationsAndUtilities.size());
-        System.out.println("number of routes fetched: " + routeResults.size());
+        log.debug("combinationsAndUtilities size: " + combinationsAndUtilities.size());
+        log.debug("number of routes fetched: " + routeResults.size());
 
         ArrayList<Double> combinationsAndUtilitiesArray = new ArrayList<Double>(combinationsAndUtilities.values());
         Double maxValue = Collections.max(combinationsAndUtilitiesArray);
-        System.out.println("max value utility: " + maxValue);	
+        log.debug("max value utility: " + maxValue);	
         int  index = combinationsAndUtilitiesArray.indexOf(maxValue);
-        System.out.println("index of list with max value: " + index);
+        log.debug("index of list with max value: " + index);
         
         LinkedHashMap finalTripResults = new LinkedHashMap<Integer, HashMap>();
 
         ArrayList finalTrips = null;
-        System.out.println("before iterating routes");
+        log.debug("before iterating routes");
         int itCounter = 0;
         Iterator it=combinationsAndUtilities.keySet().iterator();
         while ( it.hasNext()) {
@@ -271,10 +274,10 @@ public class GetRecommendations{
                 itCounter++;
         }
         
-        System.out.println("after iterating routes");
+        log.debug("after iterating routes");
         //(Integer[])(new ArrayList<Integer[]>(combinationsAndUtilities.keySet())).get(index);
 
-        System.out.println("before finding the route");
+        log.debug("before finding the route");
         //a variable to hold the routes already in the list
         ArrayList<Integer> topListValues = new ArrayList<Integer>();
         int tripCounter = 0;
@@ -288,10 +291,10 @@ public class GetRecommendations{
         }
         
         //sort finalTripResults based on utility value
-        List<Map.Entry<Integer, HashMap>> intermediaryEntries =
-    		  new ArrayList<Map.Entry<Integer, HashMap>>(finalTripResults.entrySet());
-    		Collections.sort(intermediaryEntries, new Comparator<Map.Entry<Integer, HashMap>>() {
-    		  public int compare(Map.Entry<Integer, HashMap> a, Map.Entry<Integer, HashMap> b){
+        List<Map.Entry<Integer, HashMap<JsonTrip, Double>>> intermediaryEntries =
+    		  new ArrayList<Map.Entry<Integer, HashMap<JsonTrip, Double>>>(finalTripResults.entrySet());
+    		Collections.sort(intermediaryEntries, new Comparator<Map.Entry<Integer, HashMap<JsonTrip, Double>>>() {
+    		  public int compare(Map.Entry<Integer, HashMap<JsonTrip, Double>> a, Map.Entry<Integer, HashMap<JsonTrip, Double>> b){
     			  Double aValue = ((Double)(((Map.Entry<JsonTrip,Double>)(a.getValue().entrySet().iterator()
       		    		.next())).getValue()));
     			  Double bValue = ((Double)(((Map.Entry<JsonTrip,Double>)(b.getValue().entrySet().iterator()
@@ -300,9 +303,11 @@ public class GetRecommendations{
     		  }
     		});
     		finalTripResults.clear();
-    		
-    		for (Map.Entry<Integer, HashMap> entry : intermediaryEntries) {
-    			finalTripResults.put(entry.getKey(), entry.getValue());
+    		int position = 0;
+    		for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : intermediaryEntries) {
+    			//((JsonTrip)(entry.getValue().entrySet().iterator().next().getKey())).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(position));
+    			finalTripResults.put(position, entry.getValue());//(entry.getKey(), entry.getValue());
+    			position++;
     		}
         
         //Iterate routeResults and add the remainding results to the final routes
@@ -316,7 +321,7 @@ public class GetRecommendations{
 //                tripCounter++;
 //            }
 //        }
-        System.out.println("after finding the route");
+        log.debug("after finding the route");
              
         //Print results to check if we have UTF-8
         Collection c = finalTripResults.values();
@@ -330,7 +335,7 @@ public class GetRecommendations{
   private LinkedHashMap methodForRecommendations2(UserPreferences userPreferences, 
 		  ArrayList<JsonResponseRoute> routeResults){
         
-	  System.out.println("DEBUG: methodForRecommendations2");
+	  log.debug("methodForRecommendations2");
 	  
 	  	ArrayList tripsList = new ArrayList<JsonTrip>();
   	
