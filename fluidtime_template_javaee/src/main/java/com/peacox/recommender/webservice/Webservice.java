@@ -272,6 +272,9 @@ public class Webservice {
         GetRecommendations recommendations = new GetRecommendations();
         LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences, routeList);
         List<JsonTrip> newTrips = new ArrayList();
+        
+        //maybe temporary solution: empty route trips and add the in the order I want
+        route.getTrips().clear(); // this is temporary
         for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
             Integer key = entry.getKey();
             HashMap<JsonTrip,Double> value = entry.getValue();
@@ -281,14 +284,19 @@ public class Webservice {
             log.debug("entry utility: " + element.getValue());
             JsonTrip trip = element.getKey();
             log.debug("Trip Info:");
+            trip.addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));
+            trip.addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
             printTripInfo(trip);
             newTrips.add(trip);
-            int tripIndex = route.getTrips().indexOf(trip);            
-            route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));                      
-            route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
-            log.debug("adding trip_index: " + Integer.toString(key) + " to trip " + tripIndex + " with RECOMMENDATION_FACTOR: " + Double.toString(utility));
+            //start this is temporary
+            //int tripIndex = route.getTrips().indexOf(trip);
+            //route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));                      
+            //route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
+            //log.debug("adding trip_index: " + Integer.toString(key) + " to trip " + tripIndex + " with RECOMMENDATION_FACTOR: " + Double.toString(utility));
+            //end this is temporary
             log.debug("*********** END Found Trip ***********");
         }
+        route.setTrips(newTrips); 
         
         //route.setTrips(newTrips);
         
