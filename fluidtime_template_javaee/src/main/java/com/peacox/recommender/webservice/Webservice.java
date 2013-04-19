@@ -52,6 +52,7 @@ import com.peacox.recommender.repository.UserService;
 //import com.peacox.recommender.repository.OwnedVehicles;
 //import com.peacox.recommender.repository.OwnedVehiclesTypeService;
 import com.peacox.recommender.repository.OwnedVehiclesService;
+import com.peacox.recommender.utils.CompressString;
 import com.peacox.recommender.utils.Coordinates;
 import com.peacox.recommender.utils.Simulator;
 
@@ -131,10 +132,15 @@ public class Webservice {
 			UserRouteResult newRouteResult = new UserRouteResult();
 			newRouteResult.setUser_id(45);
 			newRouteResult.setTimestamp(new Date());
-			newRouteResult.setResult(body);
+			newRouteResult.setResult(CompressString.compress(body));
 			routeResultService.create(newRouteResult);
+			
+			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
+			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
+			
 		}catch(Exception e){
 			log.error("Could not store routeRequest in the database");
+			e.printStackTrace();
 		}
 		
 		JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(body);
@@ -159,7 +165,7 @@ public class Webservice {
 		
         String jsonResponse = recommendRoutes(route, userPreferences);
         
-        log.debug("jsonResponse: " + jsonResponse);
+        //log.debug("jsonResponse: " + jsonResponse);
         
         model.addAttribute("serverResponse", jsonResponse);
 		

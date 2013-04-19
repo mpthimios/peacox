@@ -95,7 +95,7 @@ public class GetRecommendations{
     		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10){
 
     	  // this is a default option for comfortable?
-    	  
+    	  log.debug("Setting options for comfortable profile");
     	  //comfortable?
     	  userPreferences.setComfortHigh(4.0);
     	  userPreferences.setComfortMedium(10.0);
@@ -122,6 +122,7 @@ public class GetRecommendations{
     		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
     	  
     	  // this is a default option for barrier-free?
+    	  log.debug("Setting options for barrier-free profile");
     	  
     	  //very comfortable?
     	  userPreferences.setComfortHigh(10.0);
@@ -148,6 +149,8 @@ public class GetRecommendations{
     		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
     	  
     	  // this is a default option for fast?
+    	  
+    	  log.debug("Setting options for fast profile");
     	  
     	  //I don't care about comfort?
     	  userPreferences.setComfortHigh(1.0);
