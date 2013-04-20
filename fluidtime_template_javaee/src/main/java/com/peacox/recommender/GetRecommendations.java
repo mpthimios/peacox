@@ -89,6 +89,10 @@ public class GetRecommendations{
       RequestGetRoute routeRequest = RouteParser
               .routeRequestFromJson(userRouteRequest.getRequest());
       
+      log.debug("Going to check which options to set");
+      log.debug("Checking for Comfortable: ");
+      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
+    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
       //set user preferences according to userRouteRequest
       if (routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
     		   &&
@@ -117,6 +121,11 @@ public class GetRecommendations{
     	  userPreferences.setEcoAttitudeImportance(0.2);
       }
       
+      log.debug("Checking for barrier-free: ");
+      log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
+    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
+    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
+      
       if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
     		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
     		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
@@ -144,6 +153,10 @@ public class GetRecommendations{
     	  
     	  userPreferences.setEcoAttitudeImportance(0.2);
       }
+      
+      log.debug("Checking for fast: ");
+      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
+    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
       
       if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
     		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
