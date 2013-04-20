@@ -276,8 +276,9 @@ public class Webservice {
         
         ArrayList routeList = new ArrayList<JsonResponseRoute>();
         routeList.add(route);
-        		       
-        GetRecommendations recommendations = new GetRecommendations();
+        
+        GetRecommendations recommendations = 
+				(GetRecommendations) appContext.getBean("GetRecommendations");
         LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences, routeList);
         List<JsonTrip> newTrips = new ArrayList();
         
@@ -321,7 +322,8 @@ public class Webservice {
         ArrayList routeList = new ArrayList<JsonResponseRoute>();
         routeList.add(route);
         		       
-        GetRecommendations recommendations = new GetRecommendations();
+        GetRecommendations recommendations = 
+				(GetRecommendations) appContext.getBean("GetRecommendations");
         LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = 
         		recommendations.getRecommendations(userPreferences, routeList, userId);
         List<JsonTrip> newTrips = new ArrayList();

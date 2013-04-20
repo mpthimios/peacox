@@ -22,17 +22,17 @@ public class UserRouteRequestServiceImpl implements UserRouteRequestService {
 	private UserRouteRequestRepository repository;
 
 	public UserRouteRequest findRouteRequestById(int id) {
-		TypedQuery query = em.createQuery("select r from RouteRequest r where r.id = ?1", UserRouteRequest.class);
+		TypedQuery query = em.createQuery("select r from UserRouteRequest r where r.id = ?1", UserRouteRequest.class);
 	    query.setParameter(1, id);
 	 
 	    return (UserRouteRequest)query.getSingleResult();		
 	}
 
 	public UserRouteRequest findRouteRequestByUserIdTimestamp(long user_id) {
-		TypedQuery query = em.createQuery("select r from RouteRequest r where r.user_id = ?1 order by timestamp DESC", UserRouteRequest.class);
+		TypedQuery query = em.createQuery("select r from UserRouteRequest r where r.user_id = ?1 order by timestamp DESC limit 1", UserRouteRequest.class);
 	    query.setParameter(1, user_id);
 	 
-	    return (UserRouteRequest)query.getSingleResult();		
+	    return (UserRouteRequest)query.getResultList().get(0);		
 	}
 
 	public UserRouteRequest create(UserRouteRequest routeRequest) {
