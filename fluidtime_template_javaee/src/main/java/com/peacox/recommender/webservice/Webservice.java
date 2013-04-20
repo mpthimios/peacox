@@ -163,7 +163,7 @@ public class Webservice {
 		User user = userService.findUserByUserId(userId);
 		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
 		
-        String jsonResponse = recommendRoutes(route, userPreferences);
+        String jsonResponse = recommendRoutes(route, userPreferences, userId);
         
         //log.debug("jsonResponse: " + jsonResponse);
         
@@ -268,6 +268,8 @@ public class Webservice {
 		return "getRecommendationForRoute";
 	}
 	
+	
+	//without userId
 	private String recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences){
 		
         //printRouteInfo(route);
@@ -277,6 +279,51 @@ public class Webservice {
         		       
         GetRecommendations recommendations = new GetRecommendations();
         LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences, routeList);
+        List<JsonTrip> newTrips = new ArrayList();
+        
+        //maybe temporary solution: empty route trips and add the in the order I want
+        route.getTrips().clear(); // this is temporary
+        for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
+            Integer key = entry.getKey();
+            HashMap<JsonTrip,Double> value = entry.getValue();
+            log.debug("***********Found Trip: " + key + " ***********");
+            Map.Entry<JsonTrip,Double> element = value.entrySet().iterator().next();
+            double utility = element.getValue();
+            log.debug("entry utility: " + element.getValue());
+            JsonTrip trip = element.getKey();
+            log.debug("Trip Info:");
+            trip.addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));
+            trip.addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
+            printTripInfo(trip);
+            newTrips.add(trip);
+            //start this is temporary
+            //int tripIndex = route.getTrips().indexOf(trip);
+            //route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_INDEX, Integer.toString(key));                      
+            //route.getTrips().get(tripIndex).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_FACTOR, Double.toString(utility));
+            //log.debug("adding trip_index: " + Integer.toString(key) + " to trip " + tripIndex + " with RECOMMENDATION_FACTOR: " + Double.toString(utility));
+            //end this is temporary
+            log.debug("*********** END Found Trip ***********");
+        }
+        route.setTrips(newTrips); 
+        
+        //route.setTrips(newTrips);
+        
+        String json = RouteParser.routeToJson(route);
+        
+        return json;
+	}
+	
+	//with userId
+	private String recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences, long userId){
+		
+        //printRouteInfo(route);
+        
+        ArrayList routeList = new ArrayList<JsonResponseRoute>();
+        routeList.add(route);
+        		       
+        GetRecommendations recommendations = new GetRecommendations();
+        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = 
+        		recommendations.getRecommendations(userPreferences, routeList, userId);
         List<JsonTrip> newTrips = new ArrayList();
         
         //maybe temporary solution: empty route trips and add the in the order I want

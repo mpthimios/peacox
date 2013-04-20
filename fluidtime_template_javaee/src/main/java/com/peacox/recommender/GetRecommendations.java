@@ -79,6 +79,8 @@ public class GetRecommendations{
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, 
 		  ArrayList<JsonResponseRoute> routeResults, long user_id){
 	  
+	  log.debug("Start processing RouteRecommendations. user_id: " + user_id);
+	  
       LinkedHashMap finalRouteResults;
       updateTotalDurationStats(routeResults);
       updateTotalWBDurationStats(routeResults);
