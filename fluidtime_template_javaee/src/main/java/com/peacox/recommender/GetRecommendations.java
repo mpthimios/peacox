@@ -53,6 +53,10 @@ public class GetRecommendations{
   
   private String ownsVehicle = "";
   
+  private int walkingTimeThreshold = 40;
+  private int bikeTimeThreshold = 60;
+  private int maxPtChangesThreshold = 4;
+  
   protected Logger log = Logger.getLogger(GetRecommendations.class);
   
   @Autowired protected UserRouteRequestService routeRequestService;
@@ -406,9 +410,61 @@ public class GetRecommendations{
 	    			  return bValue.compareTo(aValue);
 	    		  }
 	    		});
+        	
+        	int minChanges = 100;
+        	int maxChanges = 0;
+        	int minTime = 1000;
+        	int maxTime = 0;
+        	
+        	if (entry.getKey().matches("pt")){
+	        	//find some statistics for the pt mode
+	        	
+	        	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
+	        		JsonTrip tmpTrip = arrayEntry.entrySet().iterator().next().getKey();
+	        		if (tmpTrip.getDurationMinutes() > maxTime){
+	        			maxTime = tmpTrip.getDurationMinutes();
+	        		}
+	        		if (tmpTrip.getDurationMinutes() < minTime){
+	        			minTime = tmpTrip.getDurationMinutes();
+	        		}
+	        		if (tmpTrip.getSegments().size() > maxChanges){
+	        			maxChanges = tmpTrip.getSegments().size();
+	        		}
+	        		if (tmpTrip.getSegments().size() < minChanges){
+	        			minChanges = tmpTrip.getSegments().size();
+	        		}
+	        	}
+        	}
+        	
+        	
+        	
+        	
         	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
-	        	finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
-	        	position++;	        
+        		boolean placeEntry = true;
+        		if (entry.getKey().matches("walk")){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > walkingTimeThreshold){
+        				placeEntry = false;
+        			}
+        		}
+        		if (entry.getKey().matches("bike")){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > bikeTimeThreshold){
+        				placeEntry = false;
+        			}
+        		}
+        		//some logic on how to re-rank pt options
+        		if (entry.getKey().matches("pt")){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > (int)(1.5*minTime)){
+        				placeEntry = false;
+        			}
+        			if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(2*minChanges)){
+        				placeEntry = false;
+        			}
+        		}
+        		
+        		if (placeEntry){
+		        	finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
+		        	position++;
+        		}
         	}
         }
               

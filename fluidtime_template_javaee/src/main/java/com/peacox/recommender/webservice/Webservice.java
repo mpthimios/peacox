@@ -43,6 +43,8 @@ import com.peacox.recommender.GetRecommendationsRouteDto;
 import com.peacox.recommender.RouteRequest;
 import com.peacox.recommender.UserPreferences;
 import com.peacox.recommender.repository.OwnedVehicles;
+import com.peacox.recommender.repository.Recommendations;
+import com.peacox.recommender.repository.RecommendationsService;
 import com.peacox.recommender.repository.User;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
@@ -71,6 +73,9 @@ public class Webservice {
 	
 	@Autowired
 	private UserRouteResultService routeResultService;
+	
+	@Autowired
+	private RecommendationsService recommendationsService;
 	
 	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION"
 	
@@ -166,6 +171,20 @@ public class Webservice {
         String jsonResponse = recommendRoutes(route, userPreferences, userId);
         
         //log.debug("jsonResponse: " + jsonResponse);
+        try{
+			Recommendations recommendations = new Recommendations();
+			recommendations.setUser_id(45);
+			recommendations.setTimestamp(new Date());
+			recommendations.setRecommendations(CompressString.compress(jsonResponse));
+			recommendationsService.create(recommendations);
+			
+			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
+			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
+			
+		}catch(Exception e){
+			log.error("Could not store routeRequest in the database");
+			e.printStackTrace();
+		}
         
         model.addAttribute("serverResponse", jsonResponse);
 		
