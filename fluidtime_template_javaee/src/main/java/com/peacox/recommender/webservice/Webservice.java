@@ -328,7 +328,7 @@ public class Webservice {
         		recommendations.getRecommendations(userPreferences, routeList, userId);
         List<JsonTrip> newTrips = new ArrayList();
         
-        //maybe temporary solution: empty route trips and add the in the order I want
+        //maybe temporary solution: empty route trips and add the in them order I want
         route.getTrips().clear(); // this is temporary
         for (Map.Entry<Integer, HashMap<JsonTrip,Double>> entry : finalRouteResults.entrySet()) {
             Integer key = entry.getKey();
