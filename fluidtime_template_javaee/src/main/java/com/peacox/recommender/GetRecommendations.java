@@ -352,8 +352,11 @@ public class GetRecommendations{
         groupedTrips.put("bike", new ArrayList<HashMap<JsonTrip, Double>>());
         groupedTrips.put("bta", new ArrayList<HashMap<JsonTrip, Double>>());
         groupedTrips.put("bar", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("par_pt", new ArrayList<HashMap<JsonTrip, Double>>());
+        
+        //pt and par_pt should be merged!
+        //groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
+        //groupedTrips.put("par_pt", new ArrayList<HashMap<JsonTrip, Double>>());
+        groupedTrips.put("pt|par_pt", new ArrayList<HashMap<JsonTrip, Double>>());
         groupedTrips.put("par", new ArrayList<HashMap<JsonTrip, Double>>());
         groupedTrips.put("car", new ArrayList<HashMap<JsonTrip, Double>>());
         
@@ -361,6 +364,9 @@ public class GetRecommendations{
         	Map.Entry<Integer, HashMap<JsonTrip, Double>> entry = mapIt.next();
         	String modality = "";        	
         	modality = entry.getValue().entrySet().iterator().next().getKey().getModality();
+        	if (modality.matches("pt") || modality.matches("par_pt")){
+        		modality = "pt|par_pt";
+        	}
         	if (groupedTrips.containsKey(modality)){
         		groupedTrips.get(modality).add(entry.getValue());        	
         	}
