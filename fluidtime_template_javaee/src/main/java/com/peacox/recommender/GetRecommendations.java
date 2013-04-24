@@ -462,7 +462,7 @@ public class GetRecommendations{
         	
         	//remove some entries
         	//and group by utility 
-        	HashMap<Double, ArrayList<HashMap<JsonTrip, Double>>> tripsGroupedByUtility = new HashMap<Double, ArrayList<HashMap<JsonTrip, Double>>>();
+        	LinkedHashMap<Double, ArrayList<HashMap<JsonTrip, Double>>> tripsGroupedByUtility = new LinkedHashMap<Double, ArrayList<HashMap<JsonTrip, Double>>>();
         	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
         		boolean placeEntry = true;
         		if (entry.getKey().matches("walk")){
