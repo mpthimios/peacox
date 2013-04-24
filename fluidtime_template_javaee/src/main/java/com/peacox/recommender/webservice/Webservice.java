@@ -404,7 +404,8 @@ public class Webservice {
 	private void printTripInfo(JsonTrip trip) { // for debugging				
 		log.debug("modality: " + trip.getModality() + 
 				" - Total Distance: " + trip.getDistanceMeter() + " meters" +
-				" - Total Duration " + trip.getDurationMinutes() + " minutes");			
+				" - Total Duration " + trip.getDurationMinutes() + " minutes" +
+				" - Total Emissions " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2) + " CO2");			
 		List<JsonSegment> segments = trip.getSegments();
 		int k = 0;
 		while (k < segments.size()) {

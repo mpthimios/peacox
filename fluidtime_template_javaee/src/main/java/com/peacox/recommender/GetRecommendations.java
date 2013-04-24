@@ -244,6 +244,9 @@ public class GetRecommendations{
       	  for(JsonTrip trip : route.getTrips()){
       		  
       		  log.debug("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+      		  if (trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2) == null){
+      			trip.addAttribute(AttributeListKeys.KEY_SEGMENT_CO2, Double.toString(this.getTripTotalEmissions(trip)));
+      		  }
       		  tripsList.add(trip);
       	  }
       	}
@@ -356,16 +359,19 @@ public class GetRecommendations{
         //pt and par_pt should be merged!
         //groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
         //groupedTrips.put("par_pt", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("pt|par_pt", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("par", new ArrayList<HashMap<JsonTrip, Double>>());
+        groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
+        //groupedTrips.put("par", new ArrayList<HashMap<JsonTrip, Double>>());
         groupedTrips.put("car", new ArrayList<HashMap<JsonTrip, Double>>());
         
         for (Iterator<Map.Entry<Integer, HashMap<JsonTrip, Double>>> mapIt = finalTripResults.entrySet().iterator(); mapIt.hasNext();) {
         	Map.Entry<Integer, HashMap<JsonTrip, Double>> entry = mapIt.next();
         	String modality = "";        	
         	modality = entry.getValue().entrySet().iterator().next().getKey().getModality();
-        	if (modality.matches("pt") || modality.matches("par_pt")){
-        		modality = "pt|par_pt";
+        	if ( modality.matches("par_pt")){
+        		modality = "pt";
+        	}
+        	if ( modality.matches("par_car")){
+        		modality = "car";
         	}
         	if (groupedTrips.containsKey(modality)){
         		groupedTrips.get(modality).add(entry.getValue());        	
@@ -451,8 +457,9 @@ public class GetRecommendations{
         	}
         	
         	
-        	
-        	
+        	//remove some entries
+        	//and group by utility 
+        	HashMap<Double, ArrayList<HashMap<JsonTrip, Double>>> tripsGroupedByUtility = new HashMap<Double, ArrayList<HashMap<JsonTrip, Double>>>();
         	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
         		boolean placeEntry = true;
         		if (entry.getKey().matches("walk")){
@@ -484,10 +491,97 @@ public class GetRecommendations{
         		}
         		
         		if (placeEntry){
-		        	finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
-		        	position++;
+        			if (tripsGroupedByUtility.containsKey(arrayEntry.entrySet().iterator().next().getValue())){
+        				tripsGroupedByUtility.get(arrayEntry.entrySet().iterator().next().getValue()).add(arrayEntry);
+        			}
+        			else{
+        				ArrayList<HashMap<JsonTrip, Double>> array = new ArrayList<HashMap<JsonTrip, Double>>();
+        				array.add(arrayEntry);
+        				tripsGroupedByUtility.put(arrayEntry.entrySet().iterator().next().getValue(), array);
+        			}
+        			
         		}
         	}
+        	
+        	for (Map.Entry<Double, ArrayList<HashMap<JsonTrip, Double>>> 
+        		tripsGroupedByUtilityEntry : tripsGroupedByUtility.entrySet()){
+        		
+        		if (tripsGroupedByUtilityEntry.getValue().size() > 1){
+        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayEmissions = tripsGroupedByUtilityEntry.getValue();
+        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayDuration = tripsGroupedByUtilityEntry.getValue();
+        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayChanges = tripsGroupedByUtilityEntry.getValue();
+        			//this case means that we have multiple entries with the same utility value!
+        			// some should be removed in order not to overload the user with information.
+        			// our target is to provide ~3 options
+        			
+        			//first sort by least emissions 
+        			Collections.sort(tmpArrayEmissions, new Comparator<HashMap<JsonTrip, Double>>() {
+      	    		  public int compare(HashMap<JsonTrip, Double> a, HashMap<JsonTrip, Double> b){
+      	    			  Double aValue = ((Double)Double.parseDouble((((Map.Entry<JsonTrip,Double>)(a.entrySet().iterator()
+      	      		    		.next())).getKey()).getAttribute(AttributeListKeys.KEY_SEGMENT_CO2)));      	    			
+      	    			  Double bValue = ((Double)Double.parseDouble((((Map.Entry<JsonTrip,Double>)(b.entrySet().iterator()
+        	      		    		.next())).getKey()).getAttribute(AttributeListKeys.KEY_SEGMENT_CO2)));
+      	    			  return aValue.compareTo(bValue);
+      	    		  }
+      	    		});
+        			
+        			//then the one with the least duration
+        			Collections.sort(tmpArrayDuration, new Comparator<HashMap<JsonTrip, Double>>() {
+        	    		  public int compare(HashMap<JsonTrip, Double> a, HashMap<JsonTrip, Double> b){
+        	    			  Double aValue = ((double)((((Map.Entry<JsonTrip,Double>)(a.entrySet().iterator()
+        	      		    		.next())).getKey()).getDurationMinutes()));      	    			
+        	    			  Double bValue = ((double)((((Map.Entry<JsonTrip,Double>)(b.entrySet().iterator()
+          	      		    		.next())).getKey()).getDurationMinutes()));
+        	    			  return aValue.compareTo(bValue);
+        	    		  }
+        	    		});
+        			
+        			//finally the one with the least changes
+        			Collections.sort(tmpArrayChanges, new Comparator<HashMap<JsonTrip, Double>>() {
+      	    		  public int compare(HashMap<JsonTrip, Double> a, HashMap<JsonTrip, Double> b){
+      	    			  Double aValue = ((double)((((Map.Entry<JsonTrip,Double>)(a.entrySet().iterator()
+      	      		    		.next())).getKey()).getSegments().size()));      	    			
+      	    			  Double bValue = ((double)((((Map.Entry<JsonTrip,Double>)(b.entrySet().iterator()
+        	      		    		.next())).getKey()).getSegments().size()));
+      	    			  return aValue.compareTo(bValue);
+      	    		  }
+      	    		});
+        			
+        			//finally get the score of each option 
+        			ArrayList<HashMap<Integer, Integer>> scores = new ArrayList<HashMap<Integer, Integer>>();
+        			int scoresIterator = 0;
+        			for (HashMap<JsonTrip, Double> tmpEntry : tripsGroupedByUtilityEntry.getValue()){
+        				HashMap<Integer, Integer> score = new HashMap<Integer, Integer>(); 
+        				score.put(scoresIterator, tmpArrayEmissions.indexOf(tmpEntry) +
+        						tmpArrayDuration.indexOf(tmpEntry) +
+        						tmpArrayChanges.indexOf(tmpEntry));
+        				scores.add(score);
+        				scoresIterator++;
+        			}
+        			Collections.sort(scores, new Comparator<HashMap<Integer, Integer>>() {
+        	    		  public int compare(HashMap<Integer, Integer> a, HashMap<Integer, Integer> b){
+        	    			  Double aValue = ((double)((((Map.Entry<Integer, Integer>)(a.entrySet().iterator()
+        	      		    		.next())).getValue())));      	    			
+        	    			  Double bValue = ((double)((((Map.Entry<Integer, Integer>)(b.entrySet().iterator()
+          	      		    		.next())).getValue())));
+        	    			  return aValue.compareTo(bValue);
+        	    		  }
+        	    		});
+        			
+        			HashMap<JsonTrip, Double> tripToKeep = tripsGroupedByUtilityEntry.getValue().
+        					get(scores.get(0).entrySet().iterator().next().getKey());
+        			tripsGroupedByUtilityEntry.getValue().clear();
+        			tripsGroupedByUtilityEntry.getValue().add(tripToKeep);
+        			log.debug("ommiting some duplicate trips");
+        			
+        		}        		
+        		for(HashMap<JsonTrip, Double> arrayEntry : tripsGroupedByUtilityEntry.getValue()){
+            		finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
+    	        	position++;        			
+        		}
+
+        	}
+        	
         }
               
         
