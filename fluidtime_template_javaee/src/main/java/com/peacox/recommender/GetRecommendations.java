@@ -314,7 +314,8 @@ public class GetRecommendations{
         int  index = combinationsAndUtilitiesArray.indexOf(maxValue);
         log.debug("index of list with max value: " + index);
         
-        LinkedHashMap finalTripResults = new LinkedHashMap<Integer, HashMap>();
+        LinkedHashMap<Integer, HashMap<JsonTrip, Double>> finalTripResults = new LinkedHashMap<Integer, HashMap<JsonTrip, Double>>();
+        LinkedHashMap<Integer, HashMap<JsonTrip, Double>> omittedTripResults = new LinkedHashMap<Integer, HashMap<JsonTrip, Double>>();
 
         ArrayList finalTrips = null;
         log.debug("before iterating routes");
@@ -418,7 +419,9 @@ public class GetRecommendations{
         //LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>> groupedTrips
         finalTripResults.clear();
         int position = 0;
-        for (Iterator<Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>>> mapIt = groupedTrips.entrySet().iterator(); mapIt.hasNext();) {
+        int omittedPosition = 0;
+        for (Iterator<Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>>> mapIt = groupedTrips.
+        		entrySet().iterator(); mapIt.hasNext();) {
         	Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>> entry = mapIt.next();
         	Collections.sort(entry.getValue(), new Comparator<HashMap<JsonTrip, Double>>() {
 	    		  public int compare(HashMap<JsonTrip, Double> a, HashMap<JsonTrip, Double> b){
@@ -467,26 +470,34 @@ public class GetRecommendations{
         				placeEntry = false;
         				log.debug("ommiting 'walk' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
         			}
         		}
         		if (entry.getKey().matches("bike")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > bikeTimeThreshold){
-        				placeEntry = false;
+        				placeEntry = false;        				
         				log.debug("ommiting 'bike' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
         			}
         		}
         		//some logic on how to re-rank pt options
         		if (entry.getKey().matches("pt")){
-        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > (int)(1.5*minTime)){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > (int)(1.8*minTime)){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since its duration is very hign compared to the others: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
         			}
         			if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(2*minChanges)){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since it contains too many chnages: " +
         						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
         			}
         		}
         		
@@ -570,6 +581,11 @@ public class GetRecommendations{
         			
         			HashMap<JsonTrip, Double> tripToKeep = tripsGroupedByUtilityEntry.getValue().
         					get(scores.get(0).entrySet().iterator().next().getKey());
+        			for(int i = 1; i< scores.size(); i++){
+        				omittedTripResults.put(omittedPosition, tripsGroupedByUtilityEntry.getValue().
+            					get(scores.get(i).entrySet().iterator().next().getKey()));
+        				omittedPosition++;
+        			}
         			tripsGroupedByUtilityEntry.getValue().clear();
         			tripsGroupedByUtilityEntry.getValue().add(tripToKeep);
         			log.debug("ommiting some duplicate trips");
@@ -583,7 +599,12 @@ public class GetRecommendations{
         	}
         	
         }
-              
+        
+        //add all omitted trips to get an overview
+        for(Map.Entry<Integer, HashMap<JsonTrip, Double>> omittedTrip : omittedTripResults.entrySet()){
+        	finalTripResults.put(position, omittedTrip.getValue());
+        	position++;
+        }
         
         //Iterate routeResults and add the remainding results to the final routes
         //temporarily skip this
@@ -598,11 +619,11 @@ public class GetRecommendations{
 //        }
         log.debug("after finding the route");
              
-        //Print results to check if we have UTF-8
-        Collection c = finalTripResults.values();
-        Iterator itr = c.iterator();
-        PrintWriter outUTF8 = new PrintWriter(new OutputStreamWriter(System.out));
-        int ci = 1;
+//        //Print results to check if we have UTF-8
+//        Collection c = finalTripResults.values();
+//        Iterator itr = c.iterator();
+//        PrintWriter outUTF8 = new PrintWriter(new OutputStreamWriter(System.out));
+//        int ci = 1;
       
         return finalTripResults;
   }
