@@ -52,7 +52,7 @@ public class UserPreferences{
 	
 	
 	private double orderAlgorithm = 1.0;
-	private double utilityAlgorithm = 5.0;
+	private double utilityAlgorithm = 6.0;
 		
     public LinkedHashMap getUserPreferences(){
 

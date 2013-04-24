@@ -21,6 +21,7 @@ import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,9 +44,11 @@ import org.springframework.stereotype.Component;
 public class GetRecommendations{
     
   //Stats
-  private LinkedHashMap maxValues = new LinkedHashMap<String, Double>();
-  private LinkedHashMap minValues = new LinkedHashMap<String, Double>();
-  private LinkedHashMap sumValues = new LinkedHashMap<String, Double>();
+  private LinkedHashMap<String, Double> maxValues = new LinkedHashMap<String, Double>();
+  private LinkedHashMap<String, Double> minValues = new LinkedHashMap<String, Double>();
+  private LinkedHashMap<String, Double> sumValues = new LinkedHashMap<String, Double>();
+  private LinkedHashMap<String, Double> medianValues = new LinkedHashMap<String, Double>();
+  private LinkedHashMap<String, Double> meanValues = new LinkedHashMap<String, Double>();
   
   private double maxValue = 0;
   private double minValue = 1000000;
@@ -69,6 +72,8 @@ public class GetRecommendations{
         updateTotalDurationStats(routeResults);
         updateTotalWBDurationStats(routeResults);
         updateTotalEmissionStats(routeResults);
+        
+        //HashMap<String, Double> statistics = updateStatistics(routeResults);
         
         switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
             case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
@@ -275,6 +280,8 @@ public class GetRecommendations{
                                 break;
                             case 5: tripUtility += routeUtilityCalulationP5(tripResult, userPreferences);
                             break;
+                            case 6: tripUtility += routeUtilityCalulationP6(tripResult, userPreferences);
+                            break;
                             default: tripUtility += routeUtilityCalulation(tripResult, userPreferences);
                                 break;                                        
                         }
@@ -418,6 +425,7 @@ public class GetRecommendations{
         	
         	if (entry.getKey().matches("pt")){
 	        	//find some statistics for the pt mode
+        		//these should be already calculated - double check please
 	        	
 	        	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
 	        		JsonTrip tmpTrip = arrayEntry.entrySet().iterator().next().getKey();
@@ -444,20 +452,28 @@ public class GetRecommendations{
         		if (entry.getKey().matches("walk")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > walkingTimeThreshold){
         				placeEntry = false;
+        				log.debug("ommiting 'walk' based route since its duration is: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
         			}
         		}
         		if (entry.getKey().matches("bike")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > bikeTimeThreshold){
         				placeEntry = false;
+        				log.debug("ommiting 'bike' based route since its duration is: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
         			}
         		}
         		//some logic on how to re-rank pt options
         		if (entry.getKey().matches("pt")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > (int)(1.5*minTime)){
         				placeEntry = false;
+        				log.debug("ommiting 'pt' based route since its duration is very hign compared to the others: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
         			}
         			if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(2*minChanges)){
         				placeEntry = false;
+        				log.debug("ommiting 'pt' based route since it contains too many chnages: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
         			}
         		}
         		
@@ -791,6 +807,8 @@ public class GetRecommendations{
     double totalEmissions = this.getTripTotalEmissions(tripResult);
     double nominalEmissions = this.getTripNominalEmissions(tripResult);
     
+    
+    
     System.out.println("trip emissions: " + totalEmissions);
     
 	double durationCriterionValue = 0;
@@ -857,10 +875,103 @@ public class GetRecommendations{
 	return totalUtility;
   }
   
+  //routeUtilityCalulationP6
+  public double routeUtilityCalulationP6(JsonTrip tripResult, UserPreferences userPreferences){
+		
+	  	log.debug("*** calculating based on routeUtilityCalulationP6 ***");
+	  	double totalUtility = 0;			
+		double totalDuration = (double) this.getTripTotalDuration(tripResult);
+	    double totalEmissions = this.getTripTotalEmissions(tripResult);
+	    double nominalEmissions = this.getTripNominalEmissions(tripResult);
+	    
+	    System.out.println("trip emissions: " + totalEmissions);
+	    
+	    //1st approach based on the mean value for total trip time
+	    //it's like taking some nominal values for the trip
+	    
+	    double minTime = minValues.get("minTotalDuration");
+	    double maxTime = maxValues.get("maxTotalDuration");
+	    double meanTime = meanValues.get("meanTotalDuration");
+	    double intervalPercentage = 0.3; 
+	    
+		double durationCriterionValue = 0;
+		if (minTime <= totalDuration && totalDuration <= (meanTime - meanTime*0.3)){
+			durationCriterionValue = (Double)userPreferences.getDuration10min();
+		} 
+		else if (meanTime - meanTime*0.3 < totalDuration && totalDuration <= (meanTime + meanTime*0.3)){
+			durationCriterionValue = (Double)userPreferences.getDuration30min();
+		}
+		else{
+			durationCriterionValue = (Double)userPreferences.getDuration30plus();
+		}
+	        
+	    int numberOfChanges = tripResult.getSegments().size();
+	    double comfortCriterionValue = 0;
+	    
+	    if (numberOfChanges <= 2){
+	        comfortCriterionValue = (Double) userPreferences.getComfortHigh();
+	    }
+	    else if (numberOfChanges > 2 && numberOfChanges <= 3){
+	        comfortCriterionValue = (Double) userPreferences.getComfortMedium();
+	    }
+	    else {
+	        comfortCriterionValue = (Double) userPreferences.getComfortLow();
+	    }
+		
+	    //1st approach based on the mean value for total trip time
+	    double minWBTime = minValues.get("minWBTotalDuration");
+	    double maxWBTime = maxValues.get("maxWBTotalDuration");
+	    double meanWBTime = meanValues.get("meanWBTotalDuration");
+	    double intervalWBPercentage = 0.3; 
+	    
+		double wbDuration = (double) this.getTripTotalWBDuration(tripResult);
+		double wbDurationCriterionValue = 0;
+		if (wbDuration > 0){
+			if (minWBTime <= wbDuration && wbDuration <= (meanWBTime - meanWBTime*0.3)){
+				wbDurationCriterionValue = (Double)userPreferences.getWB10min();
+			} 
+			else if ((meanWBTime - meanWBTime*0.3) < wbDuration && wbDuration <= (meanWBTime + meanWBTime*0.3)){
+				wbDurationCriterionValue = (Double)userPreferences.getWB30min();
+			}
+			else{
+				wbDurationCriterionValue = (Double)userPreferences.getWB30plus();
+			}
+		}
+		
+		double emissionsCriterionValue = 0;
+		if (totalEmissions <= 1.0*nominalEmissions){
+			emissionsCriterionValue = (Double)userPreferences.getEmissionsLow();
+		}
+		else if (totalEmissions > 1.0*nominalEmissions && totalEmissions <= 1.6*nominalEmissions){
+			emissionsCriterionValue = (Double)userPreferences.getEmissionsMedium();
+		}
+		else{
+			emissionsCriterionValue = (Double)userPreferences.getEmissionsHigh();
+		}
+			
+		totalUtility = durationCriterionValue*
+							((Double)userPreferences.getDurationImportance()) 
+							+ 
+							wbDurationCriterionValue*
+							((Double)userPreferences.getWbtimeImportance())
+	                                                +
+	                                                comfortCriterionValue*
+	                				((Double)userPreferences.getComfortImportance())
+	                                                ;
+	    
+		totalUtility = totalUtility*(1.0-(Double)userPreferences.getEcoAttitudeImportance())
+									- emissionsCriterionValue*(Double)userPreferences.getEcoAttitudeImportance();
+		return totalUtility;
+	  }
+  
+  
     private void updateTotalWBDurationStats(ArrayList<JsonResponseRoute> routeResults){
-      for(JsonResponseRoute route : routeResults){
+    	ArrayList<Double> durations = new ArrayList<Double>();
+    	double numberOfTrips = 0;
+    	for(JsonResponseRoute route : routeResults){
     	  for(JsonTrip trip : route.getTrips()){
 	          double walkingBicycleDuration = getTripTotalWBDuration(trip);
+	          durations.add(walkingBicycleDuration);
 	          if (maxValues.containsKey("maxWBTotalDuration")){
 	            double currentMaxTotalDuration = (Double) maxValues.get("maxWBTotalDuration");
 	            if (currentMaxTotalDuration < walkingBicycleDuration){
@@ -888,15 +999,31 @@ public class GetRecommendations{
 	          }
 	          else{
 	              sumValues.put("sumWBTotalDuration", walkingBicycleDuration);
-	          } 
+	          }
+	          numberOfTrips++;
     	  }
-      }      
+      }
+    	log.debug("numberOfTrips: " + numberOfTrips);
+        log.debug("mean numberOfTrips: " + (int)numberOfTrips/2);
+        Collections.sort(durations);
+        int middle = ((durations.size()) / 2);
+        if(durations.size() % 2 == 0){
+  		   double medianA = durations.get(middle);
+  		   double medianB = durations.get(middle+1);
+  		   medianValues.put("medianWBTotalDuration", (medianA + medianB) / 2);
+        } else{
+      	  medianValues.put("medianWBTotalDuration", durations.get(middle+1));       
+        }
+        meanValues.put("meanWBTotalDuration", sumValues.get("sumWBTotalDuration")/numberOfTrips); 
   }
   
-  private void updateTotalDurationStats(ArrayList<JsonResponseRoute> routeResults){      
+  private void updateTotalDurationStats(ArrayList<JsonResponseRoute> routeResults){ 
+	  double numberOfTrips = 0;
+	  ArrayList<Double> durations = new ArrayList<Double>();
       for(JsonResponseRoute route : routeResults){
     	  for(JsonTrip trip : route.getTrips()){
 	        double totalDuration = getTripTotalDuration(trip);
+	        durations.add(totalDuration);
 	        if (maxValues.containsKey("maxTotalDuration")){
 	            double currentMaxTotalDuration = (Double) maxValues.get("maxTotalDuration");
 	            if (currentMaxTotalDuration < totalDuration){
@@ -925,8 +1052,22 @@ public class GetRecommendations{
 	        else{
 	            sumValues.put("sumTotalDuration", totalDuration);
 	        }
+	        numberOfTrips++;
     	  }
-      }           
+      }
+      log.debug("numberOfTrips: " + numberOfTrips);
+      log.debug("mean numberOfTrips: " + (int)numberOfTrips/2);
+      Collections.sort(durations);
+      int middle = ((durations.size()) / 2);
+      if(durations.size() % 2 == 0){
+		   double medianA = durations.get(middle);
+		   double medianB = durations.get(middle+1);
+		   medianValues.put("medianTotalDuration", (medianA + medianB) / 2);
+      } else{
+    	  medianValues.put("medianTotalDuration", durations.get(middle+1));       
+      }
+      meanValues.put("meanTotalDuration", sumValues.get("sumTotalDuration")/numberOfTrips); 
+      
   }
   
   private void updateTotalEmissionStats(ArrayList<JsonResponseRoute> routeResults){      
@@ -1033,7 +1174,30 @@ public class GetRecommendations{
       return result;
   }
   
-  
+//  private HashMap<String, Double> updateStatistics(ArrayList<JsonResponseRoute> routeResults){
+//	  HashMap<String, Double> result = new HashMap<String, Double>();
+//	  double minDuration = 10000;
+//	  double maxDuration = 0;
+//	  double medianDuration = 0;
+//	  double meanDuration = 0;
+//	  double minWalkingDuration = 10000;
+//	  double maxWalkingDuration = 0;
+//	  double minWalkingDurationPt = 10000;
+//	  double maxWalkingDurationPt = 0;
+//	  
+//	  ArrayList<Double> durations = new ArrayList<Double>(); 
+//	  
+//	  for(JsonResponseRoute route : routeResults){
+//    	  for(JsonTrip trip : route.getTrips()){
+//	        double tripDuration = getTripTotalDuration(trip);
+//	        durations.add(tripDuration);
+//	        if (minDuration > tripDuration) minDuration = tripDuration;
+//	        if (maxDuration < tripDuration) maxDuration = tripDuration;
+//    	  }
+//      }
+//	  
+//	  return null;
+//  }
   
   //per trip total walking or bicycle duration
   private double getTripTotalWBDuration(JsonTrip trip){
@@ -1066,5 +1230,7 @@ public class GetRecommendations{
        }
        return result;
    }
+  
+  
   
 }
