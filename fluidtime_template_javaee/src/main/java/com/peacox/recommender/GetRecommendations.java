@@ -485,7 +485,9 @@ public class GetRecommendations{
         		}
         		//some logic on how to re-rank pt options
         		if (entry.getKey().matches("pt")){
-        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > (int)(1.8*minTime)){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > 
+        																(int)(1.5*minValues.get("minPTTotalDuration"))){
+        				
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since its duration is very hign compared to the others: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
@@ -1173,6 +1175,29 @@ public class GetRecommendations{
 	        else{
 	            sumValues.put("sumTotalDuration", totalDuration);
 	        }
+	        
+	        if (trip.getModality().matches("pt") || trip.getModality().matches("pt")){
+	        	if (maxValues.containsKey("maxPTTotalDuration")){
+		            double currentMaxPTTotalDuration = (Double) maxValues.get("maxPTTotalDuration");
+		            if (currentMaxPTTotalDuration < totalDuration){
+		                maxValues.put("maxPTTotalDuration", totalDuration);
+		            }
+		        }
+		        else{
+		            maxValues.put("maxPTTotalDuration", totalDuration);
+		        }
+	        	
+	        	if (minValues.containsKey("minPTTotalDuration")){
+	  	          double currentMinPTTotalDuration = (Double) minValues.get("minPTTotalDuration");
+	  	          if (currentMinPTTotalDuration > totalDuration){
+	  	              minValues.put("minPTTotalDuration", totalDuration);
+	  	          }
+	  	        }
+	  	        else{
+	  	            minValues.put("minPTTotalDuration", totalDuration);
+	  	        }
+	        }
+	        
 	        numberOfTrips++;
     	  }
       }
