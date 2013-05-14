@@ -125,7 +125,7 @@
             class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
 
     <mvc:resources mapping="/resources/**" location="/resources/"/>
-    <mvc:resources mapping="/servicepage/**" location="/servicepage/"/>
+<!--     <mvc:resources mapping="/servicepage/**" location="/servicepage/"/> -->
 
     <bean
             class="org.springframework.web.servlet.view.InternalResourceViewResolver">

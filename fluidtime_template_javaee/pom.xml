@@ -209,18 +209,18 @@
 
 		<!-- Fluidtime Dependencies -->
 		<!-- Service Page -->
-		<dependency>
-			<groupId>com.fluidtime</groupId>
-			<artifactId>servicepage_brivel</artifactId>
-			<version>1.1.42</version>
-			<classifier>classes</classifier>
-		</dependency>
-		<dependency>
-			<groupId>com.fluidtime</groupId>
-			<artifactId>servicepage_brivel</artifactId>
-			<version>1.1.42</version>
-			<type>war</type>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.fluidtime</groupId> -->
+<!-- 			<artifactId>servicepage_brivel</artifactId> -->
+<!-- 			<version>1.1.42</version> -->
+<!-- 			<classifier>classes</classifier> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.fluidtime</groupId> -->
+<!-- 			<artifactId>servicepage_brivel</artifactId> -->
+<!-- 			<version>1.1.42</version> -->
+<!-- 			<type>war</type> -->
+<!-- 		</dependency> -->
 		<dependency>
 	        <groupId>com.fluidtime</groupId>
 	        <artifactId>fluidtime</artifactId>
@@ -244,8 +244,8 @@
 		</dependency>
 		<dependency>
             <groupId>com.fluidtime</groupId>
-            <artifactId>brivel_json</artifactId>
-            <version>0.0.4-SNAPSHOT</version>
+            <artifactId>peacox_json</artifactId>
+            <version>0.2.5</version>
         </dependency>
         <dependency>
 	        <groupId>combinatronics</groupId>
@@ -306,14 +306,14 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
-					<warName>peacox_recommeder</warName>
+					<warName>peacox_recommender</warName>
 					<!-- <outputDirectory>/Applications/apache-tomcat-7.0.27/webapps</outputDirectory> -->
-					<overlays>
-						<overlay>
-							<groupId>com.fluidtime</groupId>
-							<artifactId>servicepage_brivel</artifactId>
-						</overlay>
-					</overlays>
+<!-- 					<overlays> -->
+<!-- 						<overlay> -->
+<!-- 							<groupId>com.fluidtime</groupId> -->
+<!-- 							<artifactId>servicepage_brivel</artifactId> -->
+<!-- 						</overlay> -->
+<!-- 					</overlays> -->
 					<archive>
 						<manifest>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>

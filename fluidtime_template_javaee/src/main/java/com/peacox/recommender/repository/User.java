@@ -12,14 +12,14 @@ import javax.persistence.Table;
 import javax.persistence.NamedQuery;
 
 @Entity
-@Table(schema="public", name = "user")
+@Table(schema="public", name = "user_peacox")
 
 public class User {
 
 	protected Long id;
 	protected String first_name;
 	protected String last_name;
-	protected Date birth_date;
+	protected byte[] birth_date;
 	protected boolean has_disabilities;
 	protected boolean eco_altitude;
 	protected int eco_score;
@@ -61,12 +61,12 @@ public class User {
 	}
 
 	@Column(name = "birth_date")
-	public Date getBirth_date() {
+	public byte[] getBirth_date() {
 		return birth_date;
 	}
 
 
-	public void setBirth_date(Date birth_date) {
+	public void setBirth_date(byte[] birth_date) {
 		this.birth_date = birth_date;
 	}
 

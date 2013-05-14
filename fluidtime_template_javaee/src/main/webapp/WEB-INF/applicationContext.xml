@@ -63,10 +63,10 @@
 			</bean>
 		</property>
 	</bean>
-	<bean id="pomInfo" class="com.fluidtime.servicepage.PomInfo">
-		<constructor-arg value="${project.artifactId}" />
-		<constructor-arg value="${project.version}" />
-	</bean>
+<!-- 	<bean id="pomInfo" class="com.fluidtime.servicepage.PomInfo"> -->
+<!-- 		<constructor-arg value="${project.artifactId}" /> -->
+<!-- 		<constructor-arg value="${project.version}" /> -->
+<!-- 	</bean> -->
 	<bean id="entityManager"
 		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="jpaVendorAdapter">

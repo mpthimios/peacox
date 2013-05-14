@@ -6,12 +6,12 @@
 	version="1.0">
 	<persistence-unit name="entityManager"
 		transaction-type="RESOURCE_LOCAL">
-		<class>com.fluidtime.servicepage.persistence.model.Logging</class>
-		<class>com.fluidtime.servicepage.persistence.model.Monitoring</class>
-		<class>com.fluidtime.servicepage.persistence.model.MonitoringDb</class>
-		<class>com.fluidtime.servicepage.persistence.model.SystemConfig</class>
-		<class>com.fluidtime.servicepage.persistence.model.SystemDatabaseVersion</class>
-		<class>com.fluidtime.servicepage.persistence.model.UpdateHashcode</class>
+<!-- 		<class>com.fluidtime.servicepage.persistence.model.Logging</class> -->
+<!-- 		<class>com.fluidtime.servicepage.persistence.model.Monitoring</class> -->
+<!-- 		<class>com.fluidtime.servicepage.persistence.model.MonitoringDb</class> -->
+<!-- 		<class>com.fluidtime.servicepage.persistence.model.SystemConfig</class> -->
+<!-- 		<class>com.fluidtime.servicepage.persistence.model.SystemDatabaseVersion</class> -->
+<!-- 		<class>com.fluidtime.servicepage.persistence.model.UpdateHashcode</class> -->
 		<properties>
 			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
 			<property name="hibernate.show_sql" value="false" />

@@ -9,7 +9,6 @@ import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
-import com.fluidtime.brivel.route.json.response.JsonResponseRouteTrip;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
 import com.peacox.recommender.webservice.Webservice;

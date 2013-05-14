@@ -28,12 +28,7 @@ import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.library.model.json.JsonSegment;
 import com.fluidtime.library.model.json.JsonTrip;
-import com.fluidtime.library.model.json.FeatureTypes.JsonFeature;
-import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
-import com.fluidtime.brivel.route.json.response.JsonResponseRouteTrip;
-import com.fluidtime.brivel.route.json.response.JsonResponseSegment;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -148,7 +143,7 @@ public class Webservice {
 			e.printStackTrace();
 		}
 		
-		JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(body);
+		JsonResponseRoute route = RouteParser.routeFromJson(body);
 				
 		String userIdStr = route.getAttribute(AttributeListKeys.KEY_ROUTE_USERID);
 		Long userId = 0L;
@@ -270,7 +265,7 @@ public class Webservice {
 		        in.close();		        		        
 		       
 		        System.out.println(response);
-		        JsonResponseRoute route = RouteParser.jsonStringTojsonRoute(response);
+		        JsonResponseRoute route = RouteParser.routeFromJson(response);
 		        String jsonResponse = recommendRoutes(route, userPreferences);
 		        
 		        model.addAttribute("serverResponse", jsonResponse);

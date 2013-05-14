@@ -1,8 +1,8 @@
 package com.peacox.recommender;
 
+import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.fluidtime.routeExample.model.RouteDto;
 import com.fluidtime.routeExample.model.TripDto;
-import com.fluidtime.brivel.route.json.response.JsonResponseRoute;
 //import com.peacoxrmi.model.User;
 import de.bezier.math.combinatorics.Combination;
 import java.io.BufferedWriter;
