@@ -489,7 +489,8 @@ public class GetRecommendations{
         				
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since its duration is very hign compared to the others: " +
-        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() + " the min value is: " + 
+        						minValues.get("minPTTotalDuration"));
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
