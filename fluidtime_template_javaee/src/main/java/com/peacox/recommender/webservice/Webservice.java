@@ -1,8 +1,11 @@
 package com.peacox.recommender.webservice;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,9 +40,13 @@ import com.peacox.recommender.GetRecommendations;
 import com.peacox.recommender.GetRecommendationsRouteDto;
 import com.peacox.recommender.RouteRequest;
 import com.peacox.recommender.UserPreferences;
+import com.peacox.recommender.repository.EmissionStatistics;
+import com.peacox.recommender.repository.EmissionStatisticsService;
 import com.peacox.recommender.repository.OwnedVehicles;
 import com.peacox.recommender.repository.Recommendations;
 import com.peacox.recommender.repository.RecommendationsService;
+import com.peacox.recommender.repository.Stages;
+import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.User;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
@@ -49,6 +56,7 @@ import com.peacox.recommender.repository.UserService;
 //import com.peacox.recommender.repository.OwnedVehicles;
 //import com.peacox.recommender.repository.OwnedVehiclesTypeService;
 import com.peacox.recommender.repository.OwnedVehiclesService;
+import com.peacox.recommender.utils.AverageEmissions;
 import com.peacox.recommender.utils.CompressString;
 import com.peacox.recommender.utils.Coordinates;
 import com.peacox.recommender.utils.Simulator;
@@ -71,6 +79,12 @@ public class Webservice {
 	
 	@Autowired
 	private RecommendationsService recommendationsService;
+	
+	@Autowired
+	private StagesService stagesService;
+	
+	@Autowired
+	private EmissionStatisticsService emissionStatisticsService;
 	
 	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION"
 	
@@ -144,7 +158,7 @@ public class Webservice {
 		}
 		
 		JsonResponseRoute route = RouteParser.routeFromJson(body);
-				
+		
 		String userIdStr = route.getAttribute(AttributeListKeys.KEY_ROUTE_USERID);
 		Long userId = 0L;
 		
@@ -281,7 +295,53 @@ public class Webservice {
 		
 		return "getRecommendationForRoute";
 	}
-	
+
+	@RequestMapping(value="calculateEmissions", method = RequestMethod.GET)
+	public String calculateEmissions (Locale locale, Model model, @RequestBody String body) {
+		
+		log.debug("calculateEmissions");
+		log.debug("received new calculateEmissions: " + body);
+		
+		try {
+			List<User> users = userService.findAllUsers();
+			log.debug("number of users found: " + users.size());
+			for (User user : users){
+				Calendar cal = Calendar.getInstance();
+				cal.set(Calendar.HOUR_OF_DAY,0);
+				cal.set(Calendar.MINUTE,0);
+				cal.set(Calendar.SECOND,0);
+				cal.set(Calendar.MILLISECOND,0);
+				Date start = cal.getTime();				
+				cal.set(Calendar.HOUR_OF_DAY, 23);
+				cal.set(Calendar.MINUTE,59);
+				cal.set(Calendar.SECOND,59);
+				cal.set(Calendar.MILLISECOND,999);
+				Date end = cal.getTime();
+				
+				List<Stages> stages = stagesService.findStagesByUserIdAndDate(user.getId(), start, end);				
+				log.debug("number of stages found: " + stages.size());
+				
+				for(Stages stage : stages){
+					double dailyEmissions = 0.0;
+					int mode = stage.getMode_detected_code();
+					dailyEmissions += AverageEmissions.getLarasAverageEmissions(mode)
+							*stage.getDistance()/1000.0;
+					EmissionStatistics emissionStatistics = new EmissionStatistics();
+					emissionStatistics.setStage_id(stage.getId());
+					emissionStatistics.setTimestamp(new Timestamp((new Date()).getTime()));
+					emissionStatistics.setEmissions_estimation(dailyEmissions);
+					emissionStatisticsService.create(emissionStatistics);
+				}
+			}			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("serverResponse", "DONE");
+		
+		return "calculateEmissions";
+	}
 	
 	//without userId
 	private String recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences){

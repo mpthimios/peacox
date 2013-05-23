@@ -6,4 +6,5 @@ public interface UserService {
 	
 	public User findUserByUserId(Long id);
 	public User create(User user);
+	public List<User> findAllUsers();
 }

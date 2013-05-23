@@ -33,4 +33,10 @@ public class UserServiceImpl implements UserService {
 	    return (User)query.getSingleResult();
 
 	}
+
+	public List<User> findAllUsers() {
+		TypedQuery query = em.createQuery("from User", User.class);	    
+	 
+	    return query.getResultList();
+	}
 }
