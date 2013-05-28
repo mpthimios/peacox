@@ -60,6 +60,7 @@ import com.peacox.recommender.utils.AverageEmissions;
 import com.peacox.recommender.utils.CompressString;
 import com.peacox.recommender.utils.Coordinates;
 import com.peacox.recommender.utils.Simulator;
+import com.peacox.recommender.utils.TreeScore;
 
 @Controller
 @RequestMapping(value = "/")
@@ -142,21 +143,6 @@ public class Webservice {
 		log.debug("getRecommendationForRoute");
 		log.debug("received new RecommendationForRequest: " + body);
 		
-		try{
-			UserRouteResult newRouteResult = new UserRouteResult();
-			newRouteResult.setUser_id(45);
-			newRouteResult.setTimestamp(new Date());
-			newRouteResult.setResult(CompressString.compress(body));
-			routeResultService.create(newRouteResult);
-			
-			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
-			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
-			
-		}catch(Exception e){
-			log.error("Could not store routeRequest in the database");
-			e.printStackTrace();
-		}
-		
 		JsonResponseRoute route = RouteParser.routeFromJson(body);
 		
 		String userIdStr = route.getAttribute(AttributeListKeys.KEY_ROUTE_USERID);
@@ -166,18 +152,38 @@ public class Webservice {
 			userId = Long.parseLong(userIdStr);
 		}
 		else{
-			userId = 103L;
+			// no userid - exit!
+			log.error("UserId in the route request is null - exiting");
+			model.addAttribute("serverResponse", body);			
+			return "getRecommendationForRoute";
 		}
 		
-		
+		try{
+			UserRouteResult newRouteResult = new UserRouteResult();
+			newRouteResult.setUser_id(userId);
+			newRouteResult.setTimestamp(new Date());
+			newRouteResult.setResult(CompressString.compress(body));
+			routeResultService.create(newRouteResult);
+			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
+			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
+		}catch(Exception e){
+			log.error("Could not store routeRequest in the database");
+			e.printStackTrace();
+		}
 		
 		UserPreferences userPreferences = new UserPreferences();
 		int scenarioId = 1;
 		
 		User user = userService.findUserByUserId(userId);
-		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
 		
-        String jsonResponse = recommendRoutes(route, userPreferences, userId);
+		if (user == null){
+			log.error("UserId in the database is null - exiting");
+			model.addAttribute("serverResponse", body);			
+			return "getRecommendationForRoute";
+		}
+		
+		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
+		String jsonResponse = recommendRoutes(route, userPreferences, userId);
         
         //log.debug("jsonResponse: " + jsonResponse);
         try{
@@ -341,6 +347,46 @@ public class Webservice {
 		model.addAttribute("serverResponse", "DONE");
 		
 		return "calculateEmissions";
+	}
+	
+	@RequestMapping(value="getStaticUserScoreForTree", method = RequestMethod.POST)
+	public String getUserScoreForTree (Locale locale, Model model, @RequestBody String body) {
+		
+		log.debug("getStaticUserScoreForTree");
+		log.debug("received new getStaticUserScoreForTree with user id: " + body);
+		double result = 0;
+		try{
+			long userId = Long.parseLong(body);
+			TreeScore treeScore = 
+					(TreeScore) appContext.getBean("TreeScore");
+			result = treeScore.calculateStatic(userId);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("userScore", result);
+		return "getUserScoreForTree";
+	}
+	
+	@RequestMapping(value="getDynamicUserScoreForTree", method = RequestMethod.POST)
+	public String getDynamicUserScoreForTree (Locale locale, Model model, @RequestBody String body) {
+		
+		log.debug("getDynamicUserScoreForTree");
+		log.debug("received new getDynamicUserScoreForTree with user id: " + body);
+		double result = 0;
+		try{
+			long userId = Long.parseLong(body);
+			TreeScore treeScore = 
+					(TreeScore) appContext.getBean("TreeScore");
+			result = treeScore.calculateDynamic(userId);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("userScore", result);
+		return "getUserScoreForTree";
 	}
 	
 	//without userId

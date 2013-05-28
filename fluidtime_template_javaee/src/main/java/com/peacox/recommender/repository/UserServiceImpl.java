@@ -3,6 +3,7 @@ package com.peacox.recommender.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -29,9 +30,12 @@ public class UserServiceImpl implements UserService {
 	public User findUserByUserId(Long id) {
 		TypedQuery query = em.createQuery("select a from User a where a.id = ?1", User.class);
 	    query.setParameter(1, id);
-	 
-	    return (User)query.getSingleResult();
-
+	    try{
+	    	return (User)query.getSingleResult();
+	    }
+	    catch(NoResultException nre){
+	    	return null;
+	    }
 	}
 
 	public List<User> findAllUsers() {

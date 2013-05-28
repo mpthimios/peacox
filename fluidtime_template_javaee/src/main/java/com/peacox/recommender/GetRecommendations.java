@@ -61,6 +61,8 @@ public class GetRecommendations{
   
   protected Logger log = Logger.getLogger(GetRecommendations.class);
   
+  protected boolean SHOWALL = false;
+  
   @Autowired protected UserRouteRequestService routeRequestService;
   
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
@@ -603,9 +605,11 @@ public class GetRecommendations{
         }
         
         //add all omitted trips to get an overview
-        for(Map.Entry<Integer, HashMap<JsonTrip, Double>> omittedTrip : omittedTripResults.entrySet()){
-        	finalTripResults.put(position, omittedTrip.getValue());
-        	position++;
+        if (SHOWALL){
+	        for(Map.Entry<Integer, HashMap<JsonTrip, Double>> omittedTrip : omittedTripResults.entrySet()){
+	        	finalTripResults.put(position, omittedTrip.getValue());
+	        	position++;
+	        }
         }
         
         //Iterate routeResults and add the remainding results to the final routes
@@ -1358,6 +1362,12 @@ public class GetRecommendations{
           j++;
       }
       return result;
+  }
+  
+  private double[] calculateUserPreferences( long userId){
+	  
+	  
+	  return null;
   }
   
   static LinkedHashMap sortByValue(LinkedHashMap map) {

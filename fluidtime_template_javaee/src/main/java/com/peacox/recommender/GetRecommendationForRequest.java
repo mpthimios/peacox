@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,8 @@ import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.library.model.json.request.RequestDetails;
 import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.request.RequestOptionRoute;
+import com.peacox.recommender.repository.Citytemp;
+import com.peacox.recommender.repository.CitytempService;
 import com.peacox.recommender.repository.OwnedVehicles;
 import com.peacox.recommender.repository.OwnedVehiclesService;
 import com.peacox.recommender.repository.User;
@@ -37,6 +40,8 @@ public class GetRecommendationForRequest {
 	@Autowired protected UserService userService;
 	
 	@Autowired protected UserRouteRequestService routeRequestService;
+	
+	@Autowired protected CitytempService citytempService;
 	
 	//arbitrary - is there a better solution?
 	protected int maxBikeTimeInExtremeConditions = 15;
@@ -155,6 +160,9 @@ public class GetRecommendationForRequest {
 		
 		try{
 			User user = userService.findUserByUserId(userId);
+			if (user == null){
+				throw new Exception("Could not find user in the database");
+			}
 			log.debug("disabilities for user: " + user.getFirst_name() + " " + user.getLast_name());
 			boolean hasDisabilities = user.isHas_disabilities();
 			if (hasDisabilities){
@@ -180,34 +188,67 @@ public class GetRecommendationForRequest {
 		//contextType:
 
 		try{
+			
+			double temp = 0.0;
+			double precipitation = 0.0;
 			boolean extremeConditions = false;
 			boolean rainyConditions = false;
-			String url = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=Vienna&num_of_days=2&key=gxytvkzgssj753r6kb3aax68&format=csv";
-			URL flu = new URL(url);
-			HttpURLConnection conn = (HttpURLConnection) flu.openConnection();
-	        conn.setRequestMethod( "GET" );
-	        BufferedReader in = new BufferedReader(
-	                                new InputStreamReader(
-	                                conn.getInputStream()));
-	        String inputLine;
-	        String response = "";
-	        int index = 0;
-	        while ((inputLine = in.readLine()) != null){
-	        	if (index == 8){
-	        		response = inputLine;
-	        	}
-	        	index++;
-	        }
-	        in.close();
-	        
-	        String[] weatherValues = response.split(",");
-	        if (weatherValues.length > 2){
-	        	//check temperature
-	        	if (Double.parseDouble(weatherValues[1]) < 5 || Double.parseDouble(weatherValues[1]) > 30){
+			boolean changeParams = false;
+			
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.HOUR,-3);
+			Date date = cal.getTime();	
+			
+			List<Citytemp> citytemps = citytempService.findCitytempByDate(date);
+			
+			if (citytemps.size() > 0){
+				Citytemp citytemp = citytemps.get(0);
+				temp = citytemp.getTemp();
+				precipitation = citytemp.getPrecipitation();
+				changeParams = true;
+			}
+			else{
+				String url = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=Vienna&num_of_days=2&key=gxytvkzgssj753r6kb3aax68&format=csv";
+				URL flu = new URL(url);
+				HttpURLConnection conn = (HttpURLConnection) flu.openConnection();
+		        conn.setRequestMethod( "GET" );
+		        BufferedReader in = new BufferedReader(
+		                                new InputStreamReader(
+		                                conn.getInputStream()));
+		        String inputLine;
+		        String response = "";
+		        int index = 0;
+		        while ((inputLine = in.readLine()) != null){
+		        	if (index == 8){
+		        		response = inputLine;
+		        	}
+		        	index++;
+		        }
+		        in.close();
+		        
+		        String[] weatherValues = response.split(",");
+		        
+		        if (weatherValues.length > 2){
+		        	temp = Double.parseDouble(weatherValues[1]);
+		        	precipitation = Double.parseDouble(weatherValues[9]);
+		        	changeParams = true;
+		        	//save
+		        	Citytemp newCitytemp = new Citytemp();
+		        	newCitytemp.setCity("Vienna");
+		        	newCitytemp.setTemp(temp);
+		        	newCitytemp.setPrecipitation(precipitation);
+		        	newCitytemp.setTime((new Date()));
+		        	citytempService.create(newCitytemp);
+		        }
+		        
+		        
+			}
+			if (changeParams){
+				if (temp < 5 || temp > 30){
 	        		//extreme conditions
 	        		extremeConditions = true;	       
 	        	}
-	        	if (Double.parseDouble(weatherValues[9]) > 1){
+	        	if (precipitation > 1){
 	        		//rain
 	        		rainyConditions = true;
 	        	}
@@ -215,7 +256,7 @@ public class GetRecommendationForRequest {
 	        		requestOptions.setBikeMaxTime(maxBikeTimeInExtremeConditions);
 	        		requestOptions.setWalkMaxTime(maxWalkTimeInExtremeConditions);
 	        	}
-	        }	        	        
+			}
 	    }
 		catch(Exception e){
 			log.debug("error in processing weather information");

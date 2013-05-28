@@ -39,5 +39,13 @@ public class StagesServiceImpl implements StagesService {
 	    return query.getResultList();
 	}
 
+	public int findNumberOfDaysTraced(Long userId) {
+		
+		TypedQuery query = em.createQuery("SELECT to_char(start_date_time, 'YYYY MM DD') " + 
+				"FROM Stages s WHERE s.user_id = ?1 GROUP by to_char(start_date_time, 'YYYY MM DD') ORDER by to_char(start_date_time, 'YYYY MM DD')", String.class);
+	    query.setParameter(1, userId);
+		return query.getResultList().size();
+	}
+
 	
 }
