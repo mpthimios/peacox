@@ -54,4 +54,6 @@
     <!--<listener>
         <listener-class>com.fluidtime.wlPlatform.utils.StartStopListener</listener-class>
     </listener>-->
+    
+    <display-name>${project.artifactId} ${project.version} | DB: ec_peacox</display-name>
 </web-app>

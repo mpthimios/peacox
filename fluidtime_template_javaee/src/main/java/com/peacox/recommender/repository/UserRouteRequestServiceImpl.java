@@ -31,8 +31,13 @@ public class UserRouteRequestServiceImpl implements UserRouteRequestService {
 	public UserRouteRequest findRouteRequestByUserIdTimestamp(long user_id) {
 		TypedQuery query = em.createQuery("select r from UserRouteRequest r where r.user_id = ?1 order by timestamp DESC limit 1", UserRouteRequest.class);
 	    query.setParameter(1, user_id);
-	 
-	    return (UserRouteRequest)query.getResultList().get(0);		
+	    UserRouteRequest result = null;
+	    try{
+	    	result = (UserRouteRequest)query.getResultList().get(0);
+	    }catch(IndexOutOfBoundsException e){
+	    	//nothing to do for now
+	    }
+	    return result; 		
 	}
 
 	public UserRouteRequest create(UserRouteRequest routeRequest) {

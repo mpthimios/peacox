@@ -13,7 +13,7 @@ import javax.persistence.Table;
 import javax.persistence.NamedQuery;
 
 @Entity
-@Table(schema="public", name = "citytemp")
+@Table(schema="public", name = "iccs_citytemp")
 
 public class Citytemp {
 

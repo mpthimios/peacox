@@ -94,6 +94,7 @@ public class TreeScore{
 		to.set(Calendar.MILLISECOND,999);
 		
 		SimpleDateFormat format = new SimpleDateFormat("yyyy MM dd");
+		SimpleDateFormat format1 = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
 		
 		LinkedHashMap<String, Double> dailyEmissions = new LinkedHashMap();
 		LinkedHashMap<String, Double> dailyTravelDistance = new LinkedHashMap();
@@ -103,16 +104,19 @@ public class TreeScore{
 		double distance7_14 = 0.0;
 		
 		for (int i = 0; i < numberOfDays; i++){
-			from.add(Calendar.DAY_OF_MONTH, -1);
-			to.add(Calendar.DAY_OF_MONTH, -1);
-			
+			if (i > 0){
+				from.add(Calendar.DAY_OF_MONTH, -1);
+				to.add(Calendar.DAY_OF_MONTH, -1);
+			}
 			List<Stages> stages = stagesService.findStagesByUserIdAndDate(userId, from.getTime(), to.getTime());				
 			log.debug("number of stages found: " + stages.size());
 			double dailyEmissionsValue = 0.0;
 			double dailyTravelDistanceValue = 0.0;
-			for(Stages stage : stages){				
+			for(Stages stage : stages){
+				log.debug("found stage: " + stage.getId() + " distance: " +stage.getDistance() +
+						" mode: " + stage.getMode_detected_code());
 				int mode = stage.getMode_detected_code();
-				dailyEmissionsValue += AverageEmissions.getLarasAverageEmissions(mode)						;
+				dailyEmissionsValue += AverageEmissions.getLarasAverageEmissions(mode) * (stage.getDistance()/1000.0);
 				dailyTravelDistanceValue += stage.getDistance()/1000.0;
 			}
 			dailyEmissions.put(format.format(from.getTime()), dailyEmissionsValue);
@@ -128,17 +132,19 @@ public class TreeScore{
 			}
 			
 			log.debug("current day: " + format.format(from.getTime()) + " emissions: " +
-					dailyEmissionsValue);	
+					dailyEmissionsValue/dailyTravelDistanceValue);	
 		}
 		
-		
+		log.debug("average emissions_7: " + emissions7/distance7);
+		log.debug("average emissions_7_14: " + emissions7_14/distance7_14);
 		
 		score = userTreeScore.getScore();
 		
 		log.debug("current score for user " + userId + " is: " + score); 
 		
+	
 		//case 1: emission7 is 0-50grams/km -> user gains a point
-		if (emissions7/distance7 > 0 && emissions7/distance7 < 50)
+		if ((distance7 > 0) && (emissions7/distance7 > 0 && emissions7/distance7 < 50))
 			score += 3;
 		
 		else{
@@ -146,17 +152,18 @@ public class TreeScore{
 			//(i.e. if today is the 22nd, from the 8th to the 14th) 
 			//and divide it by the total travel distance during that time frame (= “emission14”)
 			//If emission7_14 < emission7 -> user gains a point
-			
-			if ( emissions7_14/distance7_14 > emissions7/distance7)
-				score += 3;
-			else{
-				//i. If emission7_14 >= emission-7 OR emission7 is 50-100 grams/km 
-				//-> user gains no points
-				if ( emissions7_14/distance7_14 <= emissions7/distance7 || 
-						(emissions7/distance7 > 50 && emissions7/distance7 < 100))
-					score = score; // do nothing
+			if (distance7_14 > 0 && distance7 > 0){
+				if ( emissions7_14/distance7_14 > emissions7/distance7)
+					score += 3;
 				else{
-					score -= 3;
+					//i. If emission7_14 >= emission-7 OR emission7 is 50-100 grams/km 
+					//-> user gains no points
+					if ( emissions7_14/distance7_14 <= emissions7/distance7 || 
+							(emissions7/distance7 > 50 && emissions7/distance7 < 100))
+						score = score; // do nothing
+					else{
+						score -= 3;
+					}
 				}
 			}
 		}
@@ -223,16 +230,17 @@ public class TreeScore{
 		double distance7_14 = 0.0;
 		
 		for (int i = 0; i < numberOfDays; i++){
-			from.add(Calendar.DAY_OF_MONTH, -1);
-			to.add(Calendar.DAY_OF_MONTH, -1);
-			
+			if (i > 0){
+				from.add(Calendar.DAY_OF_MONTH, -1);
+				to.add(Calendar.DAY_OF_MONTH, -1);
+			}
 			List<Stages> stages = stagesService.findStagesByUserIdAndDate(userId, from.getTime(), to.getTime());				
 			log.debug("number of stages found: " + stages.size());
 			double dailyEmissionsValue = 0.0;
 			double dailyTravelDistanceValue = 0.0;
 			for(Stages stage : stages){				
 				int mode = stage.getMode_detected_code();
-				dailyEmissionsValue += AverageEmissions.getLarasAverageEmissions(mode)						;
+				dailyEmissionsValue += AverageEmissions.getLarasAverageEmissions(mode) * (stage.getDistance()/1000.0);
 				dailyTravelDistanceValue += stage.getDistance()/1000.0;
 			}
 			dailyEmissions.put(format.format(from.getTime()), dailyEmissionsValue);

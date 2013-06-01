@@ -9,6 +9,8 @@ import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
+import com.peacox.recommender.repository.Stages;
+import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
 import com.peacox.recommender.webservice.Webservice;
@@ -65,6 +67,8 @@ public class GetRecommendations{
   
   @Autowired protected UserRouteRequestService routeRequestService;
   
+  @Autowired protected StagesService stagesService;
+  
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
         
 	  log.debug("Start processing RouteRecommendations");
@@ -77,11 +81,11 @@ public class GetRecommendations{
         //HashMap<String, Double> statistics = updateStatistics(routeResults);
         
         switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
-            case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
+            case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1);
                 break;
             case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
                 break;                                                                          
-            default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
+            default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1);
                 break;                                        
         }
         return finalRouteResults;
@@ -97,145 +101,147 @@ public class GetRecommendations{
       updateTotalWBDurationStats(routeResults);
       updateTotalEmissionStats(routeResults);
       
-      //get actual preferences the user has already set
-      UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
-      RequestGetRoute routeRequest = RouteParser
-              .routeRequestFromJson(userRouteRequest.getRequest());
-      
-      
-      HashSet<String> requestedModalities = new HashSet<String>();
-      try{
-    	  requestedModalities = routeRequest.getModality();
-      }
-      catch (Exception e){
-    	  log.error("Could not load user requested modalities");
-      }
-      
-      try{
-	      log.debug("Going to check which options to set");
-	      log.debug("Checking for Comfortable: ");
-	      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
-	    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
-	      //set user preferences according to userRouteRequest
-	      if (routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
-	    		   &&
-	    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10){
-	
-	    	  // this is a default option for comfortable?
-	    	  log.debug("Setting options for comfortable profile");
-	    	  //comfortable?
-	    	  userPreferences.setComfortHigh(4.0);
-	    	  userPreferences.setComfortMedium(10.0);
-	    	  userPreferences.setComfortLow(1.0);
-	    	  userPreferences.setComfortImportance(0.4);
-	    	  
-	    	  //it means that I don't care much about the time
-	    	  userPreferences.setDuration10min(4.0);
-	    	  userPreferences.setDuration30min(10.0);
-	    	  userPreferences.setDuration30plus(1.0);
-	    	  userPreferences.setDurationImportance(0.2);
-	    	  
-	    	  //it means that I wouldn't mind walking a bit
-	    	  userPreferences.setWB10min(4.0);
-	    	  userPreferences.setWB30min(10.0);
-	    	  userPreferences.setWB30plus(1.0);
-	    	  userPreferences.setWbtimeImportance(0.2);
-	    	  
-	    	  userPreferences.setEcoAttitudeImportance(0.2);
-	      }
-      }
-      catch(Exception e){
-    	  log.debug("Could not check for comfortable options");
-      }
-      
-      try{
-	      log.debug("Checking for barrier-free: ");
-	      log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
-	    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
-	    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
+	      //get actual preferences the user has already set
+	      UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
+	     
+	  if (userRouteRequest != null){
+	      RequestGetRoute routeRequest = RouteParser
+	              .routeRequestFromJson(userRouteRequest.getRequest());
 	      
-	      if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
-	    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
-	    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
-	    	  
-	    	  // this is a default option for barrier-free?
-	    	  log.debug("Setting options for barrier-free profile");
-	    	  
-	    	  //very comfortable?
-	    	  userPreferences.setComfortHigh(10.0);
-	    	  userPreferences.setComfortMedium(4.0);
-	    	  userPreferences.setComfortLow(1.0);
-	    	  userPreferences.setComfortImportance(0.5);
-	    	  
-	    	  //it means that I don't care much about the time
-	    	  userPreferences.setDuration10min(1.0);
-	    	  userPreferences.setDuration30min(4.0);
-	    	  userPreferences.setDuration30plus(10.0);
-	    	  userPreferences.setDurationImportance(0.1);
-	    	  
-	    	  //it means that I don't want to be walking or taking a bike
-	    	  userPreferences.setWB10min(10.0);
-	    	  userPreferences.setWB30min(4.0);
-	    	  userPreferences.setWB30plus(1.0);
-	    	  userPreferences.setWbtimeImportance(0.2);
-	    	  
-	    	  userPreferences.setEcoAttitudeImportance(0.2);
-	      }
-      }
-      catch(Exception e){
-    	  log.debug("Could not check for barrier free options");
-      }
-      
-      try{
-	      log.debug("Checking for fast: ");
-	      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
-	    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
 	      
-	      if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
-	    		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
-	    	  
-	    	  // this is a default option for fast?
-	    	  
-	    	  log.debug("Setting options for fast profile");
-	    	  
-	    	  //I don't care about comfort?
-	    	  userPreferences.setComfortHigh(1.0);
-	    	  userPreferences.setComfortMedium(4.0);
-	    	  userPreferences.setComfortLow(10.0);
-	    	  userPreferences.setComfortImportance(0.3);
-	    	  
-	    	  //it means that I care much about the time, I want to to be the minimum possible
-	    	  userPreferences.setDuration10min(10.0);
-	    	  userPreferences.setDuration30min(4.0);
-	    	  userPreferences.setDuration30plus(1.0);
-	    	  userPreferences.setDurationImportance(0.4);
-	    	  
-	    	  //it means that I care about walking or taking a bicycle
-	    	  userPreferences.setWB10min(10.0);
-	    	  userPreferences.setWB30min(4.0);
-	    	  userPreferences.setWB30plus(1.0);
-	    	  userPreferences.setWbtimeImportance(0.1);
-	    	  
-	    	  userPreferences.setEcoAttitudeImportance(0.2);	    	  
+	      HashSet<String> requestedModalities = new HashSet<String>();
+	      try{
+	    	  requestedModalities = routeRequest.getModality();
 	      }
-      }
-      catch(Exception e){
-    	  log.debug("Could not check for fast criterion");
-      }
-      
+	      catch (Exception e){
+	    	  log.error("Could not load user requested modalities");
+	      }
+	      
+	      try{
+		      log.debug("Going to check which options to set");
+		      log.debug("Checking for Comfortable: ");
+		      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
+		    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
+		      //set user preferences according to userRouteRequest
+		      if (routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
+		    		   &&
+		    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10){
+		
+		    	  // this is a default option for comfortable?
+		    	  log.debug("Setting options for comfortable profile");
+		    	  //comfortable?
+		    	  userPreferences.setComfortHigh(4.0);
+		    	  userPreferences.setComfortMedium(10.0);
+		    	  userPreferences.setComfortLow(1.0);
+		    	  userPreferences.setComfortImportance(0.4);
+		    	  
+		    	  //it means that I don't care much about the time
+		    	  userPreferences.setDuration10min(4.0);
+		    	  userPreferences.setDuration30min(10.0);
+		    	  userPreferences.setDuration30plus(1.0);
+		    	  userPreferences.setDurationImportance(0.2);
+		    	  
+		    	  //it means that I wouldn't mind walking a bit
+		    	  userPreferences.setWB10min(4.0);
+		    	  userPreferences.setWB30min(10.0);
+		    	  userPreferences.setWB30plus(1.0);
+		    	  userPreferences.setWbtimeImportance(0.2);
+		    	  
+		    	  userPreferences.setEcoAttitudeImportance(0.2);
+		      }
+	      }
+	      catch(Exception e){
+	    	  log.debug("Could not check for comfortable options");
+	      }
+	      
+	      try{
+		      log.debug("Checking for barrier-free: ");
+		      log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
+		    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
+		    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
+		      
+		      if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
+		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
+		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
+		    	  
+		    	  // this is a default option for barrier-free?
+		    	  log.debug("Setting options for barrier-free profile");
+		    	  
+		    	  //very comfortable?
+		    	  userPreferences.setComfortHigh(10.0);
+		    	  userPreferences.setComfortMedium(4.0);
+		    	  userPreferences.setComfortLow(1.0);
+		    	  userPreferences.setComfortImportance(0.5);
+		    	  
+		    	  //it means that I don't care much about the time
+		    	  userPreferences.setDuration10min(1.0);
+		    	  userPreferences.setDuration30min(4.0);
+		    	  userPreferences.setDuration30plus(10.0);
+		    	  userPreferences.setDurationImportance(0.1);
+		    	  
+		    	  //it means that I don't want to be walking or taking a bike
+		    	  userPreferences.setWB10min(10.0);
+		    	  userPreferences.setWB30min(4.0);
+		    	  userPreferences.setWB30plus(1.0);
+		    	  userPreferences.setWbtimeImportance(0.2);
+		    	  
+		    	  userPreferences.setEcoAttitudeImportance(0.2);
+		      }
+	      }
+	      catch(Exception e){
+	    	  log.debug("Could not check for barrier free options");
+	      }
+	      
+	      try{
+		      log.debug("Checking for fast: ");
+		      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
+		    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
+		      
+		      if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
+		    		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
+		    	  
+		    	  // this is a default option for fast?
+		    	  
+		    	  log.debug("Setting options for fast profile");
+		    	  
+		    	  //I don't care about comfort?
+		    	  userPreferences.setComfortHigh(1.0);
+		    	  userPreferences.setComfortMedium(4.0);
+		    	  userPreferences.setComfortLow(10.0);
+		    	  userPreferences.setComfortImportance(0.3);
+		    	  
+		    	  //it means that I care much about the time, I want to to be the minimum possible
+		    	  userPreferences.setDuration10min(10.0);
+		    	  userPreferences.setDuration30min(4.0);
+		    	  userPreferences.setDuration30plus(1.0);
+		    	  userPreferences.setDurationImportance(0.4);
+		    	  
+		    	  //it means that I care about walking or taking a bicycle
+		    	  userPreferences.setWB10min(10.0);
+		    	  userPreferences.setWB30min(4.0);
+		    	  userPreferences.setWB30plus(1.0);
+		    	  userPreferences.setWbtimeImportance(0.1);
+		    	  
+		    	  userPreferences.setEcoAttitudeImportance(0.2);	    	  
+		      }
+	      }
+	      catch(Exception e){
+	    	  log.debug("Could not check for fast criterion");
+	      }
+	  }
       switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
-          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
+          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id);
               break;
           case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
               break;                                                                          
-          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults);
+          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id);
               break;                                        
       }
       return finalRouteResults;
   }
     
     private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
-        ArrayList<JsonResponseRoute> routeResults){
+        ArrayList<JsonResponseRoute> routeResults, long userId){
     	
 		log.debug("methodForRecommendations1");
         
@@ -348,22 +354,42 @@ public class GetRecommendations{
                 tripCounter++;
         }
         
+        //find user preferences per group
+        LinkedHashMap<Integer, Double> preferencesPerGroup = this.calculateUserPreferences(userId);
+        
         //Group trips by mode of transport:
       //environmental friendly order: walk, bike, bar, bta, pt, par, car
         LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>> groupedTrips = 
         		new LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>>();
         
-        groupedTrips.put("walk", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("bike", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("bta", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("bar", new ArrayList<HashMap<JsonTrip, Double>>());
+        for(Map.Entry<Integer, Double> entry : preferencesPerGroup.entrySet()){
+        	if (entry.getKey() == 4){
+        		groupedTrips.put("walk", new ArrayList<HashMap<JsonTrip, Double>>());
+        	}
+        	else if (entry.getKey() == 3){        		
+                groupedTrips.put("bike", new ArrayList<HashMap<JsonTrip, Double>>());
+                groupedTrips.put("bta", new ArrayList<HashMap<JsonTrip, Double>>());
+                groupedTrips.put("bar", new ArrayList<HashMap<JsonTrip, Double>>());
+        	}
+        	else if (entry.getKey() == 2){
+        		groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
+        	}
+        	else if (entry.getKey() == 1){
+        		groupedTrips.put("car", new ArrayList<HashMap<JsonTrip, Double>>());
+        	}
+        }
+         
+        //groupedTrips.put("walk", new ArrayList<HashMap<JsonTrip, Double>>());
+//        groupedTrips.put("bike", new ArrayList<HashMap<JsonTrip, Double>>());
+//        groupedTrips.put("bta", new ArrayList<HashMap<JsonTrip, Double>>());
+//        groupedTrips.put("bar", new ArrayList<HashMap<JsonTrip, Double>>());
         
         //pt and par_pt should be merged!
         //groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
         //groupedTrips.put("par_pt", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
+        //groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
         //groupedTrips.put("par", new ArrayList<HashMap<JsonTrip, Double>>());
-        groupedTrips.put("car", new ArrayList<HashMap<JsonTrip, Double>>());
+        //groupedTrips.put("car", new ArrayList<HashMap<JsonTrip, Double>>());
         
         for (Iterator<Map.Entry<Integer, HashMap<JsonTrip, Double>>> mapIt = finalTripResults.entrySet().iterator(); mapIt.hasNext();) {
         	Map.Entry<Integer, HashMap<JsonTrip, Double>> entry = mapIt.next();
@@ -522,9 +548,9 @@ public class GetRecommendations{
         		tripsGroupedByUtilityEntry : tripsGroupedByUtility.entrySet()){
         		
         		if (tripsGroupedByUtilityEntry.getValue().size() > 1){
-        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayEmissions = tripsGroupedByUtilityEntry.getValue();
-        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayDuration = tripsGroupedByUtilityEntry.getValue();
-        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayChanges = tripsGroupedByUtilityEntry.getValue();
+        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayEmissions = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
+        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayDuration = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
+        			ArrayList<HashMap<JsonTrip, Double>> tmpArrayChanges = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
         			//this case means that we have multiple entries with the same utility value!
         			// some should be removed in order not to overload the user with information.
         			// our target is to provide ~3 options
@@ -583,15 +609,22 @@ public class GetRecommendations{
         	    		  }
         	    		});
         			
-        			HashMap<JsonTrip, Double> tripToKeep = tripsGroupedByUtilityEntry.getValue().
-        					get(scores.get(0).entrySet().iterator().next().getKey());
-        			for(int i = 1; i< scores.size(); i++){
+        			//HashMap<JsonTrip, Double> tripToKeep = tripsGroupedByUtilityEntry.getValue().
+        			//		get(scores.get(0).entrySet().iterator().next().getKey());
+        			// decision to add two trips - I don't know if its a good or a bad one :)
+        			HashMap<JsonTrip, Double> trip1ToKeep = new HashMap<JsonTrip, Double>(tripsGroupedByUtilityEntry.getValue().
+                					get(scores.get(0).entrySet().iterator().next().getKey()));
+        			HashMap<JsonTrip, Double> trip2ToKeep = new HashMap<JsonTrip, Double>(tripsGroupedByUtilityEntry.getValue().
+        					get(scores.get(0).entrySet().iterator().next().getKey()));
+        			//we are keeping two trips
+        			for(int i = 2; i< scores.size(); i++){
         				omittedTripResults.put(omittedPosition, tripsGroupedByUtilityEntry.getValue().
             					get(scores.get(i).entrySet().iterator().next().getKey()));
         				omittedPosition++;
         			}
         			tripsGroupedByUtilityEntry.getValue().clear();
-        			tripsGroupedByUtilityEntry.getValue().add(tripToKeep);
+        			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
+        			tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
         			log.debug("ommiting some duplicate trips");
         			
         		}        		
@@ -611,6 +644,13 @@ public class GetRecommendations{
 	        	position++;
 	        }
         }
+        
+        
+        
+        
+        
+        
+        
         
         //Iterate routeResults and add the remainding results to the final routes
         //temporarily skip this
@@ -1364,11 +1404,83 @@ public class GetRecommendations{
       return result;
   }
   
-  private double[] calculateUserPreferences( long userId){
+  private LinkedHashMap<Integer, Double> calculateUserPreferences( long userId){
+	  double[] data = {0, 0, 0, 0};
+	  LinkedHashMap<Integer, Double> result = new LinkedHashMap();
+	  //0 walk, 1 bike, 2 pt, 3 car
+	  List<Stages> stages = stagesService.findStagesByUserId(userId);
+	  if (stages.size() < 5){
+		  data[0] = 4;
+		  data[1] = 3;
+		  data[2] = 2;
+		  data[3] = 1;
+	  }
+	  for(Stages stage : stages){
+		  switch (stage.getMode_detected_code()){
+		  	case 1:
+		  		data[0]++;
+		  		break;
+		  	case 2:
+		  		data[1]++;
+		  		break;
+		  	case 3:
+		  		data[3]++;
+		  		break;
+		  	case 4:
+		  		data[3]++;
+		  		break;
+		  	case 5:
+		  		data[2]++;
+		  		break;
+		  	case 6:
+		  		data[2]++;
+		  		break;
+		  	case 7:
+		  		data[2]++;
+		  		break;
+		  	case 11:
+		  		data[2]++;
+		  		break;
+		  	}
+		  }
+	  result.put(4, data[0]); //walk
+	  result.put(3, data[1]); //bicycle
+	  result.put(2, data[2]); //pt
+	  result.put(1, data[3]); //car
 	  
+	  List<Map.Entry<Integer, Double>> entries =
+		  new ArrayList<Map.Entry<Integer, Double>>(result.entrySet());
+		Collections.sort(entries, new Comparator<Map.Entry<Integer, Double>>() {
+		  public int compare(Map.Entry<Integer, Double> a, Map.Entry<Integer, Double> b){	
+			  if (a.getValue().compareTo(b.getValue()) > 0){
+				  return -1;
+			  }
+			  else if (a.getValue().compareTo(b.getValue()) < 0){
+				  return 1;
+			  }
+			  else{
+				  if (a.getKey() > b.getKey()){
+					  return -1;
+				  }else{
+					  return 1;
+				  }
+					  
+			  }		    
+		  }
+		});
+		LinkedHashMap<Integer, Double> sortedResult = new LinkedHashMap<Integer, Double>();
+		for (Map.Entry<Integer, Double> entry : entries) {
+			sortedResult.put(entry.getKey(), entry.getValue());
+		}
+	    
+		log.debug("order of routes display is the following:");
+	    for (Map.Entry<Integer, Double> entry : sortedResult.entrySet()){
+	    	log.debug(" type: " + entry.getKey() + " value: " + entry.getValue());
+	    }
 	  
-	  return null;
+	  return sortedResult;
   }
+  
   
   static LinkedHashMap sortByValue(LinkedHashMap map) {
         List list = new LinkedList(map.entrySet());
