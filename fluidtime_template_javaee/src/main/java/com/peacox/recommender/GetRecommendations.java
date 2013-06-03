@@ -456,7 +456,7 @@ public class GetRecommendations{
         	
         	Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>> entry = mapIt.next();
         	
-        	
+        	maxTripsToShow = 1;
         	if (entry.getKey().matches("pt")){
         		maxTripsToShow = 3;
         	}
