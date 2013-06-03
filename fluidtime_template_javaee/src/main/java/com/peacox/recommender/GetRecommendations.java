@@ -398,7 +398,7 @@ public class GetRecommendations{
         	if ( modality.matches("par_pt")){
         		modality = "pt";
         	}
-        	if ( modality.matches("par_car")){
+        	if ( modality.matches("par_car") || modality.matches("par")){
         		modality = "car";
         	}
         	if (groupedTrips.containsKey(modality)){
