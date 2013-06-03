@@ -375,6 +375,7 @@ public class GetRecommendations{
         		groupedTrips.put("pt", new ArrayList<HashMap<JsonTrip, Double>>());
         	}
         	else if (entry.getKey() == 1){
+        		groupedTrips.put("par", new ArrayList<HashMap<JsonTrip, Double>>());
         		groupedTrips.put("car", new ArrayList<HashMap<JsonTrip, Double>>());
         	}
         }
@@ -393,13 +394,14 @@ public class GetRecommendations{
         
         for (Iterator<Map.Entry<Integer, HashMap<JsonTrip, Double>>> mapIt = finalTripResults.entrySet().iterator(); mapIt.hasNext();) {
         	Map.Entry<Integer, HashMap<JsonTrip, Double>> entry = mapIt.next();
-        	String modality = "";        	
+        	String modality = "";
+        	
         	modality = entry.getValue().entrySet().iterator().next().getKey().getModality();
         	if ( modality.matches("par_pt")){
         		modality = "pt";
         	}
-        	if ( modality.matches("par_car") || modality.matches("par")){
-        		modality = "car";
+        	if ( modality.matches("par_car")){
+        		modality = "par";
         	}
         	if (groupedTrips.containsKey(modality)){
         		groupedTrips.get(modality).add(entry.getValue());        	
@@ -447,9 +449,18 @@ public class GetRecommendations{
         finalTripResults.clear();
         int position = 0;
         int omittedPosition = 0;
+        int maxTripsToShow = 1;
         for (Iterator<Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>>> mapIt = groupedTrips.
         		entrySet().iterator(); mapIt.hasNext();) {
+        	
+        	
         	Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>> entry = mapIt.next();
+        	
+        	
+        	if (entry.getKey().matches("pt")){
+        		maxTripsToShow = 3;
+        	}
+        	
         	Collections.sort(entry.getValue(), new Comparator<HashMap<JsonTrip, Double>>() {
 	    		  public int compare(HashMap<JsonTrip, Double> a, HashMap<JsonTrip, Double> b){
 	    			  Double aValue = ((Double)(((Map.Entry<JsonTrip,Double>)(a.entrySet().iterator()
@@ -516,7 +527,7 @@ public class GetRecommendations{
         																(int)(1.5*minValues.get("minPTTotalDuration"))){
         				
         				placeEntry = false;
-        				log.debug("ommiting 'pt' based route since its duration is very hign compared to the others: " +
+        				log.debug("ommiting 'pt' based route since its duration is very high compared to the others: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() + " the min value is: " + 
         						minValues.get("minPTTotalDuration"));
         				omittedTripResults.put(omittedPosition, arrayEntry);
@@ -543,6 +554,8 @@ public class GetRecommendations{
         			
         		}
         	}
+        	
+        	log.debug("found " + tripsGroupedByUtility.size() + " utility groups");
         	
         	for (Map.Entry<Double, ArrayList<HashMap<JsonTrip, Double>>> 
         		tripsGroupedByUtilityEntry : tripsGroupedByUtility.entrySet()){
@@ -622,15 +635,26 @@ public class GetRecommendations{
             					get(scores.get(i).entrySet().iterator().next().getKey()));
         				omittedPosition++;
         			}
-        			tripsGroupedByUtilityEntry.getValue().clear();
-        			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
-        			tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
-        			log.debug("ommiting some duplicate trips");
+        			if (entry.getKey().matches("par") || entry.getKey().matches("car")){
+        				tripsGroupedByUtilityEntry.getValue().clear();
+        				tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
+        			}
+        			else{
+	        			tripsGroupedByUtilityEntry.getValue().clear();
+	        			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
+	        			tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
+        			}
+        			//log.debug("ommiting some duplicate trips");
         			
-        		}        		
+        		}
+        		log.debug("adding trips for modality: " + entry.getKey() + " with size: " + tripsGroupedByUtilityEntry.getValue().size());
         		for(HashMap<JsonTrip, Double> arrayEntry : tripsGroupedByUtilityEntry.getValue()){
-            		finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
-    	        	position++;        			
+        			if (maxTripsToShow > 0){
+	            		finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
+	    	        	position++;
+	    	        	log.debug("adding new trip with modality: " + arrayEntry.entrySet().iterator().next().getKey().getModality());
+        			}
+        			maxTripsToShow--;
         		}
 
         	}
