@@ -635,16 +635,12 @@ public class GetRecommendations{
             					get(scores.get(i).entrySet().iterator().next().getKey()));
         				omittedPosition++;
         			}
-        			if (entry.getKey().matches("par") || entry.getKey().matches("car")){
-        				tripsGroupedByUtilityEntry.getValue().clear();
-        				tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
-        			}
-        			else{
-	        			tripsGroupedByUtilityEntry.getValue().clear();
-	        			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
-	        			tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
-        			}
-        			//log.debug("ommiting some duplicate trips");
+        			
+        			tripsGroupedByUtilityEntry.getValue().clear();
+        			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
+        			tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
+    			
+        			log.debug("ommiting some duplicate trips");
         			
         		}
         		log.debug("adding trips for modality: " + entry.getKey() + " with size: " + tripsGroupedByUtilityEntry.getValue().size());
