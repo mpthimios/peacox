@@ -13,6 +13,7 @@ import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
+import com.peacox.recommender.utils.Reports;
 import com.peacox.recommender.webservice.Webservice;
 //import com.peacoxrmi.model.User;
 import de.bezier.math.combinatorics.Combination;
@@ -559,7 +560,7 @@ public class GetRecommendations{
         	
         	for (Map.Entry<Double, ArrayList<HashMap<JsonTrip, Double>>> 
         		tripsGroupedByUtilityEntry : tripsGroupedByUtility.entrySet()){
-        		
+        		log.debug("utility group size: " + tripsGroupedByUtilityEntry.getValue().size());
         		if (tripsGroupedByUtilityEntry.getValue().size() > 1){
         			ArrayList<HashMap<JsonTrip, Double>> tmpArrayEmissions = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
         			ArrayList<HashMap<JsonTrip, Double>> tmpArrayDuration = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
@@ -628,7 +629,7 @@ public class GetRecommendations{
         			HashMap<JsonTrip, Double> trip1ToKeep = new HashMap<JsonTrip, Double>(tripsGroupedByUtilityEntry.getValue().
                 					get(scores.get(0).entrySet().iterator().next().getKey()));
         			HashMap<JsonTrip, Double> trip2ToKeep = new HashMap<JsonTrip, Double>(tripsGroupedByUtilityEntry.getValue().
-        					get(scores.get(0).entrySet().iterator().next().getKey()));
+        					get(scores.get(1).entrySet().iterator().next().getKey()));
         			//we are keeping two trips
         			for(int i = 2; i< scores.size(); i++){
         				omittedTripResults.put(omittedPosition, tripsGroupedByUtilityEntry.getValue().
@@ -638,7 +639,15 @@ public class GetRecommendations{
         			
         			tripsGroupedByUtilityEntry.getValue().clear();
         			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
-        			tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
+        			log.debug("trip1ToKeep: " + trip1ToKeep.entrySet().iterator().next().getKey().toString()); 
+        			Reports reports = new Reports();
+        			if (!reports.printTripInfo(trip1ToKeep.entrySet().iterator().next().getKey())
+        					.matches(reports.printTripInfo(trip2ToKeep.entrySet().iterator().next().getKey()))){
+        				tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
+        				log.debug("trip1ToKeep: " + trip2ToKeep.entrySet().iterator().next().getKey().toString());
+        			}else{
+        				log.debug("found duplicate!!!");
+        			}
     			
         			log.debug("ommiting some duplicate trips");
         			
