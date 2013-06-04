@@ -38,6 +38,15 @@ public class StagesServiceImpl implements StagesService {
 	 
 	    return query.getResultList();
 	}
+	
+	public List<Stages> findStagesByUserIdAndHour(Long id, int startHour, int endHour) {
+		TypedQuery query = em.createQuery("select s from Stages s where s.user_id = ?1 and date_part('hour', s.start_date_time) > ?2 and date_part('hour', s.end_date_time) <= ?3", Stages.class);
+	    query.setParameter(1, id);
+	    query.setParameter(2, startHour);
+	    query.setParameter(3, endHour);
+	 
+	    return query.getResultList();
+	}
 
 	public int findNumberOfDaysTraced(Long userId) {
 		

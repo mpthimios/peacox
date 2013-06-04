@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1435,9 +1437,41 @@ public class GetRecommendations{
   
   private LinkedHashMap<Integer, Double> calculateUserPreferences( long userId){
 	  double[] data = {0, 0, 0, 0};
+	  
+	  LinkedHashMap<String, int[]> intervals = new LinkedHashMap();
+	  intervals.put("morning", new int[]{1, 6});
+	  intervals.put("noon", new int[]{6, 12});
+	  intervals.put("afternoon", new int[]{12, 18});
+	  intervals.put("evening", new int[]{18, 24});
+	  
+	  Calendar now = Calendar.getInstance();
+	  SimpleDateFormat format = new SimpleDateFormat("H");
+	  
+	  int currentHour = Integer.parseInt(format.format(now.getTime()));
+	  
+	  //List<Stages> stages = stagesService.findStagesByUserId(userId);
+	  // new solution that considers the hour of the day
+	  List<Stages> stages = null;
+	  if (currentHour >0 && currentHour <=6){
+		  stages = stagesService.findStagesByUserIdAndHour(userId, 1, 6);
+		  log.debug("morning, found: " + stages.size());
+	  }
+	  else if (currentHour >6 && currentHour <=12){
+		  stages = stagesService.findStagesByUserIdAndHour(userId, 6, 12);
+		  log.debug("noon, found: " + stages.size());
+	  }
+	  else if (currentHour >12 && currentHour <=18){
+		  stages = stagesService.findStagesByUserIdAndHour(userId, 12, 18);
+		  log.debug("afternoon, found: " + stages.size());
+	  }
+	  else if (currentHour >18 && currentHour <=24){
+		  stages = stagesService.findStagesByUserIdAndHour(userId, 18, 24);
+		  log.debug("evening, found: " + stages.size());
+	  }
+	  
 	  LinkedHashMap<Integer, Double> result = new LinkedHashMap();
 	  //0 walk, 1 bike, 2 pt, 3 car
-	  List<Stages> stages = stagesService.findStagesByUserId(userId);
+	  
 	  if (stages.size() < 5){
 		  data[0] = 4;
 		  data[1] = 3;
@@ -1527,7 +1561,5 @@ public class GetRecommendations{
        }
        return result;
    }
-  
-  
   
 }

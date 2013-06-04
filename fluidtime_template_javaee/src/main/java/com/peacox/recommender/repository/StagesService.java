@@ -9,5 +9,6 @@ public interface StagesService {
 	
 	public List<Stages> findStagesByUserId(Long id);
 	public List<Stages> findStagesByUserIdAndDate(Long id, Date start, Date end);
+	public List<Stages> findStagesByUserIdAndHour(Long id, int startHour, int endHour);
 	public int findNumberOfDaysTraced(Long userId);
 }
