@@ -35,6 +35,7 @@ import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.peacox.recommender.GetRecommendationForONXRequest;
 import com.peacox.recommender.GetRecommendationForRequest;
 import com.peacox.recommender.GetRecommendations;
 import com.peacox.recommender.GetRecommendationsRouteDto;
@@ -87,7 +88,9 @@ public class Webservice {
 	@Autowired
 	private EmissionStatisticsService emissionStatisticsService;
 	
-	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION"
+	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION" "DIPLOMA"
+	
+	protected String REQUEST_MODE="DIPLOMA";
 	
 	protected String[] weatherTemp = {"cold", "mild", "hot"};
 	protected String[] weatherCond = {"rainy", "cloudy", "sunny"};
@@ -127,6 +130,14 @@ public class Webservice {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		if (REQUEST_MODE.matches("DIPLOMA")){
+			GetRecommendationForONXRequest requestRecommendation = 
+					(GetRecommendationForONXRequest) appContext.getBean("GetRecommendationForONXRequest");
+			model.addAttribute("serverResponse", requestRecommendation.getRecommendation(body));
+			
+			return "getRecommendationForRequest";
 		}
 		
 		GetRecommendationForRequest requestRecommendation = 
