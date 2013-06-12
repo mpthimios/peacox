@@ -1479,40 +1479,42 @@ public class GetRecommendations{
 	  LinkedHashMap<Integer, Double> result = new LinkedHashMap();
 	  //0 walk, 1 bike, 2 pt, 3 car
 	  
-	  if (stages.size() < 5){
+	  if (stages == null || stages.size() < 5){
 		  data[0] = 4;
 		  data[1] = 3;
 		  data[2] = 2;
 		  data[3] = 1;
 	  }
-	  for(Stages stage : stages){
-		  switch (stage.getMode_detected_code()){
-		  	case 1:
-		  		data[0]++;
-		  		break;
-		  	case 2:
-		  		data[1]++;
-		  		break;
-		  	case 3:
-		  		data[3]++;
-		  		break;
-		  	case 4:
-		  		data[3]++;
-		  		break;
-		  	case 5:
-		  		data[2]++;
-		  		break;
-		  	case 6:
-		  		data[2]++;
-		  		break;
-		  	case 7:
-		  		data[2]++;
-		  		break;
-		  	case 11:
-		  		data[2]++;
-		  		break;
-		  	}
-		  }
+	  if (stages != null){
+		  for(Stages stage : stages){
+			  switch (stage.getMode_detected_code()){
+			  	case 1:
+			  		data[0]++;
+			  		break;
+			  	case 2:
+			  		data[1]++;
+			  		break;
+			  	case 3:
+			  		data[3]++;
+			  		break;
+			  	case 4:
+			  		data[3]++;
+			  		break;
+			  	case 5:
+			  		data[2]++;
+			  		break;
+			  	case 6:
+			  		data[2]++;
+			  		break;
+			  	case 7:
+			  		data[2]++;
+			  		break;
+			  	case 11:
+			  		data[2]++;
+			  		break;
+			  	}
+			  }
+	  }
 	  result.put(4, data[0]); //walk
 	  result.put(3, data[1]); //bicycle
 	  result.put(2, data[2]); //pt
