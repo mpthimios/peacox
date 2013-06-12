@@ -183,11 +183,14 @@ public class TreeScore{
 		
 		UserTreeScores userTreeScore = userTreeScoresService.findUserTreeScore(userId);
 		
+		
 		if (userTreeScore == null){
 			//problem
 			log.error("no score could be retrieved for user: " + userId);
 			return score;
 		}
+		
+		score = userTreeScore.getScore();
     	
     	int numberOfDays = stagesService.findNumberOfDaysTraced(userId);
     	log.debug("number of days: " + stagesService.findNumberOfDaysTraced(userId));
@@ -259,7 +262,7 @@ public class TreeScore{
 					dailyEmissionsValue);	
 		}
 		
-		score = userTreeScore.getScore();
+		//score = userTreeScore.getScore();
 		
 		log.debug("current score for user " + userId + " is: " + score); 
 		
