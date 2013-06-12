@@ -1220,7 +1220,7 @@ public class GetRecommendations{
 	  ArrayList<Double> durations = new ArrayList<Double>();
       for(JsonResponseRoute route : routeResults){
     	  for(JsonTrip trip : route.getTrips()){
-	        double totalDuration = getTripTotalDuration(trip);
+	        double totalDuration = getTripTotalDuration2(trip); // 2 for new version of total duration
 	        durations.add(totalDuration);
 	        if (maxValues.containsKey("maxTotalDuration")){
 	            double currentMaxTotalDuration = (Double) maxValues.get("maxTotalDuration");
@@ -1337,6 +1337,13 @@ public class GetRecommendations{
           result += (double)segment.getDurationMinutes();
           j++;
       }
+      return result;
+  }
+  
+  //per trip total duration
+  private double getTripTotalDuration2(JsonTrip trip){
+      double result = 0.0;
+      result = (double)trip.getDurationMinutes();
       return result;
   }
   
