@@ -178,7 +178,7 @@ public class TreeScore{
     
     public double calculateDynamic(Long userId){
     	
-    	double score = 0.0;
+    	double score = 30.0;
     	double variance = 0.1;
 		
 		UserTreeScores userTreeScore = userTreeScoresService.findUserTreeScore(userId);

@@ -76,6 +76,11 @@ public class GetRecommendations{
         
 	  log.debug("Start processing RouteRecommendations");
 	  
+	  minValues = new LinkedHashMap<String, Double>();
+	  sumValues = new LinkedHashMap<String, Double>();
+	  medianValues = new LinkedHashMap<String, Double>();
+	  meanValues = new LinkedHashMap<String, Double>();
+	  
 	  LinkedHashMap finalRouteResults;
         updateTotalDurationStats(routeResults);
         updateTotalWBDurationStats(routeResults);
@@ -100,6 +105,11 @@ public class GetRecommendations{
 	  log.debug("Start processing RouteRecommendations. user_id: " + user_id);
 	  
       LinkedHashMap finalRouteResults;
+      
+      minValues = new LinkedHashMap<String, Double>();
+	  sumValues = new LinkedHashMap<String, Double>();
+	  medianValues = new LinkedHashMap<String, Double>();
+	  meanValues = new LinkedHashMap<String, Double>();
       updateTotalDurationStats(routeResults);
       updateTotalWBDurationStats(routeResults);
       updateTotalEmissionStats(routeResults);
@@ -1252,6 +1262,7 @@ public class GetRecommendations{
 	        }
 	        
 	        if (trip.getModality().matches("pt") || trip.getModality().matches("pt")){
+	        	log.debug("updating duration statistics: found pt trip with duration: " + totalDuration);
 	        	if (maxValues.containsKey("maxPTTotalDuration")){
 		            double currentMaxPTTotalDuration = (Double) maxValues.get("maxPTTotalDuration");
 		            if (currentMaxPTTotalDuration < totalDuration){
