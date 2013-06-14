@@ -25,6 +25,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.fluidtime.brivel.route.json.AttributeListKeys;
@@ -361,13 +362,13 @@ public class Webservice {
 	}
 	
 	@RequestMapping(value="getStaticUserScoreForTree", method = RequestMethod.POST)
-	public String getUserScoreForTree (Locale locale, Model model, @RequestBody String body) {
+	public String getUserScoreForTree (Locale locale, Model model, @RequestParam long userId) {
 		
 		log.debug("getStaticUserScoreForTree");
-		log.debug("received new getStaticUserScoreForTree with user id: " + body);
+		log.debug("received new getStaticUserScoreForTree with user id: " + userId);
 		double result = 0;
 		try{
-			long userId = Long.parseLong(body);
+			//long userId = Long.parseLong(body);
 			TreeScore treeScore = 
 					(TreeScore) appContext.getBean("TreeScore");
 			result = treeScore.calculateStatic(userId);
@@ -381,13 +382,13 @@ public class Webservice {
 	}
 	
 	@RequestMapping(value="getDynamicUserScoreForTree", method = RequestMethod.POST)
-	public String getDynamicUserScoreForTree (Locale locale, Model model, @RequestBody String body) {
+	public String getDynamicUserScoreForTree (Locale locale, Model model, @RequestParam long userId) {
 		
 		log.debug("getDynamicUserScoreForTree");
-		log.debug("received new getDynamicUserScoreForTree with user id: " + body);
+		log.debug("received new getDynamicUserScoreForTree with user id: " + userId);
 		double result = 0;
 		try{
-			long userId = Long.parseLong(body);
+			//long userId = Long.parseLong(body);
 			TreeScore treeScore = 
 					(TreeScore) appContext.getBean("TreeScore");
 			result = treeScore.calculateDynamic(userId);
