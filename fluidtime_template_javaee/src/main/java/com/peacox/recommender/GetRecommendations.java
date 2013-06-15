@@ -553,7 +553,7 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			else if (minValues.get("minWBTotalDuration") < 7.0){
+        			else if (minValues.containsKey("minWBTotalDuration") && (minValues.get("minWBTotalDuration") < 7.0)){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
         						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
