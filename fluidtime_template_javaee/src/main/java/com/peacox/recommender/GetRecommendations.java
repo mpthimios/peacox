@@ -546,9 +546,16 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(2*minChanges)){
+        			else if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(2*minChanges)){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since it contains too many chnages: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
+        			else if (minValues.get("minWBTotalDuration") < 7.0){
+        				placeEntry = false;
+        				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
         						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
