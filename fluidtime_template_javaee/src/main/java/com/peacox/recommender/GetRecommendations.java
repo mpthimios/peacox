@@ -54,6 +54,8 @@ public class GetRecommendations{
   private LinkedHashMap<String, Double> medianValues = new LinkedHashMap<String, Double>();
   private LinkedHashMap<String, Double> meanValues = new LinkedHashMap<String, Double>();
   
+  private double minWBvalue = 100.0;
+  
   private double maxValue = 0;
   private double minValue = 1000000;
   private double sumValue = 0;
@@ -80,6 +82,7 @@ public class GetRecommendations{
 	  sumValues = new LinkedHashMap<String, Double>();
 	  medianValues = new LinkedHashMap<String, Double>();
 	  meanValues = new LinkedHashMap<String, Double>();
+	  minWBvalue = 100.0;
 	  
 	  LinkedHashMap finalRouteResults;
         updateTotalDurationStats(routeResults);
@@ -110,6 +113,7 @@ public class GetRecommendations{
 	  sumValues = new LinkedHashMap<String, Double>();
 	  medianValues = new LinkedHashMap<String, Double>();
 	  meanValues = new LinkedHashMap<String, Double>();
+	  minWBvalue = 100.0;
       updateTotalDurationStats(routeResults);
       updateTotalWBDurationStats(routeResults);
       updateTotalEmissionStats(routeResults);
@@ -553,10 +557,11 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			else if (minValues.containsKey("minWBTotalDuration") && (minValues.get("minWBTotalDuration") < 7.0)){
+        			else if (minWBvalue < 7.0){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
-        						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+        						minValues.get("minWBTotalDuration"));
+        						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
@@ -692,14 +697,7 @@ public class GetRecommendations{
 	        	position++;
 	        }
         }
-        
-        
-        
-        
-        
-        
-        
-        
+
         //Iterate routeResults and add the remainding results to the final routes
         //temporarily skip this
 //        for (int temp = 0; temp < routeResults.size(); temp++){
@@ -1292,6 +1290,12 @@ public class GetRecommendations{
 	        }
 	        
 	        numberOfTrips++;
+	        
+	        if (trip.getModality().matches("walk") || trip.getModality().matches("bike")){
+	        	if ((double)trip.getDurationMinutes()<minWBvalue){
+	        		minWBvalue = (double)trip.getDurationMinutes();
+	        	}
+	        }
     	  }
       }
       log.debug("numberOfTrips: " + numberOfTrips);
@@ -1347,15 +1351,16 @@ public class GetRecommendations{
   
   //per trip total duration
   private double getTripTotalDuration(JsonTrip trip){
-      double result = 0.0;
-      List<JsonSegment> segments = trip.getSegments();
-      int j = 0;
-      while (j < segments.size()) {
-    	  JsonSegment segment = segments.get(j);
-          result += (double)segment.getDurationMinutes();
-          j++;
-      }
-      return result;
+//      double result = 0.0;
+//      List<JsonSegment> segments = trip.getSegments();
+//      int j = 0;
+//      while (j < segments.size()) {
+//    	  JsonSegment segment = segments.get(j);
+//          result += (double)segment.getDurationMinutes();
+//          j++;
+//      }
+//      return result;
+	  return getTripTotalDuration2(trip);
   }
   
   //per trip total duration
@@ -1447,16 +1452,20 @@ public class GetRecommendations{
   
   //per trip total walking or bicycle duration
   private double getTripTotalWBDuration(JsonTrip trip){
-      double result = 0.0;
+	  double result = 0.0;      
       List<JsonSegment> segments = trip.getSegments();
-      int j = 0;
+      int j = 0;      
+      log.debug("getTripTotalWBDuration, segments.size(): " + segments.size());
       while (j < segments.size()) {
     	  JsonSegment segment = segments.get(j);
-          if (trip.getModality().matches("walk") || trip.getModality().matches("bike")){
-            result += (double)segment.getDurationMinutes();
+          //if (trip.getModality().matches("walk") || trip.getModality().matches("bike")){
+    	  if (segment.getType().matches("walk") || segment.getType().matches("bike")){
+    		  result += (double)segment.getDurationMinutes();
+        	  log.debug("segment " + j + " duration: " + (double)segment.getDurationMinutes());
           }
           j++;
       }
+      log.debug("total duration with segments: " + result + " total duration trip: " + result);
       return result;
   }
   
