@@ -116,30 +116,30 @@ public class GetRecommendationForRequest {
 			// this is for bike and par only
 			// if the user owns a bicycle include the bicycle [2]
 			// if the user has requested a car - include the par [4] 
-			List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(userId);
+			//List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(userId);
 			
-			int j = 0;
-			log.debug("vehicles the user owns:");
-			while (j < ownedVehicles.size()) {
-				log.debug("found vehicle:" + ownedVehicles.get(j).getType() + " for user " + userId);
-				if(ownedVehicles.get(j).getType().matches(availableModalities[2])){ // bike
-					if (!modalities.contains(availableModalities[2])){
-						modalities.add(availableModalities[2]);
-					}
-					if (!modalities.contains(availableModalities[5])){
-						modalities.add(availableModalities[5]);
-					}
-					if (!modalities.contains(availableModalities[6])){
-						modalities.add(availableModalities[6]);
-					}				
-				}
-				if(ownedVehicles.get(j).getType().matches(availableModalities[1])){ //car
-					if (modalities.contains(availableModalities[1])){ // add the park and ride option if the user owns a car						
-						modalities.add(availableModalities[4]);
-					}					
-				}
-				j++;
-			}
+			//int j = 0;
+			//log.debug("vehicles the user owns: " + ownedVehicles.size());
+//			while (j < ownedVehicles.size()) {
+//				log.debug("found vehicle:" + ownedVehicles.get(j).getType() + " for user " + userId);
+//				if(ownedVehicles.get(j).getType().matches(availableModalities[2])){ // bike
+//					if (!modalities.contains(availableModalities[2])){
+//						modalities.add(availableModalities[2]);
+//					}
+//					if (!modalities.contains(availableModalities[5])){
+//						modalities.add(availableModalities[5]);
+//					}
+//					if (!modalities.contains(availableModalities[6])){
+//						modalities.add(availableModalities[6]);
+//					}				
+//				}
+//				if(ownedVehicles.get(j).getType().matches(availableModalities[1])){ //car
+//					if (modalities.contains(availableModalities[1])){ // add the park and ride option if the user owns a car						
+//						modalities.add(availableModalities[4]);
+//					}					
+//				}
+//				j++;
+//			}
 			
 			if (modalities.contains(availableModalities[1])){ // add the park and ride option if the user owns a car						
 				modalities.add(availableModalities[4]);

@@ -116,7 +116,7 @@ public class Webservice {
 		model.addAttribute("serverResponse", formattedDate);
 		User user = userService.findUserByUserId(3L);
 		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());	
-		List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(3L);
+		//List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(3L);
 		return "welcome";
 	}
 	
@@ -244,18 +244,18 @@ public class Webservice {
 		
 		User user = userService.findUserByUserId(userId);
 		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());
-		List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(userId);
-		
-		int j = 0;
-		log.debug("vehicles the user owns:");
-		while (j < ownedVehicles.size()) {
-			log.debug(ownedVehicles.get(j).getType());
-			if(ownedVehicles.get(j).getType().matches(bicycle))
-				modeOfTransport = modeOfTransport+"|bike";
-			else if(ownedVehicles.get(j).getType().matches(car))
-				modeOfTransport = modeOfTransport+"|car";
-			j++;
-		}
+//		List<OwnedVehicles> ownedVehicles = ownedVehiclesService.findOwnedVehiclesByUserId(userId);
+//		
+//		int j = 0;
+//		log.debug("vehicles the user owns: " + ownedVehicles.size());
+//		while (j < ownedVehicles.size()) {
+//			log.debug(ownedVehicles.get(j).getType());
+//			if(ownedVehicles.get(j).getType().matches(bicycle))
+//				modeOfTransport = modeOfTransport+"|bike";
+//			else if(ownedVehicles.get(j).getType().matches(car))
+//				modeOfTransport = modeOfTransport+"|car";
+//			j++;
+//		}
 		
 		try{
 			

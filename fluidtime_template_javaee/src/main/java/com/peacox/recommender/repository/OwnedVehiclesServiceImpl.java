@@ -41,7 +41,7 @@ public class OwnedVehiclesServiceImpl implements OwnedVehiclesService {
 //	}
 //	
 	public List<OwnedVehicles> findOwnedVehiclesByUserId(Long userId) {
-		TypedQuery query = em.createQuery("select a from OwnedVehicles a where a.userId = ?1", OwnedVehicles.class);
+		TypedQuery query = em.createQuery("select a from OwnedVehicles a where a.user_id = ?1", OwnedVehicles.class);
 	    query.setParameter(1, userId);
 	 
 	    return query.getResultList();
