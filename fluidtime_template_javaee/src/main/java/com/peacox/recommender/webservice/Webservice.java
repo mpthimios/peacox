@@ -91,7 +91,7 @@ public class Webservice {
 	
 	protected String MODE="TESTING"; // "SIMULATION" "PRODUCTION" "DIPLOMA"
 	
-	protected String REQUEST_MODE="PRODUCTION"; //"DIPLOMA"
+	protected String REQUEST_MODE="DIPLOMA"; //"PRODUCTION"
 	
 	protected String[] weatherTemp = {"cold", "mild", "hot"};
 	protected String[] weatherCond = {"rainy", "cloudy", "sunny"};
