@@ -560,11 +560,20 @@ public class GetRecommendations{
         			else if (minWBvalue < 7.0){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
-        						minValues.get("minWBTotalDuration"));
+        						minWBvalue);
         						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
+        		}
+        		
+        		if ((entry.getKey().matches("car") || entry.getKey().matches("par")) && (minWBvalue < 7.0)){
+        			placeEntry = false;
+    				log.debug("ommiting " + entry.getKey() + " based route since the destination is in walking distance: " +
+    						minWBvalue);
+    						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+    				omittedTripResults.put(omittedPosition, arrayEntry);
+    				omittedPosition++;
         		}
         		
         		if (placeEntry){
