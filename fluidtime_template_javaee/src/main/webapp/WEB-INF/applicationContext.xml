@@ -22,13 +22,14 @@
 		<property name="ignoreResourceNotFound" value="true"></property>
 		<property name="locations">
 			<list>
-				<value>classpath*:/main.properties</value>
-				<value>classpath*:/conf/project.properties</value>
-				<value>file:${catalina.base}/conf/${project.artifactId}/project.properties
-				</value>
+				<value>classpath*:/main.properties</value>				
+				 <value>classpath*:/conf/project.properties</value>	 
+				<value>classpath*:/conf/recommender.properties</value>			
+				<value>file:${catalina.base}/conf/${project.artifactId}/project.properties</value>									
 			</list>
 		</property>
 	</bean>
+	
 
 	<bean id="persistenceUnitManager"
 		class="org.springframework.orm.jpa.persistenceunit.DefaultPersistenceUnitManager">
@@ -54,7 +55,7 @@
 					<bean class="com.fluidtime.configuration.ReloadConfiguration">
 						<property name="reconfigurableBeans">
 							<list>
-								<ref bean="configproperties" />
+								<ref bean="configproperties" />								
 								<!-- others... -->
 							</list>
 						</property>
@@ -89,8 +90,24 @@
 		<property name="username" value="#{jdbcDefault.user}" />
 		<property name="password" value="#{jdbcDefault.password}" />
 	</bean>
-
-	<context:component-scan base-package="com.peacox" />
+		
+	<bean id="GetRecommendations"
+          class="com.peacox.recommender.GetRecommendations">
+        <property name="walkingTimeThreshold" value="#{recommender.walkingTimeThreshold}" />
+        <property name="bikeTimeThreshold" value="#{recommender.bikeTimeThreshold}"/>
+        <property name="maxPTroutesToShow" value="#{recommender.maxPTroutesToShow}"/>
+        <property name="timeThresholdCutoff" value="#{recommender.timeThresholdCutoff}"/>
+    </bean>
+    
+    <bean id="GetRecommendationForRequest"
+          class="com.peacox.recommender.GetRecommendationForRequest">
+        <property name="alwaysIncludeWalk" value="#{recommender.alwaysIncludeWalk}" />
+        <property name="alwaysIncludePT" value="#{recommender.alwaysIncludePT}"/>
+        <property name="maxBikeTimeInExtremeConditions" value="#{recommender.maxBikeTimeInExtremeConditions}"/>
+        <property name="maxWalkTimeInExtremeConditions" value="#{recommender.maxWalkTimeInExtremeConditions}"/>
+    </bean>
+	
+	<context:component-scan base-package="com.peacox" />	
 	<tx:annotation-driven transaction-manager="transactionManager" />
 	<bean
 		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />

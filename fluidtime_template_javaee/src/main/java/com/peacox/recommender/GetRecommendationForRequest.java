@@ -30,7 +30,6 @@ import com.peacox.recommender.repository.UserRouteRequestService;
 import com.peacox.recommender.repository.UserService;
 import com.peacox.recommender.webservice.Webservice;
 
-@Component("GetRecommendationForRequest")
 public class GetRecommendationForRequest {
 	
 	protected Logger log = Logger.getLogger(GetRecommendationForRequest.class);
@@ -44,8 +43,10 @@ public class GetRecommendationForRequest {
 	@Autowired protected CitytempService citytempService;
 	
 	//arbitrary - is there a better solution?
-	protected int maxBikeTimeInExtremeConditions = 15;
-	protected int maxWalkTimeInExtremeConditions = 15;
+	private int maxBikeTimeInExtremeConditions = 15;
+	private int maxWalkTimeInExtremeConditions = 15;
+	private int alwaysIncludeWalk = 1;
+	private int alwaysIncludePT = 1;
 	
 	public String getRecommendation(String request){
 		
@@ -53,6 +54,10 @@ public class GetRecommendationForRequest {
 	                .routeRequestFromJson(request);
 		
 		log.debug("start processing RecommendationForRequest");
+		log.debug("loaded property maxBikeTimeInExtremeConditions: " + this.getMaxBikeTimeInExtremeConditions());
+		log.debug("loaded property maxWalkTimeInExtremeConditions: " + this.getMaxWalkTimeInExtremeConditions());
+		log.debug("loaded property alwaysIncludeWalk: " + this.getAlwaysIncludeWalk());
+		log.debug("loaded property alwaysIncludePT: " + this.getAlwaysIncludePT());
 		
 		Long userId = 46L;
 		try{
@@ -102,10 +107,10 @@ public class GetRecommendationForRequest {
 			modalities = new HashSet<String>();
 		}
 		
-		if (!modalities.contains(availableModalities[0])){
+		if (!modalities.contains(availableModalities[0]) && this.getAlwaysIncludePT() == 1){
 			modalities.add(availableModalities[0]);
 		}
-		if (!modalities.contains(availableModalities[3])){
+		if (!modalities.contains(availableModalities[3]) && this.getAlwaysIncludeWalk() == 1){
 			modalities.add(availableModalities[3]);
 		}
 		
@@ -253,8 +258,8 @@ public class GetRecommendationForRequest {
 	        		rainyConditions = true;
 	        	}
 	        	if (extremeConditions || rainyConditions){
-	        		requestOptions.setBikeMaxTime(maxBikeTimeInExtremeConditions);
-	        		requestOptions.setWalkMaxTime(maxWalkTimeInExtremeConditions);
+	        		requestOptions.setBikeMaxTime(this.getMaxBikeTimeInExtremeConditions());
+	        		requestOptions.setWalkMaxTime(this.getMaxWalkTimeInExtremeConditions());
 	        	}
 			}
 	    }
@@ -264,6 +269,38 @@ public class GetRecommendationForRequest {
 			e.printStackTrace();
 		}
 		return requestOptions;
+	}
+
+	public int getMaxBikeTimeInExtremeConditions() {
+		return maxBikeTimeInExtremeConditions;
+	}
+
+	public void setMaxBikeTimeInExtremeConditions(int maxBikeTimeInExtremeConditions) {
+		this.maxBikeTimeInExtremeConditions = maxBikeTimeInExtremeConditions;
+	}
+
+	public int getMaxWalkTimeInExtremeConditions() {
+		return maxWalkTimeInExtremeConditions;
+	}
+
+	public void setMaxWalkTimeInExtremeConditions(int maxWalkTimeInExtremeConditions) {
+		this.maxWalkTimeInExtremeConditions = maxWalkTimeInExtremeConditions;
+	}
+
+	public int getAlwaysIncludeWalk() {
+		return alwaysIncludeWalk;
+	}
+
+	public void setAlwaysIncludeWalk(int alwaysIncludeWalk) {
+		this.alwaysIncludeWalk = alwaysIncludeWalk;
+	}
+
+	public int getAlwaysIncludePT() {
+		return alwaysIncludePT;
+	}
+
+	public void setAlwaysIncludePT(int alwaysIncludePT) {
+		this.alwaysIncludePT = alwaysIncludePT;
 	}
 
 }

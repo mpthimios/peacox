@@ -42,9 +42,11 @@ import jline.internal.Log;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-@Component("GetRecommendations")
+//@Component("GetRecommendations")
 public class GetRecommendations{
     
   //Stats
@@ -62,8 +64,11 @@ public class GetRecommendations{
   
   private String ownsVehicle = "";
   
-  private int walkingTimeThreshold = 40;
-  private int bikeTimeThreshold = 60;
+  private Integer walkingTimeThreshold;  
+  private int bikeTimeThreshold;  
+  private int maxPTroutesToShow;
+  private double timeThresholdCutoff;
+  
   private int maxPtChangesThreshold = 4;
   
   protected Logger log = Logger.getLogger(GetRecommendations.class);
@@ -106,6 +111,10 @@ public class GetRecommendations{
 		  ArrayList<JsonResponseRoute> routeResults, long user_id){
 	  
 	  log.debug("Start processing RouteRecommendations. user_id: " + user_id);
+	  log.debug("loaded property getWalkingTimeThreshold: " + this.getWalkingTimeThreshold());
+	  log.debug("loaded property bikeTimeThreshold: " + this.getBikeTimeThreshold());
+	  log.debug("loaded property maxPTroutesToShow: " + this.getMaxPTroutesToShow());
+	  log.debug("loaded property timeThresholdCutoff: " + this.getTimeThresholdCutoff());
 	  
       LinkedHashMap finalRouteResults;
       
@@ -475,7 +484,7 @@ public class GetRecommendations{
         	
         	maxTripsToShow = 1;
         	if (entry.getKey().matches("pt")){
-        		maxTripsToShow = 3;
+        		maxTripsToShow = this.getMaxPTroutesToShow();
         	}
         	
         	Collections.sort(entry.getValue(), new Comparator<HashMap<JsonTrip, Double>>() {
@@ -521,7 +530,7 @@ public class GetRecommendations{
         	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
         		boolean placeEntry = true;
         		if (entry.getKey().matches("walk")){
-        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > walkingTimeThreshold){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.getWalkingTimeThreshold()){
         				placeEntry = false;
         				log.debug("ommiting 'walk' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
@@ -530,7 +539,7 @@ public class GetRecommendations{
         			}
         		}
         		if (entry.getKey().matches("bike")){
-        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > bikeTimeThreshold){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.getBikeTimeThreshold()){
         				placeEntry = false;        				
         				log.debug("ommiting 'bike' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
@@ -541,7 +550,7 @@ public class GetRecommendations{
         		//some logic on how to re-rank pt options
         		if (entry.getKey().matches("pt")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > 
-        																(int)(1.5*minValues.get("minPTTotalDuration"))){
+        																(int)(this.getTimeThresholdCutoff()*minValues.get("minPTTotalDuration"))){
         				
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since its duration is very high compared to the others: " +
@@ -1589,8 +1598,39 @@ public class GetRecommendations{
 	  return sortedResult;
   }
   
+  	public int getWalkingTimeThreshold() {
+		return walkingTimeThreshold;
+	}
+	
+	public void setWalkingTimeThreshold(int walkingTimeThreshold) {
+		this.walkingTimeThreshold = walkingTimeThreshold;
+	}
   
-  static LinkedHashMap sortByValue(LinkedHashMap map) {
+	public int getBikeTimeThreshold() {
+		return bikeTimeThreshold;
+	}
+
+	public void setBikeTimeThreshold(int bikeTimeThreshold) {
+		this.bikeTimeThreshold = bikeTimeThreshold;
+	}
+
+	public int getMaxPTroutesToShow() {
+		return maxPTroutesToShow;
+	}
+
+	public void setMaxPTroutesToShow(int maxPTroutesToShow) {
+		this.maxPTroutesToShow = maxPTroutesToShow;
+	}
+
+	public double getTimeThresholdCutoff() {
+		return timeThresholdCutoff;
+	}
+
+	public void setTimeThresholdCutoff(double timeThresholdCutoff) {
+		this.timeThresholdCutoff = timeThresholdCutoff;
+	}
+
+static LinkedHashMap sortByValue(LinkedHashMap map) {
         List list = new LinkedList(map.entrySet());
         Collections.sort(list, new Comparator() {
              public int compare(Object o1, Object o2) {
