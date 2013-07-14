@@ -620,6 +620,7 @@ public class GetRecommendations{
 	        			log.debug("total time for par trip: " + totalTripTime +
 	        					" total time of the car segments: " + carTime);
 	        			if (carTime > this.getThresholdForParkAndRide()*totalTripTime){
+	        				placeEntry = false;
 	        				log.debug("ommiting 'par' based route since it doens't make sense: ");
 	        				omittedTripResults.put(omittedPosition, arrayEntry);
 	        				omittedPosition++;
