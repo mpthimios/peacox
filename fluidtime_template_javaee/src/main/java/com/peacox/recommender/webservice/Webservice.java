@@ -219,7 +219,7 @@ public class Webservice {
 			e.printStackTrace();
 		}
         
-        model.addAttribute("serverResponse", jsonResponse);
+        model.addAttribute("serverResponse", jsonResponseStr);
 		
 		return "getRecommendationForRoute";
 	}
