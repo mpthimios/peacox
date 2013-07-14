@@ -97,6 +97,8 @@
         <property name="bikeTimeThreshold" value="#{recommender.bikeTimeThreshold}"/>
         <property name="maxPTroutesToShow" value="#{recommender.maxPTroutesToShow}"/>
         <property name="timeThresholdCutoff" value="#{recommender.timeThresholdCutoff}"/>
+        <property name="messageForPT" value="#{recommender.messageForPT}"/>
+        <property name="messageForWalk" value="#{recommender.messageForWalk}"/>
     </bean>
     
     <bean id="GetRecommendationForRequest"

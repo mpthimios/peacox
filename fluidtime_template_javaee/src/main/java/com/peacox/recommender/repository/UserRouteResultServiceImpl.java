@@ -39,4 +39,15 @@ public class UserRouteResultServiceImpl implements UserRouteResultService {
 		repository.save(routeResult);
 		return routeResult;
 	}
+	
+	public List<UserRouteResult> getAll(){
+		TypedQuery query = em.createQuery("select r from UserRouteResult r where r.timestamp > '2013-06-19 00:00:00.000'", UserRouteResult.class);	    
+	    List<UserRouteResult> result = null;
+	    try{
+	    	result = (List<UserRouteResult>)query.getResultList();
+	    }catch(IndexOutOfBoundsException e){
+	    	//nothing to do for now
+	    }
+	    return result; 		
+	}
 }

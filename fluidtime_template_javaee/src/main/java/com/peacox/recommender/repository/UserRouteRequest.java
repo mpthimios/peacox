@@ -20,6 +20,7 @@ public class UserRouteRequest {
 	protected Date timestamp;
 	protected long user_id;
 	protected String request;
+	protected String session_id;
 	
 	public UserRouteRequest() {
 		super();
@@ -65,6 +66,15 @@ public class UserRouteRequest {
 
 	public void setRequest(String request) {
 		this.request = request;
+	}
+	
+	@Column(name="session_id")
+	public String getSessionId() {
+		return session_id;
+	}
+
+	public void setSessionId(String session_id) {
+		this.session_id = session_id;
 	}
 
 

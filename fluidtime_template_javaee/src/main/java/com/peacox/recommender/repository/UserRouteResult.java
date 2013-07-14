@@ -21,6 +21,7 @@ public class UserRouteResult {
 	protected Date timestamp;
 	protected long user_id;
 	protected String result;
+	protected String session_id;
 	
 	public UserRouteResult() {
 		super();
@@ -68,6 +69,14 @@ public class UserRouteResult {
 		this.result = result;
 	}
 
+	@Column(name="session_id")
+	public String getSessionId() {
+		return session_id;
+	}
+
+	public void setSessionId(String request) {
+		this.session_id = session_id;
+	}
 
 	@Override
 	public String toString() {

@@ -68,12 +68,16 @@ public class GetRecommendations{
   private int bikeTimeThreshold;  
   private int maxPTroutesToShow;
   private double timeThresholdCutoff;
+  private String messageForPT = "";
+  private String messageForWalk = "";
   
   private int maxPtChangesThreshold = 4;
   
   protected Logger log = Logger.getLogger(GetRecommendations.class);
   
   protected boolean SHOWALL = false;
+  protected boolean showMessageForPT = false;
+  protected boolean showMessageForWalk = false;
   
   @Autowired protected UserRouteRequestService routeRequestService;
   
@@ -115,6 +119,8 @@ public class GetRecommendations{
 	  log.debug("loaded property bikeTimeThreshold: " + this.getBikeTimeThreshold());
 	  log.debug("loaded property maxPTroutesToShow: " + this.getMaxPTroutesToShow());
 	  log.debug("loaded property timeThresholdCutoff: " + this.getTimeThresholdCutoff());
+	  log.debug("loaded property messageForPT: " + this.getMessageForPT());
+	  log.debug("loaded property messageForWalk: " + this.getMessageForWalk());
 	  
       LinkedHashMap finalRouteResults;
       
@@ -126,14 +132,26 @@ public class GetRecommendations{
       updateTotalDurationStats(routeResults);
       updateTotalWBDurationStats(routeResults);
       updateTotalEmissionStats(routeResults);
+      showMessageForPT = false;
+      showMessageForWalk = false;
       
 	      //get actual preferences the user has already set
-	      UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
+	      //UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
+      log.debug("Finding Original Route Request for SessionId: " + routeResults.get(0).getRequest().getSessionId());
+      UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdAndSessionId(user_id, 
+    		  routeResults.get(0).getRequest().getSessionId());
 	     
 	  if (userRouteRequest != null){
 	      RequestGetRoute routeRequest = RouteParser
 	              .routeRequestFromJson(userRouteRequest.getRequest());
 	      
+	      //check if we have to show messages for PT and Walk
+	      if (!routeRequest.getModality().contains("pt")){
+	    	  this.showMessageForPT = true;
+	      }
+	      if (!routeRequest.getModality().contains("walk")){
+	    	  this.showMessageForWalk = true;
+	      }
 	      
 	      HashSet<String> requestedModalities = new HashSet<String>();
 	      try{
@@ -697,6 +715,16 @@ public class GetRecommendations{
         		log.debug("adding trips for modality: " + entry.getKey() + " with size: " + tripsGroupedByUtilityEntry.getValue().size());
         		for(HashMap<JsonTrip, Double> arrayEntry : tripsGroupedByUtilityEntry.getValue()){
         			if (maxTripsToShow > 0){
+        				if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("pt") && this.showMessageForPT){
+        					((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
+        							this.getMessageForPT());
+        					log.debug("added MessageForPT: " + this.getMessageForPT());
+        				}
+        				else if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("walk") && this.showMessageForWalk){
+        					((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
+        							this.getMessageForWalk());
+        					log.debug("added MessageForWalk: " + this.getMessageForWalk());
+        				}
 	            		finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
 	    	        	position++;
 	    	        	log.debug("adding new trip with modality: " + arrayEntry.entrySet().iterator().next().getKey().getModality());
@@ -1629,6 +1657,24 @@ public class GetRecommendations{
 	public void setTimeThresholdCutoff(double timeThresholdCutoff) {
 		this.timeThresholdCutoff = timeThresholdCutoff;
 	}
+	
+	public String getMessageForPT() {
+		return messageForPT;
+	}
+
+	public void setMessageForPT(String messageForPT) {
+		this.messageForPT = messageForPT;
+	}
+	
+	public String getMessageForWalk() {
+		return messageForWalk;
+	}
+
+	public void setMessageForWalk(String messageForWalk) {
+		this.messageForWalk = messageForWalk;
+	}
+	
+	
 
 static LinkedHashMap sortByValue(LinkedHashMap map) {
         List list = new LinkedList(map.entrySet());

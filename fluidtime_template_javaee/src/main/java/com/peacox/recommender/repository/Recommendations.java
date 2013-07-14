@@ -20,6 +20,7 @@ public class Recommendations {
 	protected Date timestamp;
 	protected long user_id;
 	protected String recommendation;
+	protected String session_id;
 	
 	public Recommendations() {
 		super();
@@ -67,6 +68,14 @@ public class Recommendations {
 		this.recommendation = recommendation;
 	}
 
+	@Column(name="session_id")
+	public String getSessionId() {
+		return session_id;
+	}
+
+	public void setSessionId(String request) {
+		this.session_id = session_id;
+	}
 
 	@Override
 	public String toString() {

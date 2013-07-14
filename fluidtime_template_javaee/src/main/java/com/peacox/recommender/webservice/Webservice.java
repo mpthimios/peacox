@@ -58,6 +58,7 @@ import com.peacox.recommender.repository.UserService;
 //import com.peacox.recommender.repository.OwnedVehicles;
 //import com.peacox.recommender.repository.OwnedVehiclesTypeService;
 import com.peacox.recommender.repository.OwnedVehiclesService;
+import com.peacox.recommender.statistics.DescriptiveStats;
 import com.peacox.recommender.utils.AverageEmissions;
 import com.peacox.recommender.utils.CompressString;
 import com.peacox.recommender.utils.Coordinates;
@@ -175,6 +176,7 @@ public class Webservice {
 			newRouteResult.setUser_id(userId);
 			newRouteResult.setTimestamp(new Date());
 			newRouteResult.setResult(CompressString.compress(body));
+			newRouteResult.setSessionId(route.getRequest().getSessionId());
 			routeResultService.create(newRouteResult);
 			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
 			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
@@ -189,22 +191,26 @@ public class Webservice {
 		User user = userService.findUserByUserId(userId);
 		
 		if (user == null){
-			log.error("UserId in the database is null - exiting");
+			log.error("UserId " + userId + " in the database is null - exiting");
 			model.addAttribute("serverResponse", body);			
 			return "getRecommendationForRoute";
 		}
 		
 		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
-		String jsonResponse = recommendRoutes(route, userPreferences, userId);
+		JsonResponseRoute jsonResponse = recommendRoutes(route, userPreferences, userId);
         
         //log.debug("jsonResponse: " + jsonResponse);
+		String jsonResponseStr = RouteParser.routeToJson(jsonResponse);
+		
         try{
 			Recommendations recommendations = new Recommendations();
 			recommendations.setUser_id(45);
 			recommendations.setTimestamp(new Date());
-			recommendations.setRecommendations(CompressString.compress(jsonResponse));
+			recommendations.setRecommendations(CompressString.compress(jsonResponseStr));
+			recommendations.setSessionId(jsonResponse.getRequest().getSessionId());
 			recommendationsService.create(recommendations);
 			
+			log.debug("Saved recommendations for SessionID: " + jsonResponse.getRequest().getSessionId());
 			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
 			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
 			
@@ -298,9 +304,11 @@ public class Webservice {
 		       
 		        System.out.println(response);
 		        JsonResponseRoute route = RouteParser.routeFromJson(response);
-		        String jsonResponse = recommendRoutes(route, userPreferences);
+		        JsonResponseRoute jsonResponse = recommendRoutes(route, userPreferences);
 		        
-		        model.addAttribute("serverResponse", jsonResponse);
+		        String jsonResponseStr = RouteParser.routeToJson(jsonResponse);
+		        
+		        model.addAttribute("serverResponse", jsonResponseStr);
 				
 			}
 			else {
@@ -401,8 +409,28 @@ public class Webservice {
 		return "getUserScoreForTree";
 	}
 	
+	@RequestMapping(value="getDescriptiveStats", method = RequestMethod.POST)
+	public String getDescriptiveStats (Locale locale, Model model) {
+		
+		log.debug("getDescriptiveStats");		
+		double result = 0;
+		try{
+			//long userId = Long.parseLong(body);
+			DescriptiveStats stats = 
+					(DescriptiveStats) appContext.getBean("DescriptiveStats");
+			stats.calculateRouteRequestStats();
+			//stats.calculateRouteResultStats();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("stats", "OK");
+		return "getDescriptiveStats";
+	}	
+	
 	//without userId
-	private String recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences){
+	private JsonResponseRoute recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences){
 		
         //printRouteInfo(route);
         
@@ -441,13 +469,13 @@ public class Webservice {
         
         //route.setTrips(newTrips);
         
-        String json = RouteParser.routeToJson(route);
+        //String json = RouteParser.routeToJson(route);
         
-        return json;
+        return route;
 	}
 	
 	//with userId
-	private String recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences, long userId){
+	private JsonResponseRoute  recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences, long userId){
 		
         //printRouteInfo(route);
         
@@ -487,9 +515,9 @@ public class Webservice {
         
         //route.setTrips(newTrips);
         
-        String json = RouteParser.routeToJson(route);
+        //String json = RouteParser.routeToJson(route);
         
-        return json;
+        return route;
 	}
 
 	private void testJPA() throws Exception {

@@ -54,6 +54,7 @@ public class GetRecommendationForRequest {
 	                .routeRequestFromJson(request);
 		
 		log.debug("start processing RecommendationForRequest");
+		log.debug("SessionId: " +routeRequest.getSessionId());
 		log.debug("loaded property maxBikeTimeInExtremeConditions: " + this.getMaxBikeTimeInExtremeConditions());
 		log.debug("loaded property maxWalkTimeInExtremeConditions: " + this.getMaxWalkTimeInExtremeConditions());
 		log.debug("loaded property alwaysIncludeWalk: " + this.getAlwaysIncludeWalk());
@@ -72,6 +73,7 @@ public class GetRecommendationForRequest {
 			newRouteRequest.setUser_id(userId);
 			newRouteRequest.setTimestamp(new Date());
 			newRouteRequest.setRequest(request);
+			newRouteRequest.setSessionId(routeRequest.getSessionId());
 			routeRequestService.create(newRouteRequest);
 		}catch(Exception e){
 			log.error("Could not store routeRequest in the database");
