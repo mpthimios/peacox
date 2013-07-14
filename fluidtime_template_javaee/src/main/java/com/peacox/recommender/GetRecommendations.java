@@ -70,6 +70,9 @@ public class GetRecommendations{
   private double timeThresholdCutoff;
   private String messageForPT = "";
   private String messageForWalk = "";
+  private double thresholdForParkAndRide;
+  private double walkBikeThresholdForOmmitingCarParRoutes;
+  private double ptChangesFactorThreshold;
   
   private int maxPtChangesThreshold = 4;
   
@@ -577,14 +580,14 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			else if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(2*minChanges)){
+        			else if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(ptChangesFactorThreshold*minChanges)){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since it contains too many chnages: " +
         						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			else if (minWBvalue < 7.0){
+        			else if (minWBvalue < walkBikeThresholdForOmmitingCarParRoutes){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
         						minWBvalue);
@@ -594,13 +597,31 @@ public class GetRecommendations{
         			}
         		}
         		
-        		if ((entry.getKey().matches("car") || entry.getKey().matches("par")) && (minWBvalue < 7.0)){
+        		if ((entry.getKey().matches("car") || entry.getKey().matches("par")) && (minWBvalue < walkBikeThresholdForOmmitingCarParRoutes)){
         			placeEntry = false;
     				log.debug("ommiting " + entry.getKey() + " based route since the destination is in walking distance: " +
     						minWBvalue);
     						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
     				omittedTripResults.put(omittedPosition, arrayEntry);
     				omittedPosition++;
+        		}
+        		
+        		if (entry.getKey().matches("par")){
+        			//get car time
+        			double carTime = 0.0;
+        			double totalTripTime = (double) arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes();
+        			for(JsonSegment segment : arrayEntry.entrySet().iterator().next().getKey().getSegments()){
+        				if (segment.getType().matches("car")){
+        					carTime += (double)segment.getDurationMinutes();
+        				}
+        			}
+        			log.debug("total time for par trip: " + totalTripTime +
+        					" total time of the car segments: " + carTime);
+        			if (carTime > this.getThresholdForParkAndRide()*totalTripTime){
+        				log.debug("ommiting 'par' based route since it doens't make sense: ");
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
         		}
         		
         		if (placeEntry){
@@ -1674,8 +1695,30 @@ public class GetRecommendations{
 		this.messageForWalk = messageForWalk;
 	}
 	
-	
+	public double getThresholdForParkAndRide() {
+		return thresholdForParkAndRide;
+	}
 
+	public void setThresholdForParkAndRide(double thresholdForParkAndRide) {
+		this.thresholdForParkAndRide = thresholdForParkAndRide;
+	}
+	
+	public double getWalkBikeThresholdForOmmitingCarParRoutes() {
+		return walkBikeThresholdForOmmitingCarParRoutes;
+	}
+
+	public void setWalkBikeThresholdForOmmitingCarParRoutes(double walkBikeThresholdForOmmitingCarParRoutes) {
+		this.walkBikeThresholdForOmmitingCarParRoutes = walkBikeThresholdForOmmitingCarParRoutes;
+	}
+	
+	public double getPtChangesFactorThreshold() {
+		return ptChangesFactorThreshold;
+	}
+
+	public void setPtChangesFactorThreshold(double ptChangesFactorThreshold) {
+		this.ptChangesFactorThreshold = ptChangesFactorThreshold;
+	}		
+	
 static LinkedHashMap sortByValue(LinkedHashMap map) {
         List list = new LinkedList(map.entrySet());
         Collections.sort(list, new Comparator() {

@@ -99,6 +99,9 @@
         <property name="timeThresholdCutoff" value="#{recommender.timeThresholdCutoff}"/>
         <property name="messageForPT" value="#{recommender.messageForPT}"/>
         <property name="messageForWalk" value="#{recommender.messageForWalk}"/>
+        <property name="thresholdForParkAndRide" value="#{recommender.thresholdForParkAndRide}"/>
+        <property name="walkBikeThresholdForOmmitingCarParRoutes" value="#{recommender.walkBikeThresholdForOmmitingCarParRoutes}"/>
+        
     </bean>
     
     <bean id="GetRecommendationForRequest"
