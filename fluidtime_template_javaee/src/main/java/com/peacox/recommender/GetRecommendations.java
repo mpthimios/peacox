@@ -1474,10 +1474,17 @@ public class GetRecommendations{
       int j = 0;
       while (j < segments.size()) {
     	  JsonSegment segment = segments.get(j);
-    	  if (!(segment.getVehicle() == null) && !(segment.getVehicle().getType() == null)){
-	    	  result += ((Double)emissions.get(segment.getVehicle().getType()))
+    	  try{
+    		  if (!(segment.getVehicle() == null) && !(segment.getVehicle().getType() == null)
+    			  && !(segment.getDistanceMeter() == null)){
+    		  
+    			  result += ((Double)emissions.get(segment.getVehicle().getType()))
 	    			  *(segment.getDistanceMeter()/1000.0);
+    		  }
     	  }
+		  catch (Exception e){
+			  log.debug("Could not get emmissions for vehicle type: " + segment.getVehicle().getType());
+		  }    	  
           j++;
       }
       return result;
