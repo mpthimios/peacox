@@ -506,6 +506,7 @@ public class GetRecommendations{
         	maxTripsToShow = 1;
         	if (entry.getKey().matches("pt")){
         		maxTripsToShow = this.getMaxPTroutesToShow();
+        		log.debug("set to show " + this.getMaxPTroutesToShow() + " pt trips");
         	}
         	
         	Collections.sort(entry.getValue(), new Comparator<HashMap<JsonTrip, Double>>() {
@@ -580,10 +581,12 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			else if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(ptChangesFactorThreshold*minChanges)){
+        			else if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(this.getPtChangesFactorThreshold()*minChanges)){
         				placeEntry = false;
-        				log.debug("ommiting 'pt' based route since it contains too many chnages: " +
-        						arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+        				log.debug("ommiting 'pt' based route since it contains too many changes: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getSegments().size() +
+        						" this.getPtChangesFactorThreshold(): " + this.getPtChangesFactorThreshold() +
+        						" minChanges: " + minChanges);
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}

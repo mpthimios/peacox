@@ -101,7 +101,7 @@
         <property name="messageForWalk" value="#{recommender.messageForWalk}"/>
         <property name="thresholdForParkAndRide" value="#{recommender.thresholdForParkAndRide}"/>
         <property name="walkBikeThresholdForOmmitingCarParRoutes" value="#{recommender.walkBikeThresholdForOmmitingCarParRoutes}"/>
-        
+        <property name="ptChangesFactorThreshold" value="#{recommender.ptChangesFactorThreshold}"/>
     </bean>
     
     <bean id="GetRecommendationForRequest"
