@@ -608,19 +608,25 @@ public class GetRecommendations{
         		
         		if (entry.getKey().matches("par")){
         			//get car time
-        			double carTime = 0.0;
-        			double totalTripTime = (double) arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes();
-        			for(JsonSegment segment : arrayEntry.entrySet().iterator().next().getKey().getSegments()){
-        				if (segment.getType().matches("car")){
-        					carTime += (double)segment.getDurationMinutes();
-        				}
+        			try{
+	        			double carTime = 0.0;
+	        			double totalTripTime = 0.0;
+	        			for(JsonSegment segment : arrayEntry.entrySet().iterator().next().getKey().getSegments()){
+	        				if (segment.getType().matches("car")){
+	        					carTime += (double)segment.getDurationMinutes();
+	        				}
+	        				totalTripTime += (double)segment.getDurationMinutes();
+	        			}
+	        			log.debug("total time for par trip: " + totalTripTime +
+	        					" total time of the car segments: " + carTime);
+	        			if (carTime > this.getThresholdForParkAndRide()*totalTripTime){
+	        				log.debug("ommiting 'par' based route since it doens't make sense: ");
+	        				omittedTripResults.put(omittedPosition, arrayEntry);
+	        				omittedPosition++;
+	        			}
         			}
-        			log.debug("total time for par trip: " + totalTripTime +
-        					" total time of the car segments: " + carTime);
-        			if (carTime > this.getThresholdForParkAndRide()*totalTripTime){
-        				log.debug("ommiting 'par' based route since it doens't make sense: ");
-        				omittedTripResults.put(omittedPosition, arrayEntry);
-        				omittedPosition++;
+        			catch(Exception ex1){
+        				ex1.printStackTrace();
         			}
         		}
         		
