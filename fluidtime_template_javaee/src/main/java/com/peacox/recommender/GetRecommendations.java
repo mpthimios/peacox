@@ -164,117 +164,174 @@ public class GetRecommendations{
 	    	  log.error("Could not load user requested modalities");
 	      }
 	      
+	      boolean comfortableFound = false;
+	      boolean barrierFreeFound = false;
+	      boolean fastFound = false;
+	      
+	      //Checking for comfortable:
+	      log.debug("Going to check which options to set");
+	      log.debug("Checking for Comfortable heuristics: ");
+	      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
+	    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
 	      try{
-		      log.debug("Going to check which options to set");
-		      log.debug("Checking for Comfortable: ");
-		      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
-		    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
-		      //set user preferences according to userRouteRequest
-		      if (routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
+	    	  if ((routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
 		    		   &&
-		    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10){
-		
-		    	  // this is a default option for comfortable?
-		    	  log.debug("Setting options for comfortable profile");
-		    	  //comfortable?
-		    	  userPreferences.setComfortHigh(4.0);
-		    	  userPreferences.setComfortMedium(10.0);
-		    	  userPreferences.setComfortLow(1.0);
-		    	  userPreferences.setComfortImportance(0.4);
-		    	  
-		    	  //it means that I don't care much about the time
-		    	  userPreferences.setDuration10min(4.0);
-		    	  userPreferences.setDuration30min(10.0);
-		    	  userPreferences.setDuration30plus(1.0);
-		    	  userPreferences.setDurationImportance(0.2);
-		    	  
-		    	  //it means that I wouldn't mind walking a bit
-		    	  userPreferences.setWB10min(4.0);
-		    	  userPreferences.setWB30min(10.0);
-		    	  userPreferences.setWB30plus(1.0);
-		    	  userPreferences.setWbtimeImportance(0.2);
-		    	  
-		    	  userPreferences.setEcoAttitudeImportance(0.2);
-		      }
-	      }
-	      catch(Exception e){
-	    	  log.debug("Could not check for comfortable options");
+		    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10)){
+	    		  log.debug("Found heuristic comfortable");
+	    		  comfortableFound = true;
+	    	  }
+	      }catch (Exception e){
+	    	  log.debug("Could not check for comfortable heuristics");
 	      }
 	      
+	      log.debug("Checking for Comfortable option: ");
+	      log.debug("appName: " + routeRequest.getDetails().getAppName());
 	      try{
-		      log.debug("Checking for barrier-free: ");
-		      log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
-		    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
-		    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
-		      
-		      if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
+	    	  if (routeRequest.getDetails().getAppName().matches("comfortable")){
+	    		  log.debug("Found appName comfortable");
+	    		  comfortableFound = true;
+	    	  }
+	      }catch (Exception e){
+	    	  log.debug("Could not check for comfortable option");
+	      }
+	      
+	      //Checking for barrier-free:	      
+	      log.debug("Checking for Barrier-free heuristics: ");
+	      log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
+	    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
+	    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
+	      try{
+	    	  if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
 		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
 		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
-		    	  
-		    	  // this is a default option for barrier-free?
-		    	  log.debug("Setting options for barrier-free profile");
-		    	  
-		    	  //very comfortable?
-		    	  userPreferences.setComfortHigh(10.0);
-		    	  userPreferences.setComfortMedium(4.0);
-		    	  userPreferences.setComfortLow(1.0);
-		    	  userPreferences.setComfortImportance(0.5);
-		    	  
-		    	  //it means that I don't care much about the time
-		    	  userPreferences.setDuration10min(1.0);
-		    	  userPreferences.setDuration30min(4.0);
-		    	  userPreferences.setDuration30plus(10.0);
-		    	  userPreferences.setDurationImportance(0.1);
-		    	  
-		    	  //it means that I don't want to be walking or taking a bike
-		    	  userPreferences.setWB10min(10.0);
-		    	  userPreferences.setWB30min(4.0);
-		    	  userPreferences.setWB30plus(1.0);
-		    	  userPreferences.setWbtimeImportance(0.2);
-		    	  
-		    	  userPreferences.setEcoAttitudeImportance(0.2);
-		      }
-	      }
-	      catch(Exception e){
-	    	  log.debug("Could not check for barrier free options");
+		    	  log.debug("Found heuristic barrier-free");
+		    	  barrierFreeFound = true;
+	    	  }
+	      }catch (Exception e){
+	    	  log.debug("Could not check for barrier-free heuristics");
 	      }
 	      
+	      log.debug("Checking for Barrier-free option: ");
+	      log.debug("appName: " + routeRequest.getDetails().getAppName());
 	      try{
-		      log.debug("Checking for fast: ");
-		      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
-		    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
-		      
-		      if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
+	    	  if (routeRequest.getDetails().getAppName().matches("barrier-free")){
+	    		  log.debug("Found appName barrier-free");
+	    		  barrierFreeFound = true;
+	    	  }
+	      }catch (Exception e){
+	    	  log.debug("Could not check for barrier-free option");
+	      }
+	      
+	      //Checking for fast:	      
+	      log.debug("Checking for Fast heuristics: ");
+	      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
+	    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
+	      try{
+	    	  if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
 		    		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
-		    	  
-		    	  // this is a default option for fast?
-		    	  
-		    	  log.debug("Setting options for fast profile");
-		    	  
-		    	  //I don't care about comfort?
-		    	  userPreferences.setComfortHigh(1.0);
-		    	  userPreferences.setComfortMedium(4.0);
-		    	  userPreferences.setComfortLow(10.0);
-		    	  userPreferences.setComfortImportance(0.3);
-		    	  
-		    	  //it means that I care much about the time, I want to to be the minimum possible
-		    	  userPreferences.setDuration10min(10.0);
-		    	  userPreferences.setDuration30min(4.0);
-		    	  userPreferences.setDuration30plus(1.0);
-		    	  userPreferences.setDurationImportance(0.4);
-		    	  
-		    	  //it means that I care about walking or taking a bicycle
-		    	  userPreferences.setWB10min(10.0);
-		    	  userPreferences.setWB30min(4.0);
-		    	  userPreferences.setWB30plus(1.0);
-		    	  userPreferences.setWbtimeImportance(0.1);
-		    	  
-		    	  userPreferences.setEcoAttitudeImportance(0.2);	    	  
-		      }
+		    	  log.debug("Found heuristic fast");
+		    	  fastFound = true;
+	    	  }
+	      }catch (Exception e){
+	    	  log.debug("Could not check for fast heuristics");
 	      }
-	      catch(Exception e){
-	    	  log.debug("Could not check for fast criterion");
+	      
+	      log.debug("Checking for Fast option: ");
+	      log.debug("appName: " + routeRequest.getDetails().getAppName());
+	      try{
+	    	  if (routeRequest.getDetails().getAppName().matches("fast")){
+	    		  log.debug("Found appName fast");
+	    		  fastFound = true;
+	    	  }
+	      }catch (Exception e){
+	    	  log.debug("Could not check for fast option");
 	      }
+	      
+	      log.debug("Options set: comfortableFound - " + comfortableFound +
+	    		  ", barrierFreeFound - " + barrierFreeFound + ", " +
+	    		  "fastFound - " + fastFound);
+	      
+	      //set user preferences according to Comfortable if applicable:
+	      if (comfortableFound){
+	
+	    	  // this is a default option for comfortable?
+	    	  log.debug("Setting options for comfortable profile");
+	    	  //comfortable?
+	    	  userPreferences.setComfortHigh(4.0);
+	    	  userPreferences.setComfortMedium(10.0);
+	    	  userPreferences.setComfortLow(1.0);
+	    	  userPreferences.setComfortImportance(0.4);
+	    	  
+	    	  //it means that I don't care much about the time
+	    	  userPreferences.setDuration10min(4.0);
+	    	  userPreferences.setDuration30min(10.0);
+	    	  userPreferences.setDuration30plus(1.0);
+	    	  userPreferences.setDurationImportance(0.2);
+	    	  
+	    	  //it means that I wouldn't mind walking a bit
+	    	  userPreferences.setWB10min(4.0);
+	    	  userPreferences.setWB30min(10.0);
+	    	  userPreferences.setWB30plus(1.0);
+	    	  userPreferences.setWbtimeImportance(0.2);
+	    	  
+	    	  userPreferences.setEcoAttitudeImportance(0.2);
+	      }
+	      
+	     //set user preferences according to barrierFree if applicable:
+          if (barrierFreeFound){
+	    	  
+	    	  // this is a default option for barrier-free?
+	    	  log.debug("Setting options for barrier-free profile");
+	    	  
+	    	  //very comfortable?
+	    	  userPreferences.setComfortHigh(10.0);
+	    	  userPreferences.setComfortMedium(4.0);
+	    	  userPreferences.setComfortLow(1.0);
+	    	  userPreferences.setComfortImportance(0.5);
+	    	  
+	    	  //it means that I don't care much about the time
+	    	  userPreferences.setDuration10min(1.0);
+	    	  userPreferences.setDuration30min(4.0);
+	    	  userPreferences.setDuration30plus(10.0);
+	    	  userPreferences.setDurationImportance(0.1);
+	    	  
+	    	  //it means that I don't want to be walking or taking a bike
+	    	  userPreferences.setWB10min(10.0);
+	    	  userPreferences.setWB30min(4.0);
+	    	  userPreferences.setWB30plus(1.0);
+	    	  userPreferences.setWbtimeImportance(0.2);
+	    	  
+	    	  userPreferences.setEcoAttitudeImportance(0.2);
+	      }
+	     
+	      
+          if (fastFound || (!fastFound && !barrierFreeFound && !comfortableFound)){
+	    	  
+	    	  // this is a default option for fast?
+	    	  
+	    	  log.debug("Setting options for fast profile");
+	    	  
+	    	  //I don't care about comfort?
+	    	  userPreferences.setComfortHigh(1.0);
+	    	  userPreferences.setComfortMedium(4.0);
+	    	  userPreferences.setComfortLow(10.0);
+	    	  userPreferences.setComfortImportance(0.3);
+	    	  
+	    	  //it means that I care much about the time, I want to to be the minimum possible
+	    	  userPreferences.setDuration10min(10.0);
+	    	  userPreferences.setDuration30min(4.0);
+	    	  userPreferences.setDuration30plus(1.0);
+	    	  userPreferences.setDurationImportance(0.4);
+	    	  
+	    	  //it means that I care about walking or taking a bicycle
+	    	  userPreferences.setWB10min(10.0);
+	    	  userPreferences.setWB30min(4.0);
+	    	  userPreferences.setWB30plus(1.0);
+	    	  userPreferences.setWbtimeImportance(0.1);
+	    	  
+	    	  userPreferences.setEcoAttitudeImportance(0.2);	    	  
+	      }
+	      
 	  }
       switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
           case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id);
