@@ -317,9 +317,9 @@ public class GetRecommendations{
 	    	  log.debug("Setting options for fast profile");
 	    	  
 	    	  //I don't care about comfort?
-	    	  userPreferences.setComfortHigh(1.0);
+	    	  userPreferences.setComfortHigh(3.0);
 	    	  userPreferences.setComfortMedium(4.0);
-	    	  userPreferences.setComfortLow(6.0);
+	    	  userPreferences.setComfortLow(1.0);
 	    	  userPreferences.setComfortImportance(0.2);
 	    	  
 	    	  //it means that I care much about the time, I want to to be the minimum possible
