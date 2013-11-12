@@ -1232,17 +1232,24 @@ public class GetRecommendations{
 	  	log.debug("*** calculating based on routeUtilityCalulationP6 ***");
 	  	double totalUtility = 0;			
 		double totalDuration = (double) this.getTripTotalDuration(tripResult);
+		log.debug("totalDuration: " + totalDuration);
 	    double totalEmissions = this.getTripTotalEmissions(tripResult);
+	    log.debug("totalEmissions: " + totalEmissions);
 	    double nominalEmissions = this.getTripNominalEmissions(tripResult);
+	    log.debug("nominalEmissions: " + nominalEmissions);
 	    
-	    System.out.println("trip emissions: " + totalEmissions);
+	    log.debug("trip emissions: " + totalEmissions);
 	    
 	    //1st approach based on the mean value for total trip time
 	    //it's like taking some nominal values for the trip
 	    
 	    double minTime = minValues.get("minTotalDuration");
+	    log.debug("minTime: " + minTime);
 	    double maxTime = maxValues.get("maxTotalDuration");
+	    log.debug("maxTime: " + maxTime);
 	    double meanTime = meanValues.get("meanTotalDuration");
+	    log.debug("meanTime: " + meanTime);
+	    
 	    double intervalPercentage = 0.3; 
 	    
 		double durationCriterionValue = 0;
@@ -1256,6 +1263,8 @@ public class GetRecommendations{
 			durationCriterionValue = (Double)userPreferences.getDuration30plus();
 		}
 	        
+		log.debug("durationCriterionValue: " + durationCriterionValue);
+		
 	    int numberOfChanges = this.getNbrOfChanges(tripResult);
 	    log.debug("number of changes: " + numberOfChanges);
 	    double comfortCriterionValue = 0;
@@ -1270,6 +1279,8 @@ public class GetRecommendations{
 	        comfortCriterionValue = (Double) userPreferences.getComfortLow();
 	    }
 		
+	    log.debug("comfortCriterionValue: " + comfortCriterionValue);
+	    
 	    //1st approach based on the mean value for total trip time
 	    double minWBTime = minValues.get("minWBTotalDuration");
 	    double maxWBTime = maxValues.get("maxWBTotalDuration");
@@ -1290,6 +1301,8 @@ public class GetRecommendations{
 			}
 		}
 		
+		log.debug("wbDurationCriterionValue: " + wbDurationCriterionValue);
+		
 		double emissionsCriterionValue = 0;
 		if (totalEmissions <= 1.0*nominalEmissions){
 			emissionsCriterionValue = (Double)userPreferences.getEmissionsLow();
@@ -1300,6 +1313,8 @@ public class GetRecommendations{
 		else{
 			emissionsCriterionValue = (Double)userPreferences.getEmissionsHigh();
 		}
+		
+		log.debug("emissionsCriterionValue: " + emissionsCriterionValue);
 			
 		totalUtility = durationCriterionValue*
 							((Double)userPreferences.getDurationImportance()) 
@@ -1313,6 +1328,8 @@ public class GetRecommendations{
 	    
 		totalUtility = totalUtility*(1.0-(Double)userPreferences.getEcoAttitudeImportance())
 									- emissionsCriterionValue*(Double)userPreferences.getEcoAttitudeImportance();
+		
+		log.debug("totalUtility: " + totalUtility);		
 		return totalUtility;
 	  }
   
