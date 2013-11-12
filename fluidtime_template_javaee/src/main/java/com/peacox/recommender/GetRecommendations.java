@@ -261,8 +261,8 @@ public class GetRecommendations{
 	    	  // this is a default option for comfortable?
 	    	  log.debug("Setting options for comfortable profile");
 	    	  //comfortable?
-	    	  userPreferences.setComfortHigh(4.0);
-	    	  userPreferences.setComfortMedium(10.0);
+	    	  userPreferences.setComfortHigh(10.0);
+	    	  userPreferences.setComfortMedium(4.0);
 	    	  userPreferences.setComfortLow(1.0);
 	    	  userPreferences.setComfortImportance(0.4);
 	    	  
