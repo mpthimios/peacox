@@ -104,11 +104,11 @@ public class GetRecommendations{
         //HashMap<String, Double> statistics = updateStatistics(routeResults);
         
         switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
-            case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1);
+            case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1, null);
                 break;
             case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
                 break;                                                                          
-            default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1);
+            default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1, null);
                 break;                                        
         }
         return finalRouteResults;
@@ -137,6 +137,7 @@ public class GetRecommendations{
       updateTotalEmissionStats(routeResults);
       showMessageForPT = false;
       showMessageForWalk = false;
+      RequestGetRoute routeRequest = null;
       
 	      //get actual preferences the user has already set
 	      //UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
@@ -145,7 +146,7 @@ public class GetRecommendations{
     		  routeResults.get(0).getRequest().getSessionId());
 	     
 	  if (userRouteRequest != null){
-	      RequestGetRoute routeRequest = RouteParser
+	      routeRequest = RouteParser
 	              .routeRequestFromJson(userRouteRequest.getRequest());
 	      
 	      //check if we have to show messages for PT and Walk
@@ -338,18 +339,18 @@ public class GetRecommendations{
 	      
 	  }
       switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
-          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id);
+          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id, routeRequest);
               break;
           case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
               break;                                                                          
-          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id);
+          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id, routeRequest);
               break;                                        
       }
       return finalRouteResults;
   }
     
     private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
-        ArrayList<JsonResponseRoute> routeResults, long userId){
+        ArrayList<JsonResponseRoute> routeResults, long userId, RequestGetRoute routeRequest){
     	
 		log.debug("methodForRecommendations1");
         
@@ -584,24 +585,40 @@ public class GetRecommendations{
         	int maxChanges = 0;
         	int minTime = 1000;
         	int maxTime = 0;
+        	int preferredNbrOfChanges = 0;
+        	int nbrOfTripsWithPreferredChanges = 0; 
+        	
+        	
         	
         	if (entry.getKey().matches("pt")){
 	        	//find some statistics for the pt mode
         		//these should be already calculated - double check please
 	        	
+        		try{
+        			preferredNbrOfChanges = routeRequest.getOptionsRoute().getPtMaxChanges();
+        			log.debug("preferredNbrOfChanges: " + preferredNbrOfChanges);
+            	}catch(Exception e){
+            		log.debug("could not find prefered number of changes for pt");
+            	}
+        		
 	        	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
 	        		JsonTrip tmpTrip = arrayEntry.entrySet().iterator().next().getKey();
+	        		int tripNbrChanges = getNbrOfChanges(tmpTrip);
 	        		if (tmpTrip.getDurationMinutes() > maxTime){
 	        			maxTime = tmpTrip.getDurationMinutes();
 	        		}
 	        		if (tmpTrip.getDurationMinutes() < minTime){
 	        			minTime = tmpTrip.getDurationMinutes();
 	        		}
-	        		if (tmpTrip.getSegments().size() > maxChanges){
-	        			maxChanges = tmpTrip.getSegments().size();
+	        		if (tripNbrChanges > maxChanges){
+	        			maxChanges = tripNbrChanges;
 	        		}
-	        		if (tmpTrip.getSegments().size() < minChanges){
-	        			minChanges = tmpTrip.getSegments().size();
+	        		if (tripNbrChanges < minChanges){
+	        			minChanges = tripNbrChanges;
+	        		}
+	        		
+	        		if (preferredNbrOfChanges > 0 && tripNbrChanges <= preferredNbrOfChanges){
+	        			nbrOfTripsWithPreferredChanges++;
 	        		}
 	        	}
         	}
@@ -642,10 +659,10 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
-        			else if (arrayEntry.entrySet().iterator().next().getKey().getSegments().size() > (int)(this.getPtChangesFactorThreshold()*minChanges)){
+        			else if (getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) > (int)(this.getPtChangesFactorThreshold()*minChanges)){
         				placeEntry = false;
         				log.debug("ommiting 'pt' based route since it contains too many changes: " +
-        						arrayEntry.entrySet().iterator().next().getKey().getSegments().size() +
+        						getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) +
         						" this.getPtChangesFactorThreshold(): " + this.getPtChangesFactorThreshold() +
         						" minChanges: " + minChanges);
         				omittedTripResults.put(omittedPosition, arrayEntry);
@@ -656,6 +673,15 @@ public class GetRecommendations{
         				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
         						minWBvalue);
         						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
+        			else if(preferredNbrOfChanges > 0 && nbrOfTripsWithPreferredChanges > 0
+        					&& getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) > preferredNbrOfChanges){
+        				placeEntry = false;
+        				log.debug("ommiting 'pt' based route since it contains too many changes compared to the preferred: " +
+        						getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) +
+        						" preferredNbrOfChanges: " + preferredNbrOfChanges);
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
