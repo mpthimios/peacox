@@ -1558,9 +1558,9 @@ public class GetRecommendations{
       
       HashMap emissions = new HashMap<String, Double>();
       emissions.put("ptMetro", 20.0);
-      emissions.put("ptTrainS", 20.0);
-      emissions.put("ptTrainR", 20.0);
-      emissions.put("ptTrain", 20.0);
+      emissions.put("ptTrainS", 50.0);
+      emissions.put("ptTrainR", 55.5);
+      emissions.put("ptTrain", 55.5);
       emissions.put("ptTrainAirport", 20.0);
       emissions.put("ptTrainCog", 20.0);
       emissions.put("ptCableCar", 20.0);
