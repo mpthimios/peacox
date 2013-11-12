@@ -170,10 +170,11 @@ public class GetRecommendations{
 	      
 	      //Checking for comfortable:
 	      log.debug("Going to check which options to set");
-	      log.debug("Checking for Comfortable heuristics: ");
-	      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
-	    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
+	      
 	      try{
+	    	  log.debug("Checking for Comfortable heuristics: ");
+		      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
+		    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
 	    	  if ((routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
 		    		   &&
 		    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10)){
@@ -185,8 +186,9 @@ public class GetRecommendations{
 	      }
 	      
 	      log.debug("Checking for Comfortable option: ");
-	      log.debug("appName: " + routeRequest.getDetails().getAppName());
+	      
 	      try{
+	    	  log.debug("appName: " + routeRequest.getDetails().getAppName());
 	    	  if (routeRequest.getDetails().getAppName().matches("comfortable")){
 	    		  log.debug("Found appName comfortable");
 	    		  comfortableFound = true;
@@ -196,11 +198,13 @@ public class GetRecommendations{
 	      }
 	      
 	      //Checking for barrier-free:	      
-	      log.debug("Checking for Barrier-free heuristics: ");
-	      log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
-	    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
-	    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
+	      
+	      
 	      try{
+	    	  log.debug("Checking for Barrier-free heuristics: ");
+	    	  log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
+		    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
+		    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
 	    	  if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
 		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
 		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
@@ -222,11 +226,11 @@ public class GetRecommendations{
 	    	  log.debug("Could not check for barrier-free option");
 	      }
 	      
-	      //Checking for fast:	      
-	      log.debug("Checking for Fast heuristics: ");
-	      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
-	    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
+	      //Checking for fast:	      	      
 	      try{
+	    	  log.debug("Checking for Fast heuristics: ");
+		      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
+		    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
 	    	  if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
 		    		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
 		    	  log.debug("Found heuristic fast");
