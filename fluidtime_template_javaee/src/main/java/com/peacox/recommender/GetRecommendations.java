@@ -319,14 +319,14 @@ public class GetRecommendations{
 	    	  //I don't care about comfort?
 	    	  userPreferences.setComfortHigh(1.0);
 	    	  userPreferences.setComfortMedium(4.0);
-	    	  userPreferences.setComfortLow(10.0);
-	    	  userPreferences.setComfortImportance(0.3);
+	    	  userPreferences.setComfortLow(6.0);
+	    	  userPreferences.setComfortImportance(0.2);
 	    	  
 	    	  //it means that I care much about the time, I want to to be the minimum possible
 	    	  userPreferences.setDuration10min(10.0);
 	    	  userPreferences.setDuration30min(4.0);
 	    	  userPreferences.setDuration30plus(1.0);
-	    	  userPreferences.setDurationImportance(0.4);
+	    	  userPreferences.setDurationImportance(0.5);
 	    	  
 	    	  //it means that I care about walking or taking a bicycle
 	    	  userPreferences.setWB10min(10.0);
