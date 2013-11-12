@@ -1256,7 +1256,8 @@ public class GetRecommendations{
 			durationCriterionValue = (Double)userPreferences.getDuration30plus();
 		}
 	        
-	    int numberOfChanges = tripResult.getSegments().size();
+	    int numberOfChanges = this.getNbrOfChanges(tripResult);
+	    log.debug("number of changes: " + numberOfChanges);
 	    double comfortCriterionValue = 0;
 	    
 	    if (numberOfChanges <= 2){
@@ -1723,6 +1724,22 @@ public class GetRecommendations{
 	    }
 	  
 	  return sortedResult;
+  }
+  
+  private int getNbrOfChanges(JsonTrip trip){
+	  List<JsonSegment> segments = trip.getSegments();
+		int k = 0;
+		int result = 0;
+		while (k < segments.size()) {
+			JsonSegment segment = segments.get(k);
+			if (!segment.getType().matches("walk") &&
+					!segment.getType().matches("bike") &&
+					!segment.getType().matches("change")){
+				result++;
+			}
+			k++;
+		}
+	  return result;
   }
   
   	public int getWalkingTimeThreshold() {
