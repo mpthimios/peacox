@@ -9,6 +9,8 @@ import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
+import com.peacox.recommender.repository.Citytemp;
+import com.peacox.recommender.repository.CitytempService;
 import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.UserRouteRequest;
@@ -17,11 +19,16 @@ import com.peacox.recommender.utils.Reports;
 import com.peacox.recommender.webservice.Webservice;
 //import com.peacoxrmi.model.User;
 import de.bezier.math.combinatorics.Combination;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +36,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -73,6 +81,8 @@ public class GetRecommendations{
   private double thresholdForParkAndRide;
   private double walkBikeThresholdForOmmitingCarParRoutes;
   private double ptChangesFactorThreshold;
+  private int maxBikeTimeInExtremeConditions = 15;
+  private int maxWalkTimeInExtremeConditions = 15;
   
   private int maxPtChangesThreshold = 4;
   
@@ -85,6 +95,8 @@ public class GetRecommendations{
   @Autowired protected UserRouteRequestService routeRequestService;
   
   @Autowired protected StagesService stagesService;
+  
+  @Autowired protected CitytempService citytempService;
   
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
         
@@ -355,6 +367,8 @@ public class GetRecommendations{
 		log.debug("methodForRecommendations1");
         
     	ArrayList tripsList = new ArrayList<JsonTrip>();
+    	
+    	boolean extremeConditions = checkForExtremeWeather();
     	
     	for(JsonResponseRoute route : routeResults){
       	  for(JsonTrip trip : route.getTrips()){
@@ -637,12 +651,30 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
+        			else if (extremeConditions 
+        					&& arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.maxWalkTimeInExtremeConditions){
+        				placeEntry = false;
+        				log.debug("ommiting 'walk' based route because of extreme conditions: " +        						
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() + 
+        						" maxWalkTimeInExtremeConditions: " + maxWalkTimeInExtremeConditions);        						
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
         		}
         		if (entry.getKey().matches("bike")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.getBikeTimeThreshold()){
         				placeEntry = false;        				
         				log.debug("ommiting 'bike' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
+        			else if (extremeConditions &&
+        					arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.maxBikeTimeInExtremeConditions){
+        				placeEntry = false;        				
+        				log.debug("ommiting 'bike' based route because of extreme conditions: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() +
+        						" maxBikeTimeInExtremeConditions: " + maxBikeTimeInExtremeConditions);
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
@@ -1856,6 +1888,98 @@ public class GetRecommendations{
 	public void setPtChangesFactorThreshold(double ptChangesFactorThreshold) {
 		this.ptChangesFactorThreshold = ptChangesFactorThreshold;
 	}		
+	
+	public int getMaxBikeTimeInExtremeConditions() {
+		return maxBikeTimeInExtremeConditions;
+	}
+
+	public void setMaxBikeTimeInExtremeConditions(int maxBikeTimeInExtremeConditions) {
+		this.maxBikeTimeInExtremeConditions = maxBikeTimeInExtremeConditions;
+	}
+
+	public int getMaxWalkTimeInExtremeConditions() {
+		return maxWalkTimeInExtremeConditions;
+	}
+
+	public void setMaxWalkTimeInExtremeConditions(int maxWalkTimeInExtremeConditions) {
+		this.maxWalkTimeInExtremeConditions = maxWalkTimeInExtremeConditions;
+	}
+	
+	public boolean checkForExtremeWeather(){
+		try{
+			double temp = 0.0;
+			double precipitation = 0.0;
+			boolean extremeConditions = false;
+			boolean rainyConditions = false;
+			boolean changeParams = false;
+			
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.HOUR,-3);
+			Date date = cal.getTime();	
+			
+			List<Citytemp> citytemps = citytempService.findCitytempByDate(date);
+			
+			if (citytemps.size() > 0){
+				Citytemp citytemp = citytemps.get(0);
+				temp = citytemp.getTemp();
+				precipitation = citytemp.getPrecipitation();
+				changeParams = true;
+			}
+			else{
+				String url = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=Vienna&num_of_days=2&key=gxytvkzgssj753r6kb3aax68&format=csv";
+				URL flu = new URL(url);
+				HttpURLConnection conn = (HttpURLConnection) flu.openConnection();
+		        conn.setRequestMethod( "GET" );
+		        BufferedReader in = new BufferedReader(
+		                                new InputStreamReader(
+		                                conn.getInputStream()));
+		        String inputLine;
+		        String response = "";
+		        int index = 0;
+		        while ((inputLine = in.readLine()) != null){
+		        	if (index == 8){
+		        		response = inputLine;
+		        	}
+		        	index++;
+		        }
+		        in.close();
+		        
+		        String[] weatherValues = response.split(",");
+		        
+		        if (weatherValues.length > 2){
+		        	temp = Double.parseDouble(weatherValues[1]);
+		        	precipitation = Double.parseDouble(weatherValues[9]);
+		        	changeParams = true;
+		        	//save
+		        	Citytemp newCitytemp = new Citytemp();
+		        	newCitytemp.setCity("Vienna");
+		        	newCitytemp.setTemp(temp);
+		        	newCitytemp.setPrecipitation(precipitation);
+		        	newCitytemp.setTime((new Date()));
+		        	citytempService.create(newCitytemp);
+		        }
+			}
+			if (changeParams){
+				if (temp < 5 || temp > 30){
+	        		//extreme conditions
+	        		extremeConditions = true;	       
+	        	}
+	        	if (precipitation > 1){
+	        		//rain
+	        		rainyConditions = true;
+	        	}
+	        	if (extremeConditions || rainyConditions){
+	        		return true;
+	        	}
+			}
+	    }
+		catch(Exception e){
+			log.debug("error in processing weather information");
+			log.debug("check exception below");
+			e.printStackTrace();
+		}
+		return false;
+	}
 	
 static LinkedHashMap sortByValue(LinkedHashMap map) {
         List list = new LinkedList(map.entrySet());
