@@ -37,7 +37,6 @@ import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
 import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
-import com.fluidtime.library.webservice.model.json.JsonTrip;
 import com.fluidtime.routeExample.model.RouteDto;
 import com.fluidtime.routeExample.model.TripDto;
 import com.peacox.recommender.repository.EmissionStatistics;
