@@ -40,6 +40,13 @@ public class UserRouteResultServiceImpl implements UserRouteResultService {
 		return routeResult;
 	}
 	
+	public UserRouteResult update(UserRouteResult routeResult) {
+		// TODO Auto-generated method stub
+		repository.update(routeResult.getId(), routeResult.getSessionId());
+		
+		return routeResult;
+	}
+	
 	public List<UserRouteResult> getAll(){
 		TypedQuery query = em.createQuery("select r from UserRouteResult r where r.timestamp > '2013-06-19 00:00:00.000'", UserRouteResult.class);	    
 	    List<UserRouteResult> result = null;

@@ -6,10 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
-public interface UserRouteRequestRepository extends JpaRepository<UserRouteRequest, Long> {
+public interface RecommendationsWithRealEmissionsRepository extends JpaRepository<RecommendationsWithRealEmissions, Long> {
 	//public OwnedVehicles findOwnedVehiclesByUserId(int userId);
 	@Modifying  
 	@Transactional
-	@Query("update UserRouteRequest u set session_id = ?2 where id = ?1")
-	void update(int id, String sessionId);
+	@Query("update RecommendationsWithRealEmissions r set user_id = ?2, session_id = ?3 where id = ?1 ")
+	void update(int id, long userId, String sessionId);
+	
 }

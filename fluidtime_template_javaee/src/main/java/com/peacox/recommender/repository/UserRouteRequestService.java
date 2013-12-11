@@ -8,6 +8,7 @@ public interface UserRouteRequestService {
 	public UserRouteRequest findRouteRequestByUserIdTimestamp(long user_id);
 	public UserRouteRequest findRouteRequestByUserIdAndSessionId(long user_id, String sessionId);
 	public UserRouteRequest create(UserRouteRequest routeRequest);
+	public UserRouteRequest update(UserRouteRequest routeRequest);
 	public List<UserRouteRequest> getAll();
 	
 }

@@ -39,4 +39,22 @@ public class RecommendationsServiceImpl implements RecommendationsService {
 		repository.save(recommendations);
 		return recommendations;
 	}
+	
+	public List<Recommendations> getAll(){
+		TypedQuery query = em.createQuery("select r from Recommendations r where r.timestamp > '2013-06-19 00:00:00.000'", Recommendations.class);	    
+	    List<Recommendations> result = null;
+	    try{
+	    	result = (List<Recommendations>)query.getResultList();
+	    }catch(IndexOutOfBoundsException e){
+	    	//nothing to do for now
+	    }
+	    return result; 		
+	}
+	
+	public Recommendations update(Recommendations recommendations) {
+		// TODO Auto-generated method stub
+		repository.update(recommendations.getId(), recommendations.getUser_id(), recommendations.getSessionId());
+		
+		return recommendations;
+	}
 }

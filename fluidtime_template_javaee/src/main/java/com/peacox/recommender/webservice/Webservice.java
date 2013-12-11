@@ -46,7 +46,9 @@ import com.peacox.recommender.repository.EmissionStatistics;
 import com.peacox.recommender.repository.EmissionStatisticsService;
 import com.peacox.recommender.repository.OwnedVehicles;
 import com.peacox.recommender.repository.Recommendations;
+import com.peacox.recommender.repository.RecommendationsWithRealEmissions;
 import com.peacox.recommender.repository.RecommendationsService;
+import com.peacox.recommender.repository.RecommendationsWithRealEmissionsService;
 import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.User;
@@ -59,6 +61,8 @@ import com.peacox.recommender.repository.UserService;
 //import com.peacox.recommender.repository.OwnedVehiclesTypeService;
 import com.peacox.recommender.repository.OwnedVehiclesService;
 import com.peacox.recommender.statistics.DescriptiveStats;
+import com.peacox.recommender.statistics.FixIDs;
+import com.peacox.recommender.userdiaries.ProcessUserDiaries;
 import com.peacox.recommender.utils.AverageEmissions;
 import com.peacox.recommender.utils.CompressString;
 import com.peacox.recommender.utils.Coordinates;
@@ -83,6 +87,9 @@ public class Webservice {
 	
 	@Autowired
 	private RecommendationsService recommendationsService;
+	
+	@Autowired
+	private RecommendationsWithRealEmissionsService recommendationsWithRealEmissionsService;
 	
 	@Autowired
 	private StagesService stagesService;
@@ -325,6 +332,48 @@ public class Webservice {
 		
 		return "getRecommendationForRoute";
 	}
+	
+	@RequestMapping(value="storeRecommendationsWithRealEmissions", method = RequestMethod.POST, produces = "text/plain")
+	public String storeRecommendationsWithRealEmissions (Locale locale, Model model, @RequestBody String body) {
+		
+		 try{
+			 
+			log.debug("storeRecommendationsWithRealEmissions");
+			log.debug("received new RecommendationsWithRealEmissions: " + body);
+			
+			JsonResponseRoute route = RouteParser.routeFromJson(body);
+			
+			String userIdStr = route.getAttribute(AttributeListKeys.KEY_ROUTE_USERID);
+			Long userId = 0L;
+			
+			if (userIdStr != null){
+				userId = Long.parseLong(userIdStr);
+			}
+			else{
+				// no userid - exit!
+				log.error("UserId in the route request is null - exiting");
+				model.addAttribute("serverResponse", body);			
+				return "storeRecommendationsWithRealEmissions";
+			} 
+			String jsonResponseStr = RouteParser.routeToJson(route);
+			RecommendationsWithRealEmissions recommendationsWithRealEmissions = new RecommendationsWithRealEmissions();
+			recommendationsWithRealEmissions.setUser_id(45);
+			recommendationsWithRealEmissions.setTimestamp(new Date());
+			recommendationsWithRealEmissions.setRecommendations(CompressString.compress(jsonResponseStr));
+			recommendationsWithRealEmissions.setSessionId(route.getRequest().getSessionId());
+			recommendationsWithRealEmissionsService.create(recommendationsWithRealEmissions);
+				
+			log.debug("Saved storeRecommendationsWithRealEmissions for SessionID: " + route.getRequest().getSessionId());
+			//log.debug("testing compressed String: " + newRouteResult.getResult() + " sdfs");
+			//log.debug("testing decompressed String: " + CompressString.decompress(newRouteResult.getResult()));
+				
+		}catch(Exception e){
+			log.error("Could not store routeRequest in the database");
+			e.printStackTrace();
+		}
+		
+		return "storeRecommendationsWithRealEmissions";
+	}	
 
 	@RequestMapping(value="calculateEmissions", method = RequestMethod.GET)
 	public String calculateEmissions (Locale locale, Model model, @RequestBody String body) {
@@ -413,8 +462,8 @@ public class Webservice {
 		return "getUserScoreForTree";
 	}
 	
-	@RequestMapping(value="getDescriptiveStats", method = RequestMethod.POST)
-	public String getDescriptiveStats (Locale locale, Model model) {
+	@RequestMapping(value="getDescriptiveStats", method = RequestMethod.GET)
+	public String getDescriptiveStats (Locale locale, Model model, @RequestParam String requestType) {
 		
 		log.debug("getDescriptiveStats");		
 		double result = 0;
@@ -422,7 +471,12 @@ public class Webservice {
 			//long userId = Long.parseLong(body);
 			DescriptiveStats stats = 
 					(DescriptiveStats) appContext.getBean("DescriptiveStats");
-			stats.calculateRouteRequestStats();
+			if (requestType.matches("descriptive")){
+				stats.calculateRouteRequestStats();
+			}
+			if (requestType.matches("details")){
+				stats.calculateDetailedStats();
+			}
 			//stats.calculateRouteResultStats();
 		}
 		catch(Exception e){
@@ -431,6 +485,94 @@ public class Webservice {
 		
 		model.addAttribute("stats", "OK");
 		return "getDescriptiveStats";
+	}	
+	
+	@RequestMapping(value="fixIDs", method = RequestMethod.GET)
+	public String fixIDs (Locale locale, Model model, @RequestParam String requestType) {
+		
+		log.debug("fixIDs");		
+		
+		try{
+			FixIDs fixIDs = 
+					(FixIDs) appContext.getBean("FixIDs");
+			if (requestType.matches("fixRecommendations")){
+				log.debug("fixRecommendations");
+				//long userId = Long.parseLong(body);				
+				fixIDs.fixUserIdInRecommendations();
+				//stats.calculateRouteResultStats();
+			}
+			if (requestType.matches("fixRequests")){
+				log.debug("fixRequests");
+				fixIDs.fixSessionIdInRequests();
+			}
+			if (requestType.matches("fixResults")){
+				log.debug("fixResults");
+				fixIDs.fixSessionIdInResults();
+			}			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("fixIDs", "OK");
+		return "fixIDs";
+	}	
+	
+	@RequestMapping(value="processDiaries", method = RequestMethod.GET, produces = "text/plain")
+	public String processDiaries (Locale locale, Model model, @RequestParam String requestType) {
+		
+		log.debug("processDiaries");		
+		String result ="";
+		try{
+			ProcessUserDiaries processUserDiaries = 
+					(ProcessUserDiaries) appContext.getBean("ProcessUserDiaries");
+			result = processUserDiaries.createDiaryGraph("diaries_peacox_all_v2.txt");
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("processDiaries", result);
+		return "processDiaries";
+	}	
+	
+	@RequestMapping(value="printRecommendations", method = RequestMethod.GET, produces = "text/plain")
+	public String printRecommendations (Locale locale, Model model, @RequestParam String requestType) {
+		
+		log.debug("printRecommendations");		
+		String result ="";
+		try{
+			ProcessUserDiaries processUserDiaries = 
+					(ProcessUserDiaries) appContext.getBean("ProcessUserDiaries");
+			result = processUserDiaries.fetchRecommendations();
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("recommendations", result);
+		return "recommendations";
+	}	
+	
+	@RequestMapping(value="printRequests", method = RequestMethod.GET, produces = "text/plain")
+	public String printRequests (Locale locale, Model model, @RequestParam String requestType) {
+		
+		log.debug("printRequests");		
+		String result ="";
+		try{
+			ProcessUserDiaries processUserDiaries = 
+					(ProcessUserDiaries) appContext.getBean("ProcessUserDiaries");
+			result = processUserDiaries.fetchRequests();
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("requests", result);
+		return "requests";
 	}	
 	
 	//without userId

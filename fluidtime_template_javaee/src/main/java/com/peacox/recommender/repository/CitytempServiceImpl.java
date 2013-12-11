@@ -35,7 +35,7 @@ public class CitytempServiceImpl implements CitytempService {
 	}
 
 	public List<Citytemp> findCitytempByDate(Date date) {
-		TypedQuery query = em.createQuery("select c from Citytemp c where c.time > ?1", Citytemp.class);	    
+		TypedQuery query = em.createQuery("select c from Citytemp c where c.time > ?1 order by time ASC", Citytemp.class);	    
 	    query.setParameter(1, date);	   	 
 	    return query.getResultList();
 	}

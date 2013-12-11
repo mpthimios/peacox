@@ -1,5 +1,6 @@
 package com.peacox.recommender.repository;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -15,8 +16,9 @@ import javax.persistence.NamedQuery;
 @Entity
 @Table(schema="public", name = "route_results")
 
-public class UserRouteResult {
+public class UserRouteResult implements Serializable {
 
+	private static final long serialVersionUID = -2517851951873251699L;
 	protected int id;
 	protected Date timestamp;
 	protected long user_id;
@@ -74,7 +76,7 @@ public class UserRouteResult {
 		return session_id;
 	}
 
-	public void setSessionId(String request) {
+	public void setSessionId(String session_id) {
 		this.session_id = session_id;
 	}
 

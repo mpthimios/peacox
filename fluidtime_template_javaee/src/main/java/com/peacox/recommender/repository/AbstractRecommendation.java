@@ -1,33 +1,29 @@
 package com.peacox.recommender.repository;
 
-import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.NamedQuery;
 
-@Entity
-@Table(schema="public", name = "route_requests")
+@MappedSuperclass  
+@Table(schema="public", name = "recommendations")
 
-public class UserRouteRequest implements Serializable {
+public class AbstractRecommendation {
 
-	private static final long serialVersionUID = -2517851941873251699L; 
 	protected int id;
 	protected Date timestamp;
 	protected long user_id;
-	protected String request;
+	protected String recommendation;
 	protected String session_id;
 	
-	public UserRouteRequest() {
+	public AbstractRecommendation() {
 		super();
 	}
 
@@ -64,15 +60,15 @@ public class UserRouteRequest implements Serializable {
 	}
 
 
-	@Column(name="request")
-	public String getRequest() {
-		return request;
+	@Column(name="recommentation_list")
+	public String getRecommendations() {
+		return recommendation;
 	}
 
-	public void setRequest(String request) {
-		this.request = request;
+	public void setRecommendations(String recommendation) {
+		this.recommendation = recommendation;
 	}
-	
+
 	@Column(name="session_id")
 	public String getSessionId() {
 		return session_id;
@@ -81,10 +77,9 @@ public class UserRouteRequest implements Serializable {
 	public void setSessionId(String session_id) {
 		this.session_id = session_id;
 	}
-	
-	
+
 	@Override
 	public String toString() {
-		return "user [id=" + id + ", request=" + request + "]";
+		return "user [id=" + id + ", recommendation=" + recommendation + "]";
 	}
 }

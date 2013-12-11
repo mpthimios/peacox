@@ -56,6 +56,13 @@ public class UserRouteRequestServiceImpl implements UserRouteRequestService {
 		return routeRequest;
 	}
 	
+	public UserRouteRequest update(UserRouteRequest routeRequest) {
+		// TODO Auto-generated method stub
+		repository.update(routeRequest.getId(), routeRequest.getSessionId());
+		
+		return routeRequest;
+	}
+	
 	public UserRouteRequest findRouteRequestByUserIdAndSessionId(long user_id, String sessionId) {
 		TypedQuery query = em.createQuery("select r from UserRouteRequest r where r.user_id = ?1 and session_id = ?2", UserRouteRequest.class);
 	    query.setParameter(1, user_id);
