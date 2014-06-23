@@ -8,6 +8,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import jline.internal.Log;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
@@ -59,6 +61,18 @@ public class UserTreeScoresServiceImpl implements UserTreeScoresService {
 			result = userTreeScore;
 	    }
 	    return result;
+	}
+
+	public List<UserTreeScores> findAllUserTreeScores() {
+		TypedQuery query = em.createQuery("from UserTreeScores ", UserTreeScores.class);	    
+	    List<UserTreeScores> result = null;
+	    try {
+	    	result = (List<UserTreeScores>)query.getResultList();
+	    }
+	    catch(NoResultException nre){
+	    	Log.error("could not find results in UserTreeScores");
+	    }
+		return result;
 	}
 
 	

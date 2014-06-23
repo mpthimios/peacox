@@ -10,4 +10,5 @@ public interface UserTreeScoresService {
 	public UserTreeScores create(UserTreeScores userTreeScore);
 	public UserTreeScores update(UserTreeScores userTreeScore);
 	public UserTreeScores findUserTreeScore(Long userId);
+	public List<UserTreeScores> findAllUserTreeScores();
 }

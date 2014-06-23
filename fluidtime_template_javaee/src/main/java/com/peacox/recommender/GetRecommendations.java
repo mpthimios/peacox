@@ -9,13 +9,21 @@ import com.fluidtime.library.model.json.request.RequestGetRoute;
 import com.fluidtime.library.model.json.response.route.JsonResponseRoute;
 import com.fluidtime.brivel.route.json.AttributeListKeys;
 import com.fluidtime.brivel.route.json.RouteParser;
+import com.peacox.recommender.messages.Messages;
 import com.peacox.recommender.repository.Citytemp;
 import com.peacox.recommender.repository.CitytempService;
+import com.peacox.recommender.repository.MessagesShown;
+import com.peacox.recommender.repository.MessagesShownService;
+import com.peacox.recommender.repository.RecommenderMessages;
+import com.peacox.recommender.repository.RecommenderMessagesService;
 import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
+import com.peacox.recommender.repository.UserTreeScores;
+import com.peacox.recommender.repository.UserTreeScoresService;
 import com.peacox.recommender.utils.Reports;
+import com.peacox.recommender.utils.TreeScore;
 import com.peacox.recommender.webservice.Webservice;
 //import com.peacoxrmi.model.User;
 import de.bezier.math.combinatorics.Combination;
@@ -52,6 +60,7 @@ import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 //@Component("GetRecommendations")
@@ -89,14 +98,33 @@ public class GetRecommendations{
   protected Logger log = Logger.getLogger(GetRecommendations.class);
   
   protected boolean SHOWALL = false;
-  protected boolean showMessageForPT = false;
-  protected boolean showMessageForWalk = false;
+  protected boolean showMessageForPT = true;
+  protected boolean showMessageForWalk = true;
+  
+  //context variables
+  boolean RouteInWalkingDistance; //OK
+  boolean ComparableCarAndPTRouteDuration; //OK  
+  boolean HighEmmissionsDifferenceBetweenCarAndPT; //OK
+  boolean TooManyCarRoutes; //OK
+  boolean TooManyPTRoutes; //OK
+  boolean EmmissionsIncreasing; //OK 
+  boolean EmmissionsHighComparedToOtherUsers; //OK 
+  boolean NiceWeather; //OK
+  //somthing else about the score?
   
   @Autowired protected UserRouteRequestService routeRequestService;
   
   @Autowired protected StagesService stagesService;
   
   @Autowired protected CitytempService citytempService;
+  
+  @Autowired private ApplicationContext appContext;
+  
+  @Autowired private UserTreeScoresService userTreeScoresService;
+  
+  @Autowired protected MessagesShownService messagesShownService;
+  
+  @Autowired protected RecommenderMessagesService recommenderMessagesService;
   
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
         
@@ -137,7 +165,7 @@ public class GetRecommendations{
 	  log.debug("loaded property messageForPT: " + this.getMessageForPT());
 	  log.debug("loaded property messageForWalk: " + this.getMessageForWalk());
 	  
-      LinkedHashMap finalRouteResults;
+	  LinkedHashMap<Integer, HashMap<JsonTrip, Double>> finalRouteResults;
       
       minValues = new LinkedHashMap<String, Double>();
 	  sumValues = new LinkedHashMap<String, Double>();
@@ -147,15 +175,27 @@ public class GetRecommendations{
       updateTotalDurationStats(routeResults);
       updateTotalWBDurationStats(routeResults);
       updateTotalEmissionStats(routeResults);
-      showMessageForPT = false;
-      showMessageForWalk = false;
+      showMessageForPT = true;
+      showMessageForWalk = true;
       RequestGetRoute routeRequest = null;
+      //initialize context variables
+      RouteInWalkingDistance = false;
+      ComparableCarAndPTRouteDuration = false;  
+      HighEmmissionsDifferenceBetweenCarAndPT = false;
+      TooManyCarRoutes = false;
+      TooManyPTRoutes = false;
+      EmmissionsIncreasing = false;
+      EmmissionsHighComparedToOtherUsers = false;
+      NiceWeather = false;
+      
+      String sessionID="";
       
 	      //get actual preferences the user has already set
 	      //UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
       log.debug("Finding Original Route Request for SessionId: " + routeResults.get(0).getRequest().getSessionId());
       UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdAndSessionId(user_id, 
     		  routeResults.get(0).getRequest().getSessionId());
+      sessionID = routeResults.get(0).getRequest().getSessionId();
 	     
 	  if (userRouteRequest != null){
 	      routeRequest = RouteParser
@@ -358,6 +398,212 @@ public class GetRecommendations{
           default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id, routeRequest);
               break;                                        
       }
+      
+      //log context variables:
+      log.debug("---- Context Variables ----");
+      log.debug("RouteInWalkingDistance: " +  RouteInWalkingDistance);
+      log.debug("ComparableCarAndPTRouteDuration: " +  ComparableCarAndPTRouteDuration);
+      log.debug("HighEmmissionsDifferenceBetweenCarAndPT: " +  HighEmmissionsDifferenceBetweenCarAndPT);
+      log.debug("TooManyCarRoutes: " +  TooManyCarRoutes);
+      log.debug("TooManyPTRoutes: " +  TooManyPTRoutes);       
+      log.debug("EmmissionsIncreasing: " +  EmmissionsIncreasing);
+      log.debug("EmmissionsHighComparedToOtherUsers: " +  EmmissionsHighComparedToOtherUsers);
+      log.debug("NiceWeather: " +  NiceWeather);      
+      
+      //first get all the messages from the database
+      List<RecommenderMessages> listOfRecommenderMessages = recommenderMessagesService.getRecommenderMessages();
+      
+      LinkedHashMap<RecommenderMessages, Double> messagesAndUtilities = new LinkedHashMap();
+      //init
+      for (RecommenderMessages message : listOfRecommenderMessages){
+    	  messagesAndUtilities.put(message, -1000.0);
+      }
+      
+      double[] contextUtilities = new double[9];
+      
+      for (int i = 0; i < 9; i++){
+    	  contextUtilities[i] = 0.0;
+      }
+      
+      if (RouteInWalkingDistance){
+    	  contextUtilities[0] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"It's a short distance! You might as well walk!");
+    			  break;
+    		  }
+    	  }
+    	  */
+      }
+      else if (ComparableCarAndPTRouteDuration){
+    	  contextUtilities[2] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Consider taking public transportation! It takes about the same time.");
+    			  break;
+    		  }
+    	  }
+    	  */
+      }
+      else if (HighEmmissionsDifferenceBetweenCarAndPT){
+    	  contextUtilities[2] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("car")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The emmissions of taking a car are too high.");
+    			  break;
+    		  }
+    	  }
+    	  */
+      }
+      else if (TooManyCarRoutes){
+    	  contextUtilities[3] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you use public transportation for a change?");
+    			  break;
+    		  }
+    	  }
+    	  */
+      }
+      else if (TooManyPTRoutes){
+    	  contextUtilities[4] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you walk for a change?");
+    			  break;
+    		  }
+    		  else if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("bike")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+  			  		addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you take a bike for a change?");
+    			  break;
+    		  }
+    	  }
+    	  */
+      }
+      else if (EmmissionsIncreasing){
+    	  contextUtilities[5] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Your emmissions are increasing, consider changing to greener means!");
+    			  break;
+    		  }
+    	  }*/
+      }
+      else if (EmmissionsHighComparedToOtherUsers){
+    	  contextUtilities[6] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Other peacox users have lower emmissions! Consider this route.");
+    			  break;
+    		  }
+    	  }
+    	  */
+      }
+      else if (NiceWeather){
+    	  contextUtilities[7] +=1;
+    	  /*
+    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    	  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+				  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+				  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The weather looks fine, why don't you walk?");
+				  break;
+			  }
+			  else if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("bike")){
+				  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+				  		addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The weather looks fine, why don't you take a bike?");
+				  break;
+			  }
+    	  }*/
+      }
+      
+      double[] messagesShownStrategies = new double[8];
+      
+      for (int i = 0; i < 8; i++){
+    	  messagesShownStrategies[i] = 0.0;
+      }
+      
+      double[] messagesShownTransportationMeans = new double[4];
+      
+      for (int i = 0; i < 4; i++){
+    	  messagesShownTransportationMeans[i] = 0.0;
+      }
+      
+      List<MessagesShown> messagesShownList =  messagesShownService.findMessagesShownByUserId(user_id);
+      for (MessagesShown message : messagesShownList){
+    	  int strategy = message.getStrategy();
+    	  if (strategy > 0){
+    		  messagesShownStrategies[strategy-1] += 1;
+    	  }
+    	  int transportation_means = message.getTransportation_means();
+    	  if (transportation_means > 0){
+    		  messagesShownTransportationMeans[transportation_means-1] += 1;
+    	  }
+      }
+      
+      for (RecommenderMessages message : listOfRecommenderMessages){
+    	  double totalMessageUtility = 0.0;
+    	  if (message.getContext() > 0){
+    		  totalMessageUtility+=contextUtilities[message.getContext()-1];
+    	  }
+    	  if (message.getStrategy() > 0){
+    		  totalMessageUtility-=messagesShownStrategies[message.getStrategy()-1];
+    	  }
+    	  if (message.getTransportation_means()>0){
+    		  totalMessageUtility-=messagesShownTransportationMeans[message.getTransportation_means()-1];
+    	  }
+    	  messagesAndUtilities.put(message, totalMessageUtility);
+      }
+      
+      LinkedHashMap<RecommenderMessages, Double> sortedMessage = this.sortByValue(messagesAndUtilities);
+      
+      RecommenderMessages messageToShow = sortedMessage.entrySet().iterator().next().getKey();
+      int modalityCode = messageToShow.getTransportation_means();
+      String[] modalities = new String[4];
+      modalities[0] = "car";
+      modalities[1] = "pt";
+      modalities[2] = "bike";
+      modalities[3] = "walk";
+      String selectedModality = "";
+      if (modalityCode > 0){
+    	  selectedModality = modalities[modalityCode-1];
+    	  log.debug("selected modality found");
+      }else{
+    	  selectedModality = "pt";
+    	  log.debug("selected modality not found - choosing pt");
+      }
+      for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches(selectedModality)){
+			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
+			  break;
+		  }
+	  }
+      
+    //save
+  	MessagesShown newMessagesShown = new MessagesShown();
+  	newMessagesShown.setOid("Vienna");
+  	newMessagesShown.setUser_id(user_id);
+  	newMessagesShown.setStrategy(messageToShow.getStrategy());
+  	newMessagesShown.setSession_id(sessionID);
+  	newMessagesShown.setContext(messageToShow.getContext());
+  	newMessagesShown.setTransportation_means(messageToShow.getTransportation_means());
+  	newMessagesShown.setTimestamp(new Date());  	
+  	messagesShownService.create(newMessagesShown);
+  	
       return finalRouteResults;
   }
     
@@ -369,6 +615,10 @@ public class GetRecommendations{
     	ArrayList tripsList = new ArrayList<JsonTrip>();
     	
     	boolean extremeConditions = checkForExtremeWeather();
+    	
+    	if (!extremeConditions) {
+    		NiceWeather = true; 
+    	}
     	
     	for(JsonResponseRoute route : routeResults){
       	  for(JsonTrip trip : route.getTrips()){
@@ -480,8 +730,21 @@ public class GetRecommendations{
         //find user preferences per group
         LinkedHashMap<Integer, Double> preferencesPerGroup = this.calculateUserPreferences(userId);
         
+        //find user habits per group
+        LinkedHashMap<Integer, Double> habitsPerGroup = this.calculateUserHabits(userId);
+        
+        //check if the user has been actively taking her car
+        if (habitsPerGroup.entrySet().iterator().next().getKey() == 1){
+        	TooManyCarRoutes = true;
+        }
+        
+        //check if the user has been actively using public transport
+        if (habitsPerGroup.entrySet().iterator().next().getKey() == 2){
+        	TooManyPTRoutes = true;
+        }
+        
         //Group trips by mode of transport:
-      //environmental friendly order: walk, bike, bar, bta, pt, par, car
+        //environmental friendly order: walk, bike, bar, bta, pt, par, car
         LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>> groupedTrips = 
         		new LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>>();
         
@@ -573,6 +836,14 @@ public class GetRecommendations{
         int position = 0;
         int omittedPosition = 0;
         int maxTripsToShow = 1;
+        //check the difference between max Co2 for car and pt
+        double MaxCo2ForCar = 0.0;
+        double MaxCo2ForPT = 0.0;
+        
+        int MaxDurationForCar = 0;
+        int MaxDurationForPT = 0;
+       
+       
         for (Iterator<Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>>> mapIt = groupedTrips.
         		entrySet().iterator(); mapIt.hasNext();) {
         	
@@ -634,6 +905,7 @@ public class GetRecommendations{
 	        		if (preferredNbrOfChanges > 0 && tripNbrChanges <= preferredNbrOfChanges){
 	        			nbrOfTripsWithPreferredChanges++;
 	        		}
+	        			        		
 	        	}
         	}
         	
@@ -705,6 +977,7 @@ public class GetRecommendations{
         				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
         						minWBvalue);
         						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
+        				RouteInWalkingDistance = true;
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
@@ -723,6 +996,7 @@ public class GetRecommendations{
         			placeEntry = false;
     				log.debug("ommiting " + entry.getKey() + " based route since the destination is in walking distance: " +
     						minWBvalue);
+    				RouteInWalkingDistance = true;
     						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
     				omittedTripResults.put(omittedPosition, arrayEntry);
     				omittedPosition++;
@@ -733,7 +1007,7 @@ public class GetRecommendations{
         			try{
 	        			double carTime = 0.0;
 	        			double totalTripTime = 0.0;
-	        			for(JsonSegment segment : arrayEntry.entrySet().iterator().next().getKey().getSegments()){
+	        			for(JsonSegment segment : arrayEntry.entrySet().iterator().next().getKey().getSegments()){	        				
 	        				if (segment.getType().matches("car")){
 	        					carTime += (double)segment.getDurationMinutes();
 	        				}
@@ -863,27 +1137,84 @@ public class GetRecommendations{
         			
         		}
         		log.debug("adding trips for modality: " + entry.getKey() + " with size: " + tripsGroupedByUtilityEntry.getValue().size());
+        		Messages messages = (Messages) appContext.getBean("Messages");
         		for(HashMap<JsonTrip, Double> arrayEntry : tripsGroupedByUtilityEntry.getValue()){
         			if (maxTripsToShow > 0){
         				if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("pt") && this.showMessageForPT){
-        					((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
-        							this.getMessageForPT());
-        					log.debug("added MessageForPT: " + this.getMessageForPT());
+        					
+        					//((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
+        					//		this.getMessageForPT());
+        					//log.debug("added MessageForPT: " + this.getMessageForPT());
         				}
         				else if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("walk") && this.showMessageForWalk){
-        					((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
-        							this.getMessageForWalk());
-        					log.debug("added MessageForWalk: " + this.getMessageForWalk());
+        					//String message = messages.getMessageForWalk();
+        					//((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
+        					//		message);//this.getMessageForWalk());
+        					//log.debug("added MessageForWalk: " + message);//this.getMessageForWalk());
         				}
+        				else if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("car")){
+        					//String message = messages.getMessageForCar();
+        					//((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
+        					//		message);//this.getMessageForWalk());
+        					//log.debug("added MessageForCar: " + message);//this.getMessageForWalk());
+        				}
+        				
 	            		finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
 	    	        	position++;
 	    	        	log.debug("adding new trip with modality: " + arrayEntry.entrySet().iterator().next().getKey().getModality());
+	    	        	if (entry.getKey().matches("pt")){
+	    	        		log.debug("checking CO2 for pt trip");
+	    	        		double currentTripCo2 = Double.parseDouble(arrayEntry.entrySet().iterator().next().getKey().getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+	    	        		if (currentTripCo2 > MaxCo2ForPT){
+	    	        			MaxCo2ForPT = currentTripCo2; 	    	        			
+	    	        		}
+	    	        		log.debug("checking duration for pt trip");
+	    	        		int currentTripDuration = arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes();
+	    	        		if (currentTripDuration > MaxDurationForPT){
+	    	        			MaxDurationForPT = currentTripDuration; 	    	        			
+	    	        		}
+	    	        	}
+	    	        	else if (entry.getKey().matches("car")){
+	    	        		log.debug("checking CO2 for car trip");
+	    	        		double currentTripCo2 = Double.parseDouble(arrayEntry.entrySet().iterator().next().getKey().getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+	    	        		if (currentTripCo2 > MaxCo2ForCar){
+	    	        			MaxCo2ForCar = currentTripCo2; 	    	        			
+	    	        		}
+	    	        		log.debug("checking duration for car trip");
+	    	        		int currentTripDuration = arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes();
+	    	        		if (currentTripDuration > MaxDurationForCar){
+	    	        			MaxDurationForCar = currentTripDuration;
+	    	        		}
+	    	        	}
         			}
         			maxTripsToShow--;
         		}
 
         	}
         	
+        }
+        
+        log.debug("MaxCo2ForPT: " + MaxCo2ForPT);
+        log.debug("MaxCo2ForCar: " + MaxCo2ForCar);
+        
+        if (MaxCo2ForCar > 2*MaxCo2ForPT){
+        	HighEmmissionsDifferenceBetweenCarAndPT = true;
+        }
+        
+        log.debug("MaxDurationForPT: " + MaxDurationForPT);
+        log.debug("MaxDurationForCar: " + MaxDurationForCar);
+        
+        int difference = Math.abs(MaxDurationForCar - MaxDurationForPT);
+        
+        if (difference == 0){
+        	ComparableCarAndPTRouteDuration = true;
+        }
+        //should be parameterized
+        else if (difference != 0 && difference /((MaxDurationForCar + MaxDurationForPT)/2) < 0.2 ){
+        	ComparableCarAndPTRouteDuration = true;
+        }
+        else{
+        	//do nothing?
         }
         
         //add all omitted trips to get an overview
@@ -912,7 +1243,35 @@ public class GetRecommendations{
 //        Iterator itr = c.iterator();
 //        PrintWriter outUTF8 = new PrintWriter(new OutputStreamWriter(System.out));
 //        int ci = 1;
-      
+        //Messages messages = (Messages) appContext.getBean("Messages");
+       
+        List<UserTreeScores> userTreeScoreList = userTreeScoresService.findAllUserTreeScores();
+        UserTreeScores userTreeScore = userTreeScoresService.findUserTreeScore(userId);
+        if (userTreeScoreList != null && userTreeScore != null){
+        	double[] scoresArray = new double[userTreeScoreList.size()];
+        	int i = 0;
+        	for (UserTreeScores score : userTreeScoreList){
+        		scoresArray[i] = score.getScore();
+        		i++;
+        	}
+        	double median;
+        	if (scoresArray.length % 2 == 0)
+        	    median = ((double)scoresArray[scoresArray.length/2] + (double)scoresArray[scoresArray.length/2 - 1])/2;
+        	else
+        	    median = (double) scoresArray[scoresArray.length/2];
+        	if (userTreeScore.getScore() > median){
+        		EmmissionsHighComparedToOtherUsers = true;
+        		log.debug("user Tree score compared to median is higher");
+        	}
+        }
+        
+        TreeScore treeScore = 
+				(TreeScore) appContext.getBean("TreeScore");
+        int emmissionsTrend = treeScore.getEmmissionsTrend(userId);
+        if (emmissionsTrend == 1){
+        	EmmissionsIncreasing = true;
+        }
+        
         return finalTripResults;
   }
    
@@ -1617,6 +1976,8 @@ public class GetRecommendations{
     		  
     			  result += ((Double)emissions.get(segment.getVehicle().getType()))
 	    			  *(segment.getDistanceMeter()/1000.0);
+    			  segment.addAttribute(AttributeListKeys.KEY_SEGMENT_CO2, Double.toString(((Double)emissions.get(segment.getVehicle().getType()))
+    	    			  *(segment.getDistanceMeter()/1000.0)));
     		  }
     	  }
 		  catch (Exception e){
@@ -1798,6 +2159,97 @@ public class GetRecommendations{
 	    	log.debug(" type: " + entry.getKey() + " value: " + entry.getValue());
 	    }
 	  
+	  return sortedResult;
+  }
+  
+  private LinkedHashMap<Integer, Double> calculateUserHabits( long userId){
+	  double[] data = {0, 0, 0, 0};
+	  
+	  LinkedHashMap<String, int[]> intervals = new LinkedHashMap();
+	  intervals.put("morning", new int[]{1, 6});
+	  intervals.put("noon", new int[]{6, 12});
+	  intervals.put("afternoon", new int[]{12, 18});
+	  intervals.put("evening", new int[]{18, 24});
+	  
+	  //List<Stages> stages = stagesService.findStagesByUserId(userId);
+	  // new solution that considers the hour of the day
+	  List<Stages> stages = null;
+	  //fetching all stages
+	  stages = stagesService.findStagesByUserIdAndHour(userId, 1, 24);
+	  log.debug("morning, found: " + stages.size());	  
+	  LinkedHashMap<Integer, Double> result = new LinkedHashMap();
+	  //0 walk, 1 bike, 2 pt, 3 car
+	  
+	  if (stages == null || stages.size() < 5){
+		  data[0] = 4;
+		  data[1] = 3;
+		  data[2] = 2;
+		  data[3] = 1;
+	  }
+	  if (stages != null){
+		  for(Stages stage : stages){
+			  switch (stage.getMode_detected_code()){
+			  	case 1:
+			  		data[0]++;
+			  		break;
+			  	case 2:
+			  		data[1]++;
+			  		break;
+			  	case 3:
+			  		data[3]++;
+			  		break;
+			  	case 4:
+			  		data[3]++;
+			  		break;
+			  	case 5:
+			  		data[2]++;
+			  		break;
+			  	case 6:
+			  		data[2]++;
+			  		break;
+			  	case 7:
+			  		data[2]++;
+			  		break;
+			  	case 11:
+			  		data[2]++;
+			  		break;
+			  	}
+			  }
+	  }
+	  result.put(4, data[0]); //walk
+	  result.put(3, data[1]); //bicycle
+	  result.put(2, data[2]); //pt
+	  result.put(1, data[3]); //car
+	  
+	  List<Map.Entry<Integer, Double>> entries =
+		  new ArrayList<Map.Entry<Integer, Double>>(result.entrySet());
+		Collections.sort(entries, new Comparator<Map.Entry<Integer, Double>>() {
+		  public int compare(Map.Entry<Integer, Double> a, Map.Entry<Integer, Double> b){	
+			  if (a.getValue().compareTo(b.getValue()) > 0){
+				  return -1;
+			  }
+			  else if (a.getValue().compareTo(b.getValue()) < 0){
+				  return 1;
+			  }
+			  else{
+				  if (a.getKey() > b.getKey()){
+					  return -1;
+				  }else{
+					  return 1;
+				  }
+					  
+			  }		    
+		  }
+		});
+		LinkedHashMap<Integer, Double> sortedResult = new LinkedHashMap<Integer, Double>();
+		for (Map.Entry<Integer, Double> entry : entries) {
+			sortedResult.put(entry.getKey(), entry.getValue());
+		}
+	    
+		log.debug("current user habits are the following:");
+	    for (Map.Entry<Integer, Double> entry : sortedResult.entrySet()){
+	    	log.debug(" type: " + entry.getKey() + " value: " + entry.getValue());
+	    }	  
 	  return sortedResult;
   }
   
