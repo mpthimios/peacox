@@ -586,9 +586,11 @@ public class GetRecommendations{
     	  log.debug("selected modality not found - choosing pt");
       }
       for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+    	  log.debug("checking to add message: " + ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality());
 		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches(selectedModality)){
 			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
 			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
+			  log.debug("message added: " + messageToShow.getText());
 			  break;
 		  }
 	  }
