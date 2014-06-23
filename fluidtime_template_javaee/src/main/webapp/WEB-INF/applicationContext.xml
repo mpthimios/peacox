@@ -19,7 +19,7 @@
 
 	<bean id="configproperties"
 		class="com.fluidtime.configuration.ReloadablePropertiesFactoryBean">
-		<property name="ignoreResourceNotFound" value="true"></property>
+		<property name="ignoreResourceNotFound" value="true"></property> 
 		<property name="locations">
 			<list>
 				<value>classpath*:/main.properties</value>				
@@ -112,6 +112,10 @@
         <property name="alwaysIncludePT" value="#{recommender.alwaysIncludePT}"/>
         <property name="maxBikeTimeInExtremeConditions" value="#{recommender.maxBikeTimeInExtremeConditions}"/>
         <property name="maxWalkTimeInExtremeConditions" value="#{recommender.maxWalkTimeInExtremeConditions}"/>
+    </bean>
+    
+    <bean id="Messages"
+          class="com.peacox.recommender.messages.Messages">        
     </bean>
 	
 	<context:component-scan base-package="com.peacox" />	
