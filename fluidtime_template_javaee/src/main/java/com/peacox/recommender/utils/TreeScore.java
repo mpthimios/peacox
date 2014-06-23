@@ -150,7 +150,7 @@ public class TreeScore{
 		else{
 			//case 2: Get average emissions for seven days before that 
 			//(i.e. if today is the 22nd, from the 8th to the 14th) 
-			//and divide it by the total travel distance during that time frame (= “emission14”)
+			//and divide it by the total travel distance during that time frame (= "emission14")
 			//If emission7_14 < emission7 -> user gains a point
 			if (distance7_14 > 0 && distance7 > 0){
 				if ( emissions7_14/distance7_14 > emissions7/distance7)
@@ -273,7 +273,7 @@ public class TreeScore{
 		else{
 			//case 2: Get average emissions for seven days before that 
 			//(i.e. if today is the 22nd, from the 8th to the 14th) 
-			//and divide it by the total travel distance during that time frame (= “emission14”)
+			//and divide it by the total travel distance during that time frame (= "emission14")
 			//If emission7_14 < emission7 -> user gains a point
 			//Difference = emission7_14  - emission7
 			//If difference > emission7*variance user gains a point
@@ -400,7 +400,7 @@ public class TreeScore{
 		else{
 			//case 2: Get average emissions for seven days before that 
 			//(i.e. if today is the 22nd, from the 8th to the 14th) 
-			//and divide it by the total travel distance during that time frame (= “emission14”)
+			//and divide it by the total travel distance during that time frame (= "emission14")
 			//If emission7_14 < emission7 -> user gains a point
 			if (distance7_14 > 0 && distance7 > 0){
 				if ( emissions7_14/distance7_14 > emissions7/distance7)
