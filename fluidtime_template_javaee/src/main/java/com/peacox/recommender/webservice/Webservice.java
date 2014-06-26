@@ -202,9 +202,17 @@ public class Webservice {
 			model.addAttribute("serverResponse", body);			
 			return "getRecommendationForRoute";
 		}
-		
+		JsonResponseRoute jsonResponse = null;
 		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
-		JsonResponseRoute jsonResponse = recommendRoutes(route, userPreferences, userId);
+		try{
+			jsonResponse = recommendRoutes(route, userPreferences, userId);
+		}
+		catch (Exception e){
+			log.error("Could not store recommend routes");
+			e.printStackTrace();
+			model.addAttribute("serverResponse", body);	
+			return "getRecommendationForRoute";
+		}
         
         //log.debug("jsonResponse: " + jsonResponse);
 		String jsonResponseStr = RouteParser.routeToJson(jsonResponse);
