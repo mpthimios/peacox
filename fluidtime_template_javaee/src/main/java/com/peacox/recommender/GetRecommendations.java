@@ -415,9 +415,9 @@ public class GetRecommendations{
       
       LinkedHashMap<RecommenderMessages, Double> messagesAndUtilities = new LinkedHashMap();
       //init
-      for (RecommenderMessages message : listOfRecommenderMessages){
-    	  messagesAndUtilities.put(message, -1000.0);
-      }
+      //for (RecommenderMessages message : listOfRecommenderMessages){
+     //  messagesAndUtilities.put(message, -1000.0);
+      //}
       
       double[] contextUtilities = new double[9];
       
@@ -437,8 +437,8 @@ public class GetRecommendations{
     	  }
     	  */
       }
-      else if (ComparableCarAndPTRouteDuration){
-    	  contextUtilities[2] +=1;
+      if (ComparableCarAndPTRouteDuration){
+    	  contextUtilities[1] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
     		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
@@ -449,7 +449,7 @@ public class GetRecommendations{
     	  }
     	  */
       }
-      else if (HighEmmissionsDifferenceBetweenCarAndPT){
+      if (HighEmmissionsDifferenceBetweenCarAndPT){
     	  contextUtilities[2] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
@@ -461,7 +461,7 @@ public class GetRecommendations{
     	  }
     	  */
       }
-      else if (TooManyCarRoutes){
+      if (TooManyCarRoutes){
     	  contextUtilities[3] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
@@ -473,7 +473,7 @@ public class GetRecommendations{
     	  }
     	  */
       }
-      else if (TooManyPTRoutes){
+      if (TooManyPTRoutes){
     	  contextUtilities[4] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
@@ -490,7 +490,7 @@ public class GetRecommendations{
     	  }
     	  */
       }
-      else if (EmmissionsIncreasing){
+      if (EmmissionsIncreasing){
     	  contextUtilities[5] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
@@ -501,7 +501,7 @@ public class GetRecommendations{
     		  }
     	  }*/
       }
-      else if (EmmissionsHighComparedToOtherUsers){
+      if (EmmissionsHighComparedToOtherUsers){
     	  contextUtilities[6] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
@@ -513,7 +513,7 @@ public class GetRecommendations{
     	  }
     	  */
       }
-      else if (NiceWeather){
+      if (NiceWeather){
     	  contextUtilities[7] +=1;
     	  /*
     	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
@@ -543,6 +543,7 @@ public class GetRecommendations{
       }
       
       List<MessagesShown> messagesShownList =  messagesShownService.findMessagesShownByUserId(user_id);
+      HashMap<Integer, Double> messagesShownStats = new HashMap<Integer, Double>(); 
       for (MessagesShown message : messagesShownList){
     	  int strategy = message.getStrategy();
     	  if (strategy > 0){
@@ -552,23 +553,42 @@ public class GetRecommendations{
     	  if (transportation_means > 0){
     		  messagesShownTransportationMeans[transportation_means-1] += 1;
     	  }
+    	  
+    	  if (messagesShownStats.containsKey(message.getMessage_id())){
+    		  double temp = messagesShownStats.get(message.getMessage_id());
+    		  messagesShownStats.put(message.getMessage_id(), temp+1);
+    	  }
+    	  else{
+    		  messagesShownStats.put(message.getMessage_id(), 1.0);
+    	  }
       }
+      
       
       for (RecommenderMessages message : listOfRecommenderMessages){
     	  double totalMessageUtility = 0.0;
-    	  if (message.getContext() > 0){
-    		  totalMessageUtility+=contextUtilities[message.getContext()-1];
-    	  }
     	  if (message.getStrategy() > 0){
     		  totalMessageUtility-=messagesShownStrategies[message.getStrategy()-1];
     	  }
     	  if (message.getTransportation_means()>0){
     		  totalMessageUtility-=messagesShownTransportationMeans[message.getTransportation_means()-1];
+    	  } 
+    	  if (messagesShownStats.containsKey(message.getId())){
+    		  log.warn("reducing utility for messageid: " + message.getId()  + " " + messagesShownStats.get(message.getId()));
+    		  totalMessageUtility-=messagesShownStats.get(message.getId());
+    	  } 
+    	  if (message.getContext() > 0 && contextUtilities[message.getContext()-1] > 0){
+    		  totalMessageUtility+=contextUtilities[message.getContext()-1];
+    		  messagesAndUtilities.put(message, totalMessageUtility);
     	  }
-    	  messagesAndUtilities.put(message, totalMessageUtility);
       }
       
+      
+      
       LinkedHashMap<RecommenderMessages, Double> sortedMessage = this.sortByValue(messagesAndUtilities);
+      
+      for (Map.Entry<RecommenderMessages, Double> entry : sortedMessage.entrySet()){
+    	  log.warn("id: " + entry.getKey().getId() + " message: " + entry.getKey().getText() + " context: " + entry.getKey().getContext() + " utility: " + entry.getValue());
+      }
       
       RecommenderMessages messageToShow = sortedMessage.entrySet().iterator().next().getKey();
       int modalityCode = messageToShow.getTransportation_means();
@@ -585,12 +605,14 @@ public class GetRecommendations{
     	  selectedModality = "pt";
     	  log.debug("selected modality not found - choosing pt");
       }
+      int message_id = 0;
       for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
     	  log.debug("checking to add message: " + ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality());
 		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches(selectedModality)){
 			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
 			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
 			  log.debug("message added: " + messageToShow.getText());
+			  message_id = messageToShow.getId();
 			  break;
 		  }
 	  }
@@ -603,7 +625,8 @@ public class GetRecommendations{
   	newMessagesShown.setSession_id(sessionID);
   	newMessagesShown.setContext(messageToShow.getContext());
   	newMessagesShown.setTransportation_means(messageToShow.getTransportation_means());
-  	newMessagesShown.setTimestamp(new Date());  	
+  	newMessagesShown.setTimestamp(new Date());
+  	newMessagesShown.setMessage_id(message_id);
   	messagesShownService.create(newMessagesShown);
   	
       return finalRouteResults;

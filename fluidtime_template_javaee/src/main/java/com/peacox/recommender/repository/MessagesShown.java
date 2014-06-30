@@ -24,6 +24,7 @@ public class MessagesShown {
 	protected String session_id;
 	protected int strategy;
 	protected int context;
+	protected int message_id;
 	protected int transportation_means;
 	protected String text;
 	
@@ -126,6 +127,16 @@ public class MessagesShown {
 
 	public void setTransportation_means(int transportation_means) {
 		this.transportation_means = transportation_means;
+	}
+
+	
+	public int getMessage_id() {
+		return message_id;
+	}
+
+
+	public void setMessage_id(int message_id) {
+		this.message_id = message_id;
 	}
 
 
