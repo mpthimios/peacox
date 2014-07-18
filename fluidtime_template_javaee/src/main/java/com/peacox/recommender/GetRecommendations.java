@@ -128,7 +128,7 @@ public class GetRecommendations{
   
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
         
-	  log.debug("Start processing RouteRecommendations");
+	  log.warn("Start processing RouteRecommendations");
 	  
 	  minValues = new LinkedHashMap<String, Double>();
 	  sumValues = new LinkedHashMap<String, Double>();
@@ -157,13 +157,13 @@ public class GetRecommendations{
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, 
 		  ArrayList<JsonResponseRoute> routeResults, long user_id){
 	  
-	  log.debug("Start processing RouteRecommendations. user_id: " + user_id);
-	  log.debug("loaded property getWalkingTimeThreshold: " + this.getWalkingTimeThreshold());
-	  log.debug("loaded property bikeTimeThreshold: " + this.getBikeTimeThreshold());
-	  log.debug("loaded property maxPTroutesToShow: " + this.getMaxPTroutesToShow());
-	  log.debug("loaded property timeThresholdCutoff: " + this.getTimeThresholdCutoff());
-	  log.debug("loaded property messageForPT: " + this.getMessageForPT());
-	  log.debug("loaded property messageForWalk: " + this.getMessageForWalk());
+	  log.warn("Start processing RouteRecommendations. user_id: " + user_id);
+	  log.warn("loaded property getWalkingTimeThreshold: " + this.getWalkingTimeThreshold());
+	  log.warn("loaded property bikeTimeThreshold: " + this.getBikeTimeThreshold());
+	  log.warn("loaded property maxPTroutesToShow: " + this.getMaxPTroutesToShow());
+	  log.warn("loaded property timeThresholdCutoff: " + this.getTimeThresholdCutoff());
+	  log.warn("loaded property messageForPT: " + this.getMessageForPT());
+	  log.warn("loaded property messageForWalk: " + this.getMessageForWalk());
 	  
 	  LinkedHashMap<Integer, HashMap<JsonTrip, Double>> finalRouteResults;
       
@@ -192,7 +192,7 @@ public class GetRecommendations{
       
 	      //get actual preferences the user has already set
 	      //UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdTimestamp(user_id);
-      log.debug("Finding Original Route Request for SessionId: " + routeResults.get(0).getRequest().getSessionId());
+      log.warn("Finding Original Route Request for SessionId: " + routeResults.get(0).getRequest().getSessionId());
       UserRouteRequest userRouteRequest = routeRequestService.findRouteRequestByUserIdAndSessionId(user_id, 
     		  routeResults.get(0).getRequest().getSessionId());
       sessionID = routeResults.get(0).getRequest().getSessionId();
@@ -222,89 +222,89 @@ public class GetRecommendations{
 	      boolean fastFound = false;
 	      
 	      //Checking for comfortable:
-	      log.debug("Going to check which options to set");
+	      log.warn("Going to check which options to set");
 	      
 	      try{
-	    	  log.debug("Checking for Comfortable heuristics: ");
-		      log.debug("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
+	    	  log.warn("Checking for Comfortable heuristics: ");
+		      log.warn("PtMaxChanges: " + routeRequest.getOptionsRoute().getPtMaxChanges() +
 		    		  " PtMaxWalkingTime: " + routeRequest.getOptionsRoute().getPtMaxWalkingTime());
 	    	  if ((routeRequest.getOptionsRoute().getPtMaxChanges() <= 2 
 		    		   &&
 		    		  routeRequest.getOptionsRoute().getPtMaxWalkingTime() <=10)){
-	    		  log.debug("Found heuristic comfortable");
+	    		  log.warn("Found heuristic comfortable");
 	    		  comfortableFound = true;
 	    	  }
 	      }catch (Exception e){
-	    	  log.debug("Could not check for comfortable heuristics");
+	    	  log.warn("Could not check for comfortable heuristics");
 	      }
 	      
-	      log.debug("Checking for Comfortable option: ");
+	      log.warn("Checking for Comfortable option: ");
 	      
 	      try{
-	    	  log.debug("appName: " + routeRequest.getDetails().getAppName());
+	    	  log.warn("appName: " + routeRequest.getDetails().getAppName());
 	    	  if (routeRequest.getDetails().getAppName().matches("comfortable")){
-	    		  log.debug("Found appName comfortable");
+	    		  log.warn("Found appName comfortable");
 	    		  comfortableFound = true;
 	    	  }
 	      }catch (Exception e){
-	    	  log.debug("Could not check for comfortable option");
+	    	  log.warn("Could not check for comfortable option");
 	      }
 	      
 	      //Checking for barrier-free:	      
 	      
 	      
 	      try{
-	    	  log.debug("Checking for Barrier-free heuristics: ");
-	    	  log.debug("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
+	    	  log.warn("Checking for Barrier-free heuristics: ");
+	    	  log.warn("ptNoStairs: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") +
 		    		  " ptNoEscalators: " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") +
 		    		  " ptUseWheelchair " + routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair"));
 	    	  if (routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoStairs") &&
 		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptNoEscalators") &&
 		    		  routeRequest.getOptionsRoute().getPtMobilityConstraints().contains("ptUseWheelchair")){
-		    	  log.debug("Found heuristic barrier-free");
+		    	  log.warn("Found heuristic barrier-free");
 		    	  barrierFreeFound = true;
 	    	  }
 	      }catch (Exception e){
-	    	  log.debug("Could not check for barrier-free heuristics");
+	    	  log.warn("Could not check for barrier-free heuristics");
 	      }
 	      
-	      log.debug("Checking for Barrier-free option: ");
-	      log.debug("appName: " + routeRequest.getDetails().getAppName());
+	      log.warn("Checking for Barrier-free option: ");
+	      log.warn("appName: " + routeRequest.getDetails().getAppName());
 	      try{
 	    	  if (routeRequest.getDetails().getAppName().matches("barrier-free")){
-	    		  log.debug("Found appName barrier-free");
+	    		  log.warn("Found appName barrier-free");
 	    		  barrierFreeFound = true;
 	    	  }
 	      }catch (Exception e){
-	    	  log.debug("Could not check for barrier-free option");
+	    	  log.warn("Could not check for barrier-free option");
 	      }
 	      
 	      //Checking for fast:	      	      
 	      try{
-	    	  log.debug("Checking for Fast heuristics: ");
-		      log.debug("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
+	    	  log.warn("Checking for Fast heuristics: ");
+		      log.warn("ptMinTime: " + routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime") +
 		    		  " carMinTime: " + routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime"));
 	    	  if (routeRequest.getOptionsRoute().getPtRouteOptimisation().matches("ptMinTime")&&
 		    		  routeRequest.getOptionsRoute().getCarRouteOptimisation().matches("carMinTime")){
-		    	  log.debug("Found heuristic fast");
+		    	  log.warn("Found heuristic fast");
 		    	  fastFound = true;
 	    	  }
 	      }catch (Exception e){
-	    	  log.debug("Could not check for fast heuristics");
+	    	  log.warn("Could not check for fast heuristics");
 	      }
 	      
-	      log.debug("Checking for Fast option: ");
-	      log.debug("appName: " + routeRequest.getDetails().getAppName());
+	      log.warn("Checking for Fast option: ");
+	      log.warn("appName: " + routeRequest.getDetails().getAppName());
 	      try{
 	    	  if (routeRequest.getDetails().getAppName().matches("fast")){
-	    		  log.debug("Found appName fast");
+	    		  log.warn("Found appName fast");
 	    		  fastFound = true;
 	    	  }
 	      }catch (Exception e){
-	    	  log.debug("Could not check for fast option");
+	    	  log.warn("Could not check for fast option");
 	      }
 	      
-	      log.debug("Options set: comfortableFound - " + comfortableFound +
+	      log.warn("Options set: comfortableFound - " + comfortableFound +
 	    		  ", barrierFreeFound - " + barrierFreeFound + ", " +
 	    		  "fastFound - " + fastFound);
 	      
@@ -312,7 +312,7 @@ public class GetRecommendations{
 	      if (comfortableFound){
 	
 	    	  // this is a default option for comfortable?
-	    	  log.debug("Setting options for comfortable profile");
+	    	  log.warn("Setting options for comfortable profile");
 	    	  //comfortable?
 	    	  userPreferences.setComfortHigh(10.0);
 	    	  userPreferences.setComfortMedium(4.0);
@@ -338,7 +338,7 @@ public class GetRecommendations{
           if (barrierFreeFound){
 	    	  
 	    	  // this is a default option for barrier-free?
-	    	  log.debug("Setting options for barrier-free profile");
+	    	  log.warn("Setting options for barrier-free profile");
 	    	  
 	    	  //very comfortable?
 	    	  userPreferences.setComfortHigh(10.0);
@@ -366,7 +366,7 @@ public class GetRecommendations{
 	    	  
 	    	  // this is a default option for fast?
 	    	  
-	    	  log.debug("Setting options for fast profile");
+	    	  log.warn("Setting options for fast profile");
 	    	  
 	    	  //I don't care about comfort?
 	    	  userPreferences.setComfortHigh(3.0);
@@ -398,236 +398,241 @@ public class GetRecommendations{
           default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id, routeRequest);
               break;                                        
       }
-      
-      //log context variables:
-      log.debug("---- Context Variables ----");
-      log.debug("RouteInWalkingDistance: " +  RouteInWalkingDistance);
-      log.debug("ComparableCarAndPTRouteDuration: " +  ComparableCarAndPTRouteDuration);
-      log.debug("HighEmmissionsDifferenceBetweenCarAndPT: " +  HighEmmissionsDifferenceBetweenCarAndPT);
-      log.debug("TooManyCarRoutes: " +  TooManyCarRoutes);
-      log.debug("TooManyPTRoutes: " +  TooManyPTRoutes);       
-      log.debug("EmmissionsIncreasing: " +  EmmissionsIncreasing);
-      log.debug("EmmissionsHighComparedToOtherUsers: " +  EmmissionsHighComparedToOtherUsers);
-      log.debug("NiceWeather: " +  NiceWeather);      
-      
-      //first get all the messages from the database
-      List<RecommenderMessages> listOfRecommenderMessages = recommenderMessagesService.getRecommenderMessages();
-      
-      LinkedHashMap<RecommenderMessages, Double> messagesAndUtilities = new LinkedHashMap();
-      //init
-      //for (RecommenderMessages message : listOfRecommenderMessages){
-     //  messagesAndUtilities.put(message, -1000.0);
-      //}
-      
-      double[] contextUtilities = new double[9];
-      
-      for (int i = 0; i < 9; i++){
-    	  contextUtilities[i] = 0.0;
-      }
-      
-      if (RouteInWalkingDistance){
-    	  contextUtilities[0] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"It's a short distance! You might as well walk!");
-    			  break;
-    		  }
-    	  }
-    	  */
-      }
-      if (ComparableCarAndPTRouteDuration){
-    	  contextUtilities[1] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Consider taking public transportation! It takes about the same time.");
-    			  break;
-    		  }
-    	  }
-    	  */
-      }
-      if (HighEmmissionsDifferenceBetweenCarAndPT){
-    	  contextUtilities[2] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("car")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The emmissions of taking a car are too high.");
-    			  break;
-    		  }
-    	  }
-    	  */
-      }
-      if (TooManyCarRoutes){
-    	  contextUtilities[3] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you use public transportation for a change?");
-    			  break;
-    		  }
-    	  }
-    	  */
-      }
-      if (TooManyPTRoutes){
-    	  contextUtilities[4] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you walk for a change?");
-    			  break;
-    		  }
-    		  else if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("bike")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-  			  		addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you take a bike for a change?");
-    			  break;
-    		  }
-    	  }
-    	  */
-      }
-      if (EmmissionsIncreasing){
-    	  contextUtilities[5] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Your emmissions are increasing, consider changing to greener means!");
-    			  break;
-    		  }
-    	  }*/
-      }
-      if (EmmissionsHighComparedToOtherUsers){
-    	  contextUtilities[6] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
-    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Other peacox users have lower emmissions! Consider this route.");
-    			  break;
-    		  }
-    	  }
-    	  */
-      }
-      if (NiceWeather){
-    	  contextUtilities[7] +=1;
-    	  /*
-    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-	    	  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+      try{
+    	  Messages messages = (Messages) appContext.getBean("Messages");
+	      //log context variables:
+	      log.warn("---- Context Variables ----");
+	      log.warn("RouteInWalkingDistance: " +  RouteInWalkingDistance);
+	      log.warn("ComparableCarAndPTRouteDuration: " +  ComparableCarAndPTRouteDuration);
+	      log.warn("HighEmmissionsDifferenceBetweenCarAndPT: " +  HighEmmissionsDifferenceBetweenCarAndPT);
+	      log.warn("TooManyCarRoutes: " +  TooManyCarRoutes);
+	      log.warn("TooManyPTRoutes: " +  TooManyPTRoutes);       
+	      log.warn("EmmissionsIncreasing: " +  EmmissionsIncreasing);
+	      log.warn("EmmissionsHighComparedToOtherUsers: " +  EmmissionsHighComparedToOtherUsers);
+	      log.warn("NiceWeather: " +  NiceWeather);      
+	      
+	      //first get all the messages from the database
+	      List<RecommenderMessages> listOfRecommenderMessages = recommenderMessagesService.getRecommenderMessages();
+	      
+	      LinkedHashMap<RecommenderMessages, Double> messagesAndUtilities = new LinkedHashMap();
+	      //init
+	      //for (RecommenderMessages message : listOfRecommenderMessages){
+	     //  messagesAndUtilities.put(message, -1000.0);
+	      //}
+	      
+	      double[] contextUtilities = new double[9];
+	      
+	      for (int i = 0; i < 9; i++){
+	    	  contextUtilities[i] = 0.0;
+	      }
+	      
+	      if (RouteInWalkingDistance){
+	    	  contextUtilities[0] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"It's a short distance! You might as well walk!");
+	    			  break;
+	    		  }
+	    	  }
+	    	  */
+	      }
+	      if (ComparableCarAndPTRouteDuration){
+	    	  contextUtilities[1] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Consider taking public transportation! It takes about the same time.");
+	    			  break;
+	    		  }
+	    	  }
+	    	  */
+	      }
+	      if (HighEmmissionsDifferenceBetweenCarAndPT){
+	    	  contextUtilities[2] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("car")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The emmissions of taking a car are too high.");
+	    			  break;
+	    		  }
+	    	  }
+	    	  */
+	      }
+	      if (TooManyCarRoutes){
+	    	  contextUtilities[3] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you use public transportation for a change?");
+	    			  break;
+	    		  }
+	    	  }
+	    	  */
+	      }
+	      if (TooManyPTRoutes){
+	    	  contextUtilities[4] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you walk for a change?");
+	    			  break;
+	    		  }
+	    		  else if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("bike")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	  			  		addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Why don't you take a bike for a change?");
+	    			  break;
+	    		  }
+	    	  }
+	    	  */
+	      }
+	      if (EmmissionsIncreasing){
+	    	  contextUtilities[5] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Your emmissions are increasing, consider changing to greener means!");
+	    			  break;
+	    		  }
+	    	  }*/
+	      }
+	      if (EmmissionsHighComparedToOtherUsers){
+	    	  contextUtilities[6] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("pt")){
+	    			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+	    			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"Other peacox users have lower emmissions! Consider this route.");
+	    			  break;
+	    		  }
+	    	  }
+	    	  */
+	      }
+	      if (NiceWeather){
+	    	  contextUtilities[7] +=1;
+	    	  /*
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+		    	  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("walk")){
+					  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+					  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The weather looks fine, why don't you walk?");
+					  break;
+				  }
+				  else if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("bike")){
+					  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+					  		addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The weather looks fine, why don't you take a bike?");
+					  break;
+				  }
+	    	  }*/
+	      }
+	      
+	      double[] messagesShownStrategies = new double[8];
+	      
+	      for (int i = 0; i < 8; i++){
+	    	  messagesShownStrategies[i] = 0.0;
+	      }
+	      
+	      double[] messagesShownTransportationMeans = new double[4];
+	      
+	      for (int i = 0; i < 4; i++){
+	    	  messagesShownTransportationMeans[i] = 0.0;
+	      }
+	      
+	      List<MessagesShown> messagesShownList =  messagesShownService.findMessagesShownByUserId(user_id);
+	      HashMap<Integer, Double> messagesShownStats = new HashMap<Integer, Double>(); 
+	      for (MessagesShown message : messagesShownList){
+	    	  int strategy = message.getStrategy();
+	    	  if (strategy > 0){
+	    		  messagesShownStrategies[strategy-1] += 1;
+	    	  }
+	    	  int transportation_means = message.getTransportation_means();
+	    	  if (transportation_means > 0){
+	    		  messagesShownTransportationMeans[transportation_means-1] += 1;
+	    	  }
+	    	  
+	    	  if (messagesShownStats.containsKey(message.getMessage_id())){
+	    		  double temp = messagesShownStats.get(message.getMessage_id());
+	    		  messagesShownStats.put(message.getMessage_id(), temp+1);
+	    	  }
+	    	  else{
+	    		  messagesShownStats.put(message.getMessage_id(), 1.0);
+	    	  }
+	      }
+	      
+	      
+	      for (RecommenderMessages message : listOfRecommenderMessages){
+	    	  double totalMessageUtility = 0.0;
+	    	  if (message.getStrategy() > 0){
+	    		  totalMessageUtility-=messagesShownStrategies[message.getStrategy()-1];
+	    	  }
+	    	  if (message.getTransportation_means()>0){
+	    		  totalMessageUtility-=messagesShownTransportationMeans[message.getTransportation_means()-1];
+	    	  } 
+	    	  if (messagesShownStats.containsKey(message.getId())){
+	    		  log.warn("reducing utility for messageid: " + message.getId()  + " " + messagesShownStats.get(message.getId()));
+	    		  totalMessageUtility-=messagesShownStats.get(message.getId());
+	    	  } 
+	    	  if (message.getContext() > 0 && contextUtilities[message.getContext()-1] > 0){
+	    		  totalMessageUtility+=contextUtilities[message.getContext()-1];
+	    		  messagesAndUtilities.put(message, totalMessageUtility);
+	    	  }
+	      }
+	      
+	      
+	      
+	      LinkedHashMap<RecommenderMessages, Double> sortedMessage = this.sortByValue(messagesAndUtilities);
+	      
+	      for (Map.Entry<RecommenderMessages, Double> entry : sortedMessage.entrySet()){
+	    	  log.warn("id: " + entry.getKey().getId() + " message: " + entry.getKey().getText() + " context: " + entry.getKey().getContext() + " utility: " + entry.getValue());
+	      }
+	      
+	      RecommenderMessages messageToShow = sortedMessage.entrySet().iterator().next().getKey();
+	      int modalityCode = messageToShow.getTransportation_means();
+	      String[] modalities = new String[4];
+	      modalities[0] = "car";
+	      modalities[1] = "pt";
+	      modalities[2] = "bike";
+	      modalities[3] = "walk";
+	      String selectedModality = "";
+	      if (modalityCode > 0){
+	    	  selectedModality = modalities[modalityCode-1];
+	    	  log.warn("selected modality found");
+	      }else{
+	    	  selectedModality = "pt";
+	    	  log.warn("selected modality not found - choosing pt");
+	      }
+	      int message_id = 0;
+	      for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
+	    	  log.warn("checking to add message: " + ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality());
+			  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches(selectedModality)){
 				  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-				  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The weather looks fine, why don't you walk?");
+				  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
+				  log.warn("message added: " + messageToShow.getText());
+				  message_id = messageToShow.getId();
 				  break;
 			  }
-			  else if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches("bike")){
-				  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-				  		addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,"The weather looks fine, why don't you take a bike?");
-				  break;
-			  }
-    	  }*/
-      }
-      
-      double[] messagesShownStrategies = new double[8];
-      
-      for (int i = 0; i < 8; i++){
-    	  messagesShownStrategies[i] = 0.0;
-      }
-      
-      double[] messagesShownTransportationMeans = new double[4];
-      
-      for (int i = 0; i < 4; i++){
-    	  messagesShownTransportationMeans[i] = 0.0;
-      }
-      
-      List<MessagesShown> messagesShownList =  messagesShownService.findMessagesShownByUserId(user_id);
-      HashMap<Integer, Double> messagesShownStats = new HashMap<Integer, Double>(); 
-      for (MessagesShown message : messagesShownList){
-    	  int strategy = message.getStrategy();
-    	  if (strategy > 0){
-    		  messagesShownStrategies[strategy-1] += 1;
-    	  }
-    	  int transportation_means = message.getTransportation_means();
-    	  if (transportation_means > 0){
-    		  messagesShownTransportationMeans[transportation_means-1] += 1;
-    	  }
-    	  
-    	  if (messagesShownStats.containsKey(message.getMessage_id())){
-    		  double temp = messagesShownStats.get(message.getMessage_id());
-    		  messagesShownStats.put(message.getMessage_id(), temp+1);
-    	  }
-    	  else{
-    		  messagesShownStats.put(message.getMessage_id(), 1.0);
-    	  }
-      }
-      
-      
-      for (RecommenderMessages message : listOfRecommenderMessages){
-    	  double totalMessageUtility = 0.0;
-    	  if (message.getStrategy() > 0){
-    		  totalMessageUtility-=messagesShownStrategies[message.getStrategy()-1];
-    	  }
-    	  if (message.getTransportation_means()>0){
-    		  totalMessageUtility-=messagesShownTransportationMeans[message.getTransportation_means()-1];
-    	  } 
-    	  if (messagesShownStats.containsKey(message.getId())){
-    		  log.warn("reducing utility for messageid: " + message.getId()  + " " + messagesShownStats.get(message.getId()));
-    		  totalMessageUtility-=messagesShownStats.get(message.getId());
-    	  } 
-    	  if (message.getContext() > 0 && contextUtilities[message.getContext()-1] > 0){
-    		  totalMessageUtility+=contextUtilities[message.getContext()-1];
-    		  messagesAndUtilities.put(message, totalMessageUtility);
-    	  }
-      }
-      
-      
-      
-      LinkedHashMap<RecommenderMessages, Double> sortedMessage = this.sortByValue(messagesAndUtilities);
-      
-      for (Map.Entry<RecommenderMessages, Double> entry : sortedMessage.entrySet()){
-    	  log.warn("id: " + entry.getKey().getId() + " message: " + entry.getKey().getText() + " context: " + entry.getKey().getContext() + " utility: " + entry.getValue());
-      }
-      
-      RecommenderMessages messageToShow = sortedMessage.entrySet().iterator().next().getKey();
-      int modalityCode = messageToShow.getTransportation_means();
-      String[] modalities = new String[4];
-      modalities[0] = "car";
-      modalities[1] = "pt";
-      modalities[2] = "bike";
-      modalities[3] = "walk";
-      String selectedModality = "";
-      if (modalityCode > 0){
-    	  selectedModality = modalities[modalityCode-1];
-    	  log.debug("selected modality found");
-      }else{
-    	  selectedModality = "pt";
-    	  log.debug("selected modality not found - choosing pt");
-      }
-      int message_id = 0;
-      for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
-    	  log.debug("checking to add message: " + ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality());
-		  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches(selectedModality)){
-			  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-			  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
-			  log.debug("message added: " + messageToShow.getText());
-			  message_id = messageToShow.getId();
-			  break;
 		  }
-	  }
-      
-    //save
-  	MessagesShown newMessagesShown = new MessagesShown();
-  	newMessagesShown.setOid("Vienna");
-  	newMessagesShown.setUser_id(user_id);
-  	newMessagesShown.setStrategy(messageToShow.getStrategy());
-  	newMessagesShown.setSession_id(sessionID);
-  	newMessagesShown.setContext(messageToShow.getContext());
-  	newMessagesShown.setTransportation_means(messageToShow.getTransportation_means());
-  	newMessagesShown.setTimestamp(new Date());
-  	newMessagesShown.setMessage_id(message_id);
-  	messagesShownService.create(newMessagesShown);
+	      
+	    //save
+	  	MessagesShown newMessagesShown = new MessagesShown();
+	  	newMessagesShown.setOid("Vienna");
+	  	newMessagesShown.setUser_id(user_id);
+	  	newMessagesShown.setStrategy(messageToShow.getStrategy());
+	  	newMessagesShown.setSession_id(sessionID);
+	  	newMessagesShown.setContext(messageToShow.getContext());
+	  	newMessagesShown.setTransportation_means(messageToShow.getTransportation_means());
+	  	newMessagesShown.setTimestamp(new Date());
+	  	newMessagesShown.setMessage_id(message_id);
+	  	messagesShownService.create(newMessagesShown);
+      }catch (Exception e){
+    	  e.printStackTrace();
+    	  log.warn("cannot add message");
+      }
   	
       return finalRouteResults;
   }
@@ -635,7 +640,7 @@ public class GetRecommendations{
     private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
         ArrayList<JsonResponseRoute> routeResults, long userId, RequestGetRoute routeRequest){
     	
-		log.debug("methodForRecommendations1");
+		log.warn("methodForRecommendations1");
         
     	ArrayList tripsList = new ArrayList<JsonTrip>();
     	
@@ -648,7 +653,7 @@ public class GetRecommendations{
     	for(JsonResponseRoute route : routeResults){
       	  for(JsonTrip trip : route.getTrips()){
       		  
-      		  log.debug("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+      		  log.warn("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
       		  if (trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2) == null){
       			trip.addAttribute(AttributeListKeys.KEY_SEGMENT_CO2, Double.toString(this.getTripTotalEmissions(trip)));
       		  }
@@ -664,13 +669,13 @@ public class GetRecommendations{
         try{ 
             while (combination.hasMore()){
                     int[] combi = combination.next();
-                    log.debug("new combination found");
+                    log.warn("new combination found");
                     double utility = 0.0;
                     ArrayList<Integer> myArr = new ArrayList<Integer>();
 
                     double totalDuration = 0.0;
                     for (int temp = 0; temp < combi.length; temp++){
-                    	log.debug(" combi: " + combi[temp]);
+                    	log.warn(" combi: " + combi[temp]);
                         int pos = combi[temp];
                         myArr.add(pos);
                         JsonTrip tripResult = (JsonTrip) tripsList.get(pos);
@@ -701,7 +706,7 @@ public class GetRecommendations{
                         totalDuration += (double)getTripTotalDuration(tripResult);
                     }                    
                     combinationsAndUtilities.put(myArr, utility); //howMany should be replaced by utility
-                    log.debug("Route List no: " + howMany + " - utility: " + utility);
+                    log.warn("Route List no: " + howMany + " - utility: " + utility);
                     combinationsAndUtilities.put(myArr, utility);
                     howMany++;
             }
@@ -710,20 +715,20 @@ public class GetRecommendations{
                 e.printStackTrace();	
         }
         
-        log.debug("combinationsAndUtilities size: " + combinationsAndUtilities.size());
-        log.debug("number of routes fetched: " + routeResults.size());
+        log.warn("combinationsAndUtilities size: " + combinationsAndUtilities.size());
+        log.warn("number of routes fetched: " + routeResults.size());
 
         ArrayList<Double> combinationsAndUtilitiesArray = new ArrayList<Double>(combinationsAndUtilities.values());
         Double maxValue = Collections.max(combinationsAndUtilitiesArray);
-        log.debug("max value utility: " + maxValue);	
+        log.warn("max value utility: " + maxValue);	
         int  index = combinationsAndUtilitiesArray.indexOf(maxValue);
-        log.debug("index of list with max value: " + index);
+        log.warn("index of list with max value: " + index);
         
         LinkedHashMap<Integer, HashMap<JsonTrip, Double>> finalTripResults = new LinkedHashMap<Integer, HashMap<JsonTrip, Double>>();
         LinkedHashMap<Integer, HashMap<JsonTrip, Double>> omittedTripResults = new LinkedHashMap<Integer, HashMap<JsonTrip, Double>>();
 
         ArrayList finalTrips = null;
-        log.debug("before iterating routes");
+        log.warn("before iterating routes");
         int itCounter = 0;
         Iterator it=combinationsAndUtilities.keySet().iterator();
         while ( it.hasNext()) {
@@ -736,10 +741,10 @@ public class GetRecommendations{
                 itCounter++;
         }
         
-        log.debug("after iterating routes");
+        log.warn("after iterating routes");
         //(Integer[])(new ArrayList<Integer[]>(combinationsAndUtilities.keySet())).get(index);
 
-        log.debug("before finding the route");
+        log.warn("before finding the route");
         //a variable to hold the routes already in the list
         ArrayList<Integer> topListValues = new ArrayList<Integer>();
         int tripCounter = 0;
@@ -824,11 +829,11 @@ public class GetRecommendations{
         	}
         }
         
-        log.debug("Printing some statistics:");
-        log.debug("number of different modalities: " + groupedTrips.size());
+        log.warn("Printing some statistics:");
+        log.warn("number of different modalities: " + groupedTrips.size());
         for (Iterator<Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>>> mapIt = groupedTrips.entrySet().iterator(); mapIt.hasNext();) {
         	Map.Entry<String, ArrayList<HashMap<JsonTrip, Double>>> entry = mapIt.next();
-        	log.debug("found modality: " + entry.getKey() +
+        	log.warn("found modality: " + entry.getKey() +
         			" with number of trips: " + entry.getValue().size());        	
         }
         
@@ -878,7 +883,7 @@ public class GetRecommendations{
         	maxTripsToShow = 1;
         	if (entry.getKey().matches("pt")){
         		maxTripsToShow = this.getMaxPTroutesToShow();
-        		log.debug("set to show " + this.getMaxPTroutesToShow() + " pt trips");
+        		log.warn("set to show " + this.getMaxPTroutesToShow() + " pt trips");
         	}
         	
         	Collections.sort(entry.getValue(), new Comparator<HashMap<JsonTrip, Double>>() {
@@ -906,9 +911,9 @@ public class GetRecommendations{
 	        	
         		try{
         			preferredNbrOfChanges = routeRequest.getOptionsRoute().getPtMaxChanges();
-        			log.debug("preferredNbrOfChanges: " + preferredNbrOfChanges);
+        			log.warn("preferredNbrOfChanges: " + preferredNbrOfChanges);
             	}catch(Exception e){
-            		log.debug("could not find prefered number of changes for pt");
+            		log.warn("could not find prefered number of changes for pt");
             	}
         		
 	        	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
@@ -943,7 +948,7 @@ public class GetRecommendations{
         		if (entry.getKey().matches("walk")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.getWalkingTimeThreshold()){
         				placeEntry = false;
-        				log.debug("ommiting 'walk' based route since its duration is: " +
+        				log.warn("ommiting 'walk' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
@@ -951,7 +956,7 @@ public class GetRecommendations{
         			else if (extremeConditions 
         					&& arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.maxWalkTimeInExtremeConditions){
         				placeEntry = false;
-        				log.debug("ommiting 'walk' based route because of extreme conditions: " +        						
+        				log.warn("ommiting 'walk' based route because of extreme conditions: " +        						
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() + 
         						" maxWalkTimeInExtremeConditions: " + maxWalkTimeInExtremeConditions);        						
         				omittedTripResults.put(omittedPosition, arrayEntry);
@@ -961,7 +966,7 @@ public class GetRecommendations{
         		if (entry.getKey().matches("bike")){
         			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.getBikeTimeThreshold()){
         				placeEntry = false;        				
-        				log.debug("ommiting 'bike' based route since its duration is: " +
+        				log.warn("ommiting 'bike' based route since its duration is: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
@@ -969,7 +974,7 @@ public class GetRecommendations{
         			else if (extremeConditions &&
         					arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.maxBikeTimeInExtremeConditions){
         				placeEntry = false;        				
-        				log.debug("ommiting 'bike' based route because of extreme conditions: " +
+        				log.warn("ommiting 'bike' based route because of extreme conditions: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() +
         						" maxBikeTimeInExtremeConditions: " + maxBikeTimeInExtremeConditions);
         				omittedTripResults.put(omittedPosition, arrayEntry);
@@ -982,7 +987,7 @@ public class GetRecommendations{
         																(int)(this.getTimeThresholdCutoff()*minValues.get("minPTTotalDuration"))){
         				
         				placeEntry = false;
-        				log.debug("ommiting 'pt' based route since its duration is very high compared to the others: " +
+        				log.warn("ommiting 'pt' based route since its duration is very high compared to the others: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() + " the min value is: " + 
         						minValues.get("minPTTotalDuration"));
         				omittedTripResults.put(omittedPosition, arrayEntry);
@@ -990,7 +995,7 @@ public class GetRecommendations{
         			}
         			else if (getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) > (int)(this.getPtChangesFactorThreshold()*minChanges)){
         				placeEntry = false;
-        				log.debug("ommiting 'pt' based route since it contains too many changes: " +
+        				log.warn("ommiting 'pt' based route since it contains too many changes: " +
         						getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) +
         						" this.getPtChangesFactorThreshold(): " + this.getPtChangesFactorThreshold() +
         						" minChanges: " + minChanges);
@@ -999,7 +1004,7 @@ public class GetRecommendations{
         			}
         			else if (minWBvalue < walkBikeThresholdForOmmitingCarParRoutes){
         				placeEntry = false;
-        				log.debug("ommiting 'pt' based route since the destination is in walking distance: " +
+        				log.warn("ommiting 'pt' based route since the destination is in walking distance: " +
         						minWBvalue);
         						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
         				RouteInWalkingDistance = true;
@@ -1009,7 +1014,7 @@ public class GetRecommendations{
         			else if(preferredNbrOfChanges > 0 && nbrOfTripsWithPreferredChanges > 0
         					&& getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) > preferredNbrOfChanges){
         				placeEntry = false;
-        				log.debug("ommiting 'pt' based route since it contains too many changes compared to the preferred: " +
+        				log.warn("ommiting 'pt' based route since it contains too many changes compared to the preferred: " +
         						getNbrOfChanges(arrayEntry.entrySet().iterator().next().getKey()) +
         						" preferredNbrOfChanges: " + preferredNbrOfChanges);
         				omittedTripResults.put(omittedPosition, arrayEntry);
@@ -1019,7 +1024,7 @@ public class GetRecommendations{
         		
         		if ((entry.getKey().matches("car") || entry.getKey().matches("par")) && (minWBvalue < walkBikeThresholdForOmmitingCarParRoutes)){
         			placeEntry = false;
-    				log.debug("ommiting " + entry.getKey() + " based route since the destination is in walking distance: " +
+    				log.warn("ommiting " + entry.getKey() + " based route since the destination is in walking distance: " +
     						minWBvalue);
     				RouteInWalkingDistance = true;
     						//arrayEntry.entrySet().iterator().next().getKey().getSegments().size());
@@ -1038,11 +1043,11 @@ public class GetRecommendations{
 	        				}
 	        				totalTripTime += (double)segment.getDurationMinutes();
 	        			}
-	        			log.debug("total time for par trip: " + totalTripTime +
+	        			log.warn("total time for par trip: " + totalTripTime +
 	        					" total time of the car segments: " + carTime);
 	        			if (carTime > this.getThresholdForParkAndRide()*totalTripTime){
 	        				placeEntry = false;
-	        				log.debug("ommiting 'par' based route since it doens't make sense: ");
+	        				log.warn("ommiting 'par' based route since it doens't make sense: ");
 	        				omittedTripResults.put(omittedPosition, arrayEntry);
 	        				omittedPosition++;
 	        			}
@@ -1065,11 +1070,11 @@ public class GetRecommendations{
         		}
         	}
         	
-        	log.debug("found " + tripsGroupedByUtility.size() + " utility groups");
+        	log.warn("found " + tripsGroupedByUtility.size() + " utility groups");
         	
         	for (Map.Entry<Double, ArrayList<HashMap<JsonTrip, Double>>> 
         		tripsGroupedByUtilityEntry : tripsGroupedByUtility.entrySet()){
-        		log.debug("utility group size: " + tripsGroupedByUtilityEntry.getValue().size());
+        		log.warn("utility group size: " + tripsGroupedByUtilityEntry.getValue().size());
         		if (tripsGroupedByUtilityEntry.getValue().size() > 1){
         			ArrayList<HashMap<JsonTrip, Double>> tmpArrayEmissions = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
         			ArrayList<HashMap<JsonTrip, Double>> tmpArrayDuration = new ArrayList<HashMap<JsonTrip, Double>> (tripsGroupedByUtilityEntry.getValue());
@@ -1148,64 +1153,64 @@ public class GetRecommendations{
         			
         			tripsGroupedByUtilityEntry.getValue().clear();
         			tripsGroupedByUtilityEntry.getValue().add(trip1ToKeep);
-        			log.debug("trip1ToKeep: " + trip1ToKeep.entrySet().iterator().next().getKey().toString()); 
+        			log.warn("trip1ToKeep: " + trip1ToKeep.entrySet().iterator().next().getKey().toString()); 
         			Reports reports = new Reports();
         			if (!reports.printTripInfo(trip1ToKeep.entrySet().iterator().next().getKey())
         					.matches(reports.printTripInfo(trip2ToKeep.entrySet().iterator().next().getKey()))){
         				tripsGroupedByUtilityEntry.getValue().add(trip2ToKeep);
-        				log.debug("trip1ToKeep: " + trip2ToKeep.entrySet().iterator().next().getKey().toString());
+        				log.warn("trip1ToKeep: " + trip2ToKeep.entrySet().iterator().next().getKey().toString());
         			}else{
-        				log.debug("found duplicate!!!");
+        				log.warn("found duplicate!!!");
         			}
     			
-        			log.debug("ommiting some duplicate trips");
+        			log.warn("ommiting some duplicate trips");
         			
         		}
-        		log.debug("adding trips for modality: " + entry.getKey() + " with size: " + tripsGroupedByUtilityEntry.getValue().size());
-        		Messages messages = (Messages) appContext.getBean("Messages");
+        		 
+        		log.warn("adding trips for modality: " + entry.getKey() + " with size: " + tripsGroupedByUtilityEntry.getValue().size());        		
         		for(HashMap<JsonTrip, Double> arrayEntry : tripsGroupedByUtilityEntry.getValue()){
         			if (maxTripsToShow > 0){
         				if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("pt") && this.showMessageForPT){
         					
         					//((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
         					//		this.getMessageForPT());
-        					//log.debug("added MessageForPT: " + this.getMessageForPT());
+        					//log.warn("added MessageForPT: " + this.getMessageForPT());
         				}
         				else if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("walk") && this.showMessageForWalk){
         					//String message = messages.getMessageForWalk();
         					//((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
         					//		message);//this.getMessageForWalk());
-        					//log.debug("added MessageForWalk: " + message);//this.getMessageForWalk());
+        					//log.warn("added MessageForWalk: " + message);//this.getMessageForWalk());
         				}
         				else if (((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).getModality().matches("car")){
         					//String message = messages.getMessageForCar();
         					//((JsonTrip)arrayEntry.entrySet().iterator().next().getKey()).addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC, 
         					//		message);//this.getMessageForWalk());
-        					//log.debug("added MessageForCar: " + message);//this.getMessageForWalk());
+        					//log.warn("added MessageForCar: " + message);//this.getMessageForWalk());
         				}
         				
 	            		finalTripResults.put(position, arrayEntry);//(entry.getKey(), entry.getValue());
 	    	        	position++;
-	    	        	log.debug("adding new trip with modality: " + arrayEntry.entrySet().iterator().next().getKey().getModality());
+	    	        	log.warn("adding new trip with modality: " + arrayEntry.entrySet().iterator().next().getKey().getModality());
 	    	        	if (entry.getKey().matches("pt")){
-	    	        		log.debug("checking CO2 for pt trip");
+	    	        		log.warn("checking CO2 for pt trip");
 	    	        		double currentTripCo2 = Double.parseDouble(arrayEntry.entrySet().iterator().next().getKey().getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
 	    	        		if (currentTripCo2 > MaxCo2ForPT){
 	    	        			MaxCo2ForPT = currentTripCo2; 	    	        			
 	    	        		}
-	    	        		log.debug("checking duration for pt trip");
+	    	        		log.warn("checking duration for pt trip");
 	    	        		int currentTripDuration = arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes();
 	    	        		if (currentTripDuration > MaxDurationForPT){
 	    	        			MaxDurationForPT = currentTripDuration; 	    	        			
 	    	        		}
 	    	        	}
 	    	        	else if (entry.getKey().matches("car")){
-	    	        		log.debug("checking CO2 for car trip");
+	    	        		log.warn("checking CO2 for car trip");
 	    	        		double currentTripCo2 = Double.parseDouble(arrayEntry.entrySet().iterator().next().getKey().getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
 	    	        		if (currentTripCo2 > MaxCo2ForCar){
 	    	        			MaxCo2ForCar = currentTripCo2; 	    	        			
 	    	        		}
-	    	        		log.debug("checking duration for car trip");
+	    	        		log.warn("checking duration for car trip");
 	    	        		int currentTripDuration = arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes();
 	    	        		if (currentTripDuration > MaxDurationForCar){
 	    	        			MaxDurationForCar = currentTripDuration;
@@ -1219,15 +1224,15 @@ public class GetRecommendations{
         	
         }
         
-        log.debug("MaxCo2ForPT: " + MaxCo2ForPT);
-        log.debug("MaxCo2ForCar: " + MaxCo2ForCar);
+        log.warn("MaxCo2ForPT: " + MaxCo2ForPT);
+        log.warn("MaxCo2ForCar: " + MaxCo2ForCar);
         
         if (MaxCo2ForCar > 2*MaxCo2ForPT){
         	HighEmmissionsDifferenceBetweenCarAndPT = true;
         }
         
-        log.debug("MaxDurationForPT: " + MaxDurationForPT);
-        log.debug("MaxDurationForCar: " + MaxDurationForCar);
+        log.warn("MaxDurationForPT: " + MaxDurationForPT);
+        log.warn("MaxDurationForCar: " + MaxDurationForCar);
         
         int difference = Math.abs(MaxDurationForCar - MaxDurationForPT);
         
@@ -1261,7 +1266,7 @@ public class GetRecommendations{
 //                tripCounter++;
 //            }
 //        }
-        log.debug("after finding the route");
+        log.warn("after finding the route");
              
 //        //Print results to check if we have UTF-8
 //        Collection c = finalTripResults.values();
@@ -1286,7 +1291,7 @@ public class GetRecommendations{
         	    median = (double) scoresArray[scoresArray.length/2];
         	if (userTreeScore.getScore() > median){
         		EmmissionsHighComparedToOtherUsers = true;
-        		log.debug("user Tree score compared to median is higher");
+        		log.warn("user Tree score compared to median is higher");
         	}
         }
         
@@ -1297,19 +1302,57 @@ public class GetRecommendations{
         	EmmissionsIncreasing = true;
         }
         
+        //need to rearrange the trip results so we that we have the lowest
+        LinkedHashMap<String, LinkedHashMap <Integer, HashMap<JsonTrip, Double>>> groupedFinalTripResults =
+        		new LinkedHashMap<String, LinkedHashMap <Integer, HashMap<JsonTrip, Double>>>();
+        for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalTripResults.entrySet()){
+        	if (!groupedFinalTripResults.containsKey(entry.getValue().entrySet().iterator().next().getKey().getModality())){
+        		LinkedHashMap <Integer, HashMap<JsonTrip, Double>> tmp = new LinkedHashMap <Integer, HashMap<JsonTrip, Double>>();
+        		tmp.put(entry.getKey(), entry.getValue());
+        		groupedFinalTripResults.put(entry.getValue().entrySet().iterator().next().getKey().getModality(),
+        				tmp);
+        	}
+        	else{
+        		LinkedHashMap <Integer, HashMap<JsonTrip, Double>> tmp = groupedFinalTripResults.get(
+        				entry.getValue().entrySet().iterator().next().getKey().getModality());
+        		tmp.put(entry.getKey(), entry.getValue());
+        		groupedFinalTripResults.put(entry.getValue().entrySet().iterator().next().getKey().getModality(),
+        				tmp);
+        	}
+        }
+        finalTripResults.clear();
+        for (Map.Entry<String, LinkedHashMap <Integer, HashMap<JsonTrip, Double>>> entry : 
+        		groupedFinalTripResults.entrySet()){
+        	LinkedHashMap <Integer, HashMap<JsonTrip, Double>> tmp = entry.getValue();
+        	List<Map.Entry<Integer, HashMap<JsonTrip, Double>>> entries =
+        			  new ArrayList<Map.Entry<Integer, HashMap<JsonTrip, Double>>>(tmp.entrySet());
+        	Collections.sort(entries, new Comparator<Map.Entry<Integer, HashMap<JsonTrip, Double>>>() {
+	    		  public int compare(Map.Entry<Integer, HashMap<JsonTrip, Double>> a, Map.Entry<Integer, HashMap<JsonTrip, Double>> b){
+	    			  Double aValue = ((double) Double.parseDouble(a.getValue().entrySet().iterator().
+	    					  next().getKey().getAttribute(AttributeListKeys.KEY_SEGMENT_CO2)));      	    			
+	    			  Double bValue = ((double) Double.parseDouble(b.getValue().entrySet().iterator().
+	    					  next().getKey().getAttribute(AttributeListKeys.KEY_SEGMENT_CO2)));
+	    			  return aValue.compareTo(bValue);
+	    		  }
+	    		});
+        	for (Map.Entry<Integer, HashMap<JsonTrip, Double>> sortedEntry : entries) {
+        		finalTripResults.put(sortedEntry.getKey(), sortedEntry.getValue());
+        		}
+        }
+        
         return finalTripResults;
   }
    
   private LinkedHashMap methodForRecommendations2(UserPreferences userPreferences, 
 		  ArrayList<JsonResponseRoute> routeResults){
         
-	  log.debug("methodForRecommendations2");
+	  log.warn("methodForRecommendations2");
 	  
 	  	ArrayList tripsList = new ArrayList<JsonTrip>();
   	
   		for(JsonResponseRoute route : routeResults){
     	  for(JsonTrip trip : route.getTrips()){
-    		log.debug("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+    		log.warn("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
     		tripsList.add(trip);
     	  }
     	}
@@ -1671,26 +1714,26 @@ public class GetRecommendations{
   //routeUtilityCalulationP6
   public double routeUtilityCalulationP6(JsonTrip tripResult, UserPreferences userPreferences){
 		
-	  	log.debug("*** calculating based on routeUtilityCalulationP6 ***");
+	  	log.warn("*** calculating based on routeUtilityCalulationP6 ***");
 	  	double totalUtility = 0;			
 		double totalDuration = (double) this.getTripTotalDuration(tripResult);
-		log.debug("totalDuration: " + totalDuration);
+		log.warn("totalDuration: " + totalDuration);
 	    double totalEmissions = this.getTripTotalEmissions(tripResult);
-	    log.debug("totalEmissions: " + totalEmissions);
+	    log.warn("totalEmissions: " + totalEmissions);
 	    double nominalEmissions = this.getTripNominalEmissions(tripResult);
-	    log.debug("nominalEmissions: " + nominalEmissions);
+	    log.warn("nominalEmissions: " + nominalEmissions);
 	    
-	    log.debug("trip emissions: " + totalEmissions);
+	    log.warn("trip emissions: " + totalEmissions);
 	    
 	    //1st approach based on the mean value for total trip time
 	    //it's like taking some nominal values for the trip
 	    
 	    double minTime = minValues.get("minTotalDuration");
-	    log.debug("minTime: " + minTime);
+	    log.warn("minTime: " + minTime);
 	    double maxTime = maxValues.get("maxTotalDuration");
-	    log.debug("maxTime: " + maxTime);
+	    log.warn("maxTime: " + maxTime);
 	    double meanTime = meanValues.get("meanTotalDuration");
-	    log.debug("meanTime: " + meanTime);
+	    log.warn("meanTime: " + meanTime);
 	    
 	    double intervalPercentage = 0.3; 
 	    
@@ -1705,10 +1748,10 @@ public class GetRecommendations{
 			durationCriterionValue = (Double)userPreferences.getDuration30plus();
 		}
 	        
-		log.debug("durationCriterionValue: " + durationCriterionValue);
+		log.warn("durationCriterionValue: " + durationCriterionValue);
 		
 	    int numberOfChanges = this.getNbrOfChanges(tripResult);
-	    log.debug("number of changes: " + numberOfChanges);
+	    log.warn("number of changes: " + numberOfChanges);
 	    double comfortCriterionValue = 0;
 	    
 	    if (numberOfChanges <= 2){
@@ -1721,7 +1764,7 @@ public class GetRecommendations{
 	        comfortCriterionValue = (Double) userPreferences.getComfortLow();
 	    }
 		
-	    log.debug("comfortCriterionValue: " + comfortCriterionValue);
+	    log.warn("comfortCriterionValue: " + comfortCriterionValue);
 	    
 	    //1st approach based on the mean value for total trip time
 	    double minWBTime = minValues.get("minWBTotalDuration");
@@ -1743,7 +1786,7 @@ public class GetRecommendations{
 			}
 		}
 		
-		log.debug("wbDurationCriterionValue: " + wbDurationCriterionValue);
+		log.warn("wbDurationCriterionValue: " + wbDurationCriterionValue);
 		
 		double emissionsCriterionValue = 0;
 		if (totalEmissions <= 1.0*nominalEmissions){
@@ -1756,7 +1799,7 @@ public class GetRecommendations{
 			emissionsCriterionValue = (Double)userPreferences.getEmissionsHigh();
 		}
 		
-		log.debug("emissionsCriterionValue: " + emissionsCriterionValue);
+		log.warn("emissionsCriterionValue: " + emissionsCriterionValue);
 			
 		totalUtility = durationCriterionValue*
 							((Double)userPreferences.getDurationImportance()) 
@@ -1771,7 +1814,7 @@ public class GetRecommendations{
 		totalUtility = totalUtility*(1.0-(Double)userPreferences.getEcoAttitudeImportance())
 									- emissionsCriterionValue*(Double)userPreferences.getEcoAttitudeImportance();
 		
-		log.debug("totalUtility: " + totalUtility);		
+		log.warn("totalUtility: " + totalUtility);		
 		return totalUtility;
 	  }
   
@@ -1814,8 +1857,8 @@ public class GetRecommendations{
 	          numberOfTrips++;
     	  }
       }
-    	log.debug("numberOfTrips: " + numberOfTrips);
-        log.debug("mean numberOfTrips: " + (int)numberOfTrips/2);
+    	log.warn("numberOfTrips: " + numberOfTrips);
+        log.warn("mean numberOfTrips: " + (int)numberOfTrips/2);
         Collections.sort(durations);
         int middle = ((durations.size()) / 2);
         if(durations.size() % 2 == 0){
@@ -1865,7 +1908,7 @@ public class GetRecommendations{
 	        }
 	        
 	        if (trip.getModality().matches("pt") || trip.getModality().matches("pt")){
-	        	log.debug("updating duration statistics: found pt trip with duration: " + totalDuration);
+	        	log.warn("updating duration statistics: found pt trip with duration: " + totalDuration);
 	        	if (maxValues.containsKey("maxPTTotalDuration")){
 		            double currentMaxPTTotalDuration = (Double) maxValues.get("maxPTTotalDuration");
 		            if (currentMaxPTTotalDuration < totalDuration){
@@ -1896,8 +1939,8 @@ public class GetRecommendations{
 	        }
     	  }
       }
-      log.debug("numberOfTrips: " + numberOfTrips);
-      log.debug("mean numberOfTrips: " + (int)numberOfTrips/2);
+      log.warn("numberOfTrips: " + numberOfTrips);
+      log.warn("mean numberOfTrips: " + (int)numberOfTrips/2);
       Collections.sort(durations);
       int middle = ((durations.size()) / 2);
       if(durations.size() % 2 == 0){
@@ -2006,7 +2049,7 @@ public class GetRecommendations{
     		  }
     	  }
 		  catch (Exception e){
-			  log.debug("Could not get emmissions for vehicle type: " + segment.getVehicle().getType());
+			  log.warn("Could not get emmissions for vehicle type: " + segment.getVehicle().getType());
 		  }    	  
           j++;
       }
@@ -2062,17 +2105,17 @@ public class GetRecommendations{
 	  double result = 0.0;      
       List<JsonSegment> segments = trip.getSegments();
       int j = 0;      
-      log.debug("getTripTotalWBDuration, segments.size(): " + segments.size());
+      log.warn("getTripTotalWBDuration, segments.size(): " + segments.size());
       while (j < segments.size()) {
     	  JsonSegment segment = segments.get(j);
           //if (trip.getModality().matches("walk") || trip.getModality().matches("bike")){
     	  if (segment.getType().matches("walk") || segment.getType().matches("bike")){
     		  result += (double)segment.getDurationMinutes();
-        	  log.debug("segment " + j + " duration: " + (double)segment.getDurationMinutes());
+        	  log.warn("segment " + j + " duration: " + (double)segment.getDurationMinutes());
           }
           j++;
       }
-      log.debug("total duration with segments: " + result + " total duration trip: " + result);
+      log.warn("total duration with segments: " + result + " total duration trip: " + result);
       return result;
   }
   
@@ -2095,19 +2138,19 @@ public class GetRecommendations{
 	  List<Stages> stages = null;
 	  if (currentHour >0 && currentHour <=6){
 		  stages = stagesService.findStagesByUserIdAndHour(userId, 1, 6);
-		  log.debug("morning, found: " + stages.size());
+		  log.warn("morning, found: " + stages.size());
 	  }
 	  else if (currentHour >6 && currentHour <=12){
 		  stages = stagesService.findStagesByUserIdAndHour(userId, 6, 12);
-		  log.debug("noon, found: " + stages.size());
+		  log.warn("noon, found: " + stages.size());
 	  }
 	  else if (currentHour >12 && currentHour <=18){
 		  stages = stagesService.findStagesByUserIdAndHour(userId, 12, 18);
-		  log.debug("afternoon, found: " + stages.size());
+		  log.warn("afternoon, found: " + stages.size());
 	  }
 	  else if (currentHour >18 && currentHour <=24){
 		  stages = stagesService.findStagesByUserIdAndHour(userId, 18, 24);
-		  log.debug("evening, found: " + stages.size());
+		  log.warn("evening, found: " + stages.size());
 	  }
 	  
 	  LinkedHashMap<Integer, Double> result = new LinkedHashMap();
@@ -2179,9 +2222,9 @@ public class GetRecommendations{
 			sortedResult.put(entry.getKey(), entry.getValue());
 		}
 	    
-		log.debug("order of routes display is the following:");
+		log.warn("order of routes display is the following:");
 	    for (Map.Entry<Integer, Double> entry : sortedResult.entrySet()){
-	    	log.debug(" type: " + entry.getKey() + " value: " + entry.getValue());
+	    	log.warn(" type: " + entry.getKey() + " value: " + entry.getValue());
 	    }
 	  
 	  return sortedResult;
@@ -2201,7 +2244,7 @@ public class GetRecommendations{
 	  List<Stages> stages = null;
 	  //fetching all stages
 	  stages = stagesService.findStagesByUserIdAndHour(userId, 1, 24);
-	  log.debug("morning, found: " + stages.size());	  
+	  log.warn("morning, found: " + stages.size());	  
 	  LinkedHashMap<Integer, Double> result = new LinkedHashMap();
 	  //0 walk, 1 bike, 2 pt, 3 car
 	  
@@ -2271,9 +2314,9 @@ public class GetRecommendations{
 			sortedResult.put(entry.getKey(), entry.getValue());
 		}
 	    
-		log.debug("current user habits are the following:");
+		log.warn("current user habits are the following:");
 	    for (Map.Entry<Integer, Double> entry : sortedResult.entrySet()){
-	    	log.debug(" type: " + entry.getKey() + " value: " + entry.getValue());
+	    	log.warn(" type: " + entry.getKey() + " value: " + entry.getValue());
 	    }	  
 	  return sortedResult;
   }
@@ -2451,8 +2494,8 @@ public class GetRecommendations{
 			}
 	    }
 		catch(Exception e){
-			log.debug("error in processing weather information");
-			log.debug("check exception below");
+			log.warn("error in processing weather information");
+			log.warn("check exception below");
 			e.printStackTrace();
 		}
 		return false;
