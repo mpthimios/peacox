@@ -23,6 +23,7 @@ public class RecommenderMessages {
 	protected int transportation_means;
 	protected int user_type;
 	protected String text;
+	protected String text_de;
 	
 	
 	public RecommenderMessages() {
@@ -89,6 +90,15 @@ public class RecommenderMessages {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+		
+	public String getText_de() {
+		return text_de;
+	}
+
+
+	public void setText_de(String text_de) {
+		this.text_de = text_de;
 	}
 
 

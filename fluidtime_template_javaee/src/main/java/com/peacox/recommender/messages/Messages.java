@@ -3,9 +3,16 @@ package com.peacox.recommender.messages;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import jline.internal.Log;
+
+import org.apache.log4j.Logger;
+import org.mindswap.pellet.jena.PelletInfGraph;
+import org.mindswap.pellet.jena.PelletReasoner;
+import org.mindswap.pellet.jena.PelletReasonerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.google.gson.Gson;
 import com.hp.hpl.jena.ontology.DatatypeProperty;
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.ObjectProperty;
+import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
@@ -22,6 +32,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.peacox.recommender.GetRecommendations;
 
 
 public class Messages {
@@ -29,6 +40,7 @@ public class Messages {
 	OntModel ontology;
     String NS = "http://gumo.org/2.0/" + "#";
     String BASE_NS = "http://gumo.org/2.0/";
+    protected Logger log = Logger.getLogger(Messages.class);
 	
 	public Messages(){
 		String fileName = "gumo.owl";
@@ -36,8 +48,29 @@ public class Messages {
 		reader = new BufferedReader(new InputStreamReader(Messages.class.
 		    	getClassLoader().
 		    	getResourceAsStream(fileName)));		
-        ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        ontology = ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC);//OntModelSpec.OWL_MEM);
         ontology.read(reader, null, "RDF/XML");
+        
+        
+        
+        OntClass User = ontology.getOntClass( "http://gumo.org/2.0/User" );         
+        ObjectProperty hasMobilityBehavior = ontology.getObjectProperty("http://gumo.org/2.0/hasMobilityBehavior");
+        Individual newuser = User.createIndividual( "http://gumo.org/2.0/Takis" );
+        Individual mostlyCar = ontology.getIndividual("http://gumo.org/2.0/Mostly_Car");
+        newuser.addProperty(hasMobilityBehavior, mostlyCar);
+        
+        
+        
+        ((PelletInfGraph) ontology.getGraph()).classify();
+        
+        Iterator instances = User.listInstances();
+        log.debug("going got print user ");
+        while (instances.hasNext()){
+        	Individual user = (Individual)instances.next();
+        	log.debug("user " + user.getLocalName());
+        	DatatypeProperty  dataProperty = ontology.getDatatypeProperty("http://gumo.org/2.0/WalkingPreference");
+        	log.debug("walking preferences: " + user.getProperty(dataProperty).getInt());
+        }
 	}
 	
 	public String getMessageForWalk(){

@@ -155,7 +155,7 @@ public class GetRecommendations{
     }
   
   public LinkedHashMap getRecommendations(UserPreferences userPreferences, 
-		  ArrayList<JsonResponseRoute> routeResults, long user_id){
+		  ArrayList<JsonResponseRoute> routeResults, long user_id, String city){
 	  
 	  log.warn("Start processing RouteRecommendations. user_id: " + user_id);
 	  log.warn("loaded property getWalkingTimeThreshold: " + this.getWalkingTimeThreshold());
@@ -610,9 +610,15 @@ public class GetRecommendations{
 	      for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){
 	    	  log.warn("checking to add message: " + ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality());
 			  if (((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).getModality().matches(selectedModality)){
-				  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-				  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
-				  log.warn("message added: " + messageToShow.getText());
+				  if (city.matches("vienna")){
+					  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+					  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText_de());
+				  }
+				  else if (city.matches("dublin")){
+					  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+					  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,messageToShow.getText());
+				  }
+				  log.warn("message added: " + messageToShow.getText() + messageToShow.getText_de() + " city: " + city);
 				  message_id = messageToShow.getId();
 				  break;
 			  }

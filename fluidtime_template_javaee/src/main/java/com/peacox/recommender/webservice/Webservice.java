@@ -166,6 +166,7 @@ public class Webservice {
 		JsonResponseRoute route = RouteParser.routeFromJson(body);
 		
 		String userIdStr = route.getAttribute(AttributeListKeys.KEY_ROUTE_USERID);
+		String city = route.getAttribute(AttributeListKeys.KEY_ROUTE_CITY);
 		Long userId = 0L;
 		
 		if (userIdStr != null){
@@ -205,7 +206,7 @@ public class Webservice {
 		JsonResponseRoute jsonResponse = null;
 		log.debug("calculating for user: " + user.getFirst_name() + " " + user.getLast_name());		
 		try{
-			jsonResponse = recommendRoutes(route, userPreferences, userId);
+			jsonResponse = recommendRoutes(route, userPreferences, userId, city);
 		}
 		catch (Exception e){
 			log.error("Could not store recommend routes");
@@ -629,7 +630,8 @@ public class Webservice {
 	}
 	
 	//with userId
-	private JsonResponseRoute  recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences, long userId){
+	private JsonResponseRoute  recommendRoutes(JsonResponseRoute route, 
+			UserPreferences userPreferences, long userId, String city){
 		
         //printRouteInfo(route);
         
@@ -639,7 +641,7 @@ public class Webservice {
         GetRecommendations recommendations = 
 				(GetRecommendations) appContext.getBean("GetRecommendations");
         LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = 
-        		recommendations.getRecommendations(userPreferences, routeList, userId);
+        		recommendations.getRecommendations(userPreferences, routeList, userId, city);
         List<JsonTrip> newTrips = new ArrayList();
         
         //maybe temporary solution: empty route trips and add the in them order I want
