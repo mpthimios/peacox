@@ -103,7 +103,7 @@ public class FixIDs{
     }
     
     public void fixSessionIdInRequests(){
-    	List<UserRouteRequest> userRouteRequests = userRequestService.getAll();
+    	List<UserRouteRequest> userRouteRequests = userRequestService.getAllWithNullSessionId();
     	
     	for (UserRouteRequest userRouteRequest : userRouteRequests){
     		String request = null;
@@ -133,7 +133,7 @@ public class FixIDs{
     }
     
     public void fixSessionIdInResults(){
-    	List<UserRouteResult> results = userResultService.getAll();    	    	
+    	List<UserRouteResult> results = userResultService.getAllWithNullSessionId();    	    	
     	
     	for (UserRouteResult result : results){
     		String decommpressedResult = null;

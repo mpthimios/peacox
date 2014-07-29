@@ -76,6 +76,17 @@ public class UserRouteRequestServiceImpl implements UserRouteRequestService {
 	    }
 	    return result;
 	}
+
+	public List<UserRouteRequest> getAllWithNullSessionId() {
+		TypedQuery query = em.createQuery("select r from UserRouteRequest r where session_id is null", UserRouteRequest.class);	    
+	    List<UserRouteRequest> result = null;
+	    try{
+	    	result = (List<UserRouteRequest>)query.getResultList();
+	    }catch(IndexOutOfBoundsException e){
+	    	//nothing to do for now
+	    }
+	    return result; 
+	}
 	
 	
 }

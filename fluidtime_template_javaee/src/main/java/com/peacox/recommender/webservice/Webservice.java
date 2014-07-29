@@ -16,6 +16,8 @@ import java.util.Map;
 import java.net.*;
 import java.io.*;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -582,7 +584,37 @@ public class Webservice {
 		
 		model.addAttribute("requests", result);
 		return "requests";
-	}	
+	}
+	
+	@RequestMapping(value="printDataForTCD", method = RequestMethod.GET, produces = "text/csv")
+	public void printDataForTCD (Locale locale, Model model, HttpServletResponse response) {
+		
+		log.debug("printDataForTCD");		
+		String result ="";
+		try{
+			ProcessUserDiaries processUserDiaries = 
+					(ProcessUserDiaries) appContext.getBean("ProcessUserDiaries");
+			result = processUserDiaries.printDataForTCD();
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		response.setContentType("text/csv;charset=utf-8");
+		try{
+			OutputStream resOs= response.getOutputStream();  
+		    OutputStream buffOs= new BufferedOutputStream(resOs);   
+		    OutputStreamWriter outputwriter = new OutputStreamWriter(buffOs);  
+
+		    outputwriter.write(result);
+		    outputwriter.flush();   
+		    outputwriter.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 	
 	//without userId
 	private JsonResponseRoute recommendRoutes(JsonResponseRoute route, UserPreferences userPreferences){

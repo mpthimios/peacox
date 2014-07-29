@@ -42,12 +42,16 @@ import com.fluidtime.routeExample.model.TripDto;
 import com.peacox.recommender.repository.EmissionStatistics;
 import com.peacox.recommender.repository.RecommendationDetails;
 import com.peacox.recommender.repository.RecommendationDetailsService;
+import com.peacox.recommender.repository.Recommendations;
+import com.peacox.recommender.repository.RecommendationsService;
 import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.User;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserTreeScores;
 import com.peacox.recommender.repository.UserTreeScoresService;
+import com.peacox.recommender.repository.UserTrip;
+import com.peacox.recommender.repository.UserTripService;
 import com.peacox.recommender.utils.CompressString;
 import com.peacox.recommender.webservice.Webservice;
 
@@ -59,6 +63,12 @@ public class ProcessUserDiaries{
 	
 	@Autowired
 	private RecommendationDetailsService recommendationDetailsService;
+	
+	@Autowired
+	private RecommendationsService recommendationsService;
+	
+	@Autowired
+	private UserTripService userTripService;
 	
 	public String createDiaryGraph(String fileName){
 		LinkedHashMap<Integer, List<UserDiary>> userDiaries = loadFromFile(fileName);
@@ -345,6 +355,61 @@ public String fetchRequests(){
 			buffer.append("\n");
 		}
 		
+		return buffer.toString();
+	}
+
+	public String printDataForTCD(){
+		StringBuffer buffer = new StringBuffer();
+		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+		List<Recommendations> recommendationsList = 
+				recommendationsService.getAll();
+		
+		for (Recommendations recommendationDetail : recommendationsList){
+			try {
+				
+				String decommpressedRecommendation = CompressString.decompress(recommendationDetail.getRecommendations());
+				JsonResponseRoute routeResponse = RouteParser
+		                .routeFromJson(decommpressedRecommendation);
+				int orderId = 1;
+				
+				long requestId =  routeResponse.getId();
+				
+				
+				
+				for (com.fluidtime.library.model.json.JsonTrip trip : routeResponse.getTrips()){
+					buffer.append("" + recommendationDetail.getUser_id());
+					buffer.append(",");
+					buffer.append("" + requestId);					
+					buffer.append(",");
+					buffer.append(""+orderId);
+					buffer.append(",");
+					buffer.append(""+trip.getModality());									
+					buffer.append(",");
+					buffer.append(""+trip.getDurationMinutes());
+					buffer.append(",");
+					buffer.append(""+trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
+					buffer.append(",");
+					
+					
+					UserTrip userTripResult = 
+							userTripService.getUserTripsForRequestIdAndOrderId(requestId, orderId);
+					if (userTripResult != null){
+						buffer.append("" + userTripResult.getIs_selected());
+					}
+					else{
+						buffer.append("false");
+						log.warn("user_trip is null");
+					}
+					buffer.append(",");
+					buffer.append(sdf.format(recommendationDetail.getTimestamp()));
+					orderId++;
+					buffer.append("\n");
+				}				
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 		return buffer.toString();
 	}
 	

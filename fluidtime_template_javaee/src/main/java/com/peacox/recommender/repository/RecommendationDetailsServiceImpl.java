@@ -24,7 +24,7 @@ public class RecommendationDetailsServiceImpl implements RecommendationDetailsSe
 	private RecommendationDetailsRepository repository;
 
 	public List<RecommendationDetails> getAll(){
-		TypedQuery query = em.createQuery("select r from RecommendationDetails r where r.timestamp > '2013-06-19 00:00:00.000'", RecommendationDetails.class);	    
+		TypedQuery query = em.createQuery("select r from RecommendationDetails r where r.timestamp > '2014-06-19 00:00:00.000'", RecommendationDetails.class);	    
 	    List<RecommendationDetails> result = null;
 	    try{
 	    	result = (List<RecommendationDetails>)query.getResultList();

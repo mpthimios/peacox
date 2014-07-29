@@ -10,5 +10,6 @@ public interface UserRouteRequestService {
 	public UserRouteRequest create(UserRouteRequest routeRequest);
 	public UserRouteRequest update(UserRouteRequest routeRequest);
 	public List<UserRouteRequest> getAll();
+	public List<UserRouteRequest> getAllWithNullSessionId();
 	
 }

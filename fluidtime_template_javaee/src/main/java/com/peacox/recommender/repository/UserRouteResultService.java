@@ -9,5 +9,6 @@ public interface UserRouteResultService {
 	public UserRouteResult create(UserRouteResult routeResult);
 	public UserRouteResult update(UserRouteResult routeResult);
 	public List<UserRouteResult> getAll();
+	public List<UserRouteResult> getAllWithNullSessionId();
 	
 }
