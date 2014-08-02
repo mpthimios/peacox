@@ -626,7 +626,7 @@ public class Webservice {
         
         GetRecommendations recommendations = 
 				(GetRecommendations) appContext.getBean("GetRecommendations");
-        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences, routeList);
+        LinkedHashMap<Integer, HashMap<JsonTrip,Double>> finalRouteResults = recommendations.getRecommendations(userPreferences, routeList, "vienna");
         List<JsonTrip> newTrips = new ArrayList();
         
         //maybe temporary solution: empty route trips and add the in the order I want

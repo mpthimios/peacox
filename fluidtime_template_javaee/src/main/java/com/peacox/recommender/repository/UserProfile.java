@@ -17,7 +17,7 @@ import javax.persistence.NamedQuery;
 
 public class UserProfile {
 
-	protected int user_id;		
+	protected long user_id;		
 	protected int mobility_behaviour;
 	protected double rewards;
 	protected double social_comparison;
@@ -31,11 +31,11 @@ public class UserProfile {
 	}
 	
 	@Id
-	public int getUser_id() {
+	public long getUser_id() {
 		return user_id;
 	}
 
-	public void setUser_id(int user_id) {
+	public void setUser_id(long user_id) {
 		this.user_id = user_id;
 	}
 

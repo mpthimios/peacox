@@ -18,10 +18,14 @@ import com.peacox.recommender.repository.RecommenderMessages;
 import com.peacox.recommender.repository.RecommenderMessagesService;
 import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
+import com.peacox.recommender.repository.UserProfile;
+import com.peacox.recommender.repository.UserProfileService;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserRouteRequestService;
 import com.peacox.recommender.repository.UserTreeScores;
 import com.peacox.recommender.repository.UserTreeScoresService;
+import com.peacox.recommender.repository.UserVehicle;
+import com.peacox.recommender.repository.UserVehicleService;
 import com.peacox.recommender.utils.Reports;
 import com.peacox.recommender.utils.TreeScore;
 import com.peacox.recommender.webservice.Webservice;
@@ -73,6 +77,8 @@ public class GetRecommendations{
   private LinkedHashMap<String, Double> medianValues = new LinkedHashMap<String, Double>();
   private LinkedHashMap<String, Double> meanValues = new LinkedHashMap<String, Double>();
   
+  LinkedHashMap<String, Integer> modalitiesInFinalResults = new LinkedHashMap();
+  
   private double minWBvalue = 100.0;
   
   private double maxValue = 0;
@@ -81,7 +87,16 @@ public class GetRecommendations{
   
   private String ownsVehicle = "";
   
+  private Integer personalizedWalkingTimeThreshold;  
   private Integer walkingTimeThreshold;  
+  private Integer walkingTimeThresholdForCarUsers;
+  private Integer walkingTimeThresholdForPTUsers;
+  private Integer walkingTimeThresholdForBikeUsers;
+  private Integer walkingTimeThresholdForWalkUsers;
+  private Integer bikeTimeThresholdForCarUsers;
+  private Integer bikeTimeThresholdForPTUsers;
+  private Integer bikeTimeThresholdForBikeUsers;
+  private Integer bikeTimeThresholdForWalkUsers;
   private int bikeTimeThreshold;  
   private int maxPTroutesToShow;
   private double timeThresholdCutoff;
@@ -126,7 +141,12 @@ public class GetRecommendations{
   
   @Autowired protected RecommenderMessagesService recommenderMessagesService;
   
-  public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults){
+  @Autowired protected UserVehicleService userVehicleService;
+  
+  @Autowired protected UserProfileService userProfileService;
+  
+  public LinkedHashMap getRecommendations(UserPreferences userPreferences, ArrayList<JsonResponseRoute> routeResults,
+		  String city){
         
 	  log.warn("Start processing RouteRecommendations");
 	  
@@ -139,16 +159,18 @@ public class GetRecommendations{
 	  LinkedHashMap finalRouteResults;
         updateTotalDurationStats(routeResults);
         updateTotalWBDurationStats(routeResults);
-        updateTotalEmissionStats(routeResults);
+        updateTotalEmissionStats(routeResults, city, null);
         
         //HashMap<String, Double> statistics = updateStatistics(routeResults);
         
         switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
-            case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1, null);
+            case 1: finalRouteResults = methodForRecommendations1(userPreferences, 
+            		routeResults, 1, null, city, null);
                 break;
-            case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
+            case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults, city, null);
                 break;                                                                          
-            default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 1, null);
+            default: finalRouteResults = methodForRecommendations1(userPreferences, 
+            		routeResults, 1, null, city, null);
                 break;                                        
         }
         return finalRouteResults;
@@ -159,6 +181,14 @@ public class GetRecommendations{
 	  
 	  log.warn("Start processing RouteRecommendations. user_id: " + user_id);
 	  log.warn("loaded property getWalkingTimeThreshold: " + this.getWalkingTimeThreshold());
+	  log.warn("loaded property walkingTimeThresholdForCarUsers: " + this.getWalkingTimeThresholdForCarUsers());
+	  log.warn("loaded property walkingTimeThresholdForPTUsers: " + this.getWalkingTimeThresholdForPTUsers());
+	  log.warn("loaded property walkingTimeThresholdForBikeUsers: " + this.getWalkingTimeThresholdForBikeUsers());
+	  log.warn("loaded property walkingTimeThresholdForWalkUsers: " + this.getWalkingTimeThresholdForWalkUsers());
+	  log.warn("loaded property bikeTimeThresholdForCarUsers: " + this.getBikeTimeThresholdForCarUsers());
+	  log.warn("loaded property bikeTimeThresholdForPTUsers: " + this.getBikeTimeThresholdForPTUsers());
+	  log.warn("loaded property bikeTimeThresholdForBikeUsers: " + this.getBikeTimeThresholdForBikeUsers());
+	  log.warn("loaded property bikeTimeThresholdForWalkUsers: " + this.getBikeTimeThresholdForWalkUsers());
 	  log.warn("loaded property bikeTimeThreshold: " + this.getBikeTimeThreshold());
 	  log.warn("loaded property maxPTroutesToShow: " + this.getMaxPTroutesToShow());
 	  log.warn("loaded property timeThresholdCutoff: " + this.getTimeThresholdCutoff());
@@ -166,6 +196,35 @@ public class GetRecommendations{
 	  log.warn("loaded property messageForWalk: " + this.getMessageForWalk());
 	  
 	  LinkedHashMap<Integer, HashMap<JsonTrip, Double>> finalRouteResults;
+	  
+	  UserVehicle userVehicle = userVehicleService.findUserVehicleByUserId(user_id);
+	  
+	  
+	  UserProfile userProfile = userProfileService.findUserProfileByUserId(user_id);
+	  
+	  if (userProfile != null){
+		  int mobilityBehaviour = userProfile.getMobility_behaviour();
+		  
+		  switch (mobilityBehaviour){
+		  	case 1:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForCarUsers();
+		  		break;
+		  	case 2:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForPTUsers();
+		  		break;
+		  	case 3:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForBikeUsers();
+		  		break;
+		  	case 4:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForWalkUsers();
+		  		break;
+		  	default:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThreshold();	  			
+		  }
+	  }
+	  else{
+		  personalizedWalkingTimeThreshold = getWalkingTimeThreshold();
+	  }
       
       minValues = new LinkedHashMap<String, Double>();
 	  sumValues = new LinkedHashMap<String, Double>();
@@ -174,7 +233,7 @@ public class GetRecommendations{
 	  minWBvalue = 100.0;
       updateTotalDurationStats(routeResults);
       updateTotalWBDurationStats(routeResults);
-      updateTotalEmissionStats(routeResults);
+      updateTotalEmissionStats(routeResults, city, userVehicle);
       showMessageForPT = true;
       showMessageForWalk = true;
       RequestGetRoute routeRequest = null;
@@ -187,6 +246,12 @@ public class GetRecommendations{
       EmmissionsIncreasing = false;
       EmmissionsHighComparedToOtherUsers = false;
       NiceWeather = false;
+      
+      boolean askedForCar = false;
+      boolean askedForPT = false;
+      boolean askedForWalk = false;
+      boolean askedForBike = false;
+             
       
       String sessionID="";
       
@@ -203,11 +268,28 @@ public class GetRecommendations{
 	      
 	      //check if we have to show messages for PT and Walk
 	      if (!routeRequest.getModality().contains("pt")){
-	    	  this.showMessageForPT = true;
+	    	  this.showMessageForPT = true;	    	  
 	      }
 	      if (!routeRequest.getModality().contains("walk")){
 	    	  this.showMessageForWalk = true;
 	      }
+	      
+	    //check if we have to show messages for PT and Walk
+	      if (routeRequest.getModality().contains("pt")){
+	    	  askedForPT = true;	    	  
+	      }
+	      if (routeRequest.getModality().contains("walk")){
+	    	  askedForWalk = true;
+	      }
+	      if (routeRequest.getModality().contains("car")){
+	    	  askedForCar = true;
+	      }
+	      if (routeRequest.getModality().contains("bike")){
+	    	  askedForBike = true;
+	      }
+	      
+	      log.warn("route request found - askedForPT: " + askedForPT + " askedForWalk: " + askedForWalk +
+	    		  " askedForCar: " + askedForCar + " askedForBike: " + askedForBike);
 	      
 	      HashSet<String> requestedModalities = new HashSet<String>();
 	      try{
@@ -390,12 +472,22 @@ public class GetRecommendations{
 	      }
 	      
 	  }
+	  else{
+		  askedForBike = true;
+		  askedForCar = true;
+		  askedForPT = true;
+		  askedForWalk = true;
+		  log.warn("route request NOT found - askedForPT: " + askedForPT + " askedForWalk: " + askedForWalk +
+	    		  " askedForCar: " + askedForCar + " askedForBike: " + askedForBike);
+	  }
       switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
-          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id, routeRequest);
+          case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 
+        		  user_id, routeRequest, city, userVehicle);
               break;
-          case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults);
+          case 2: finalRouteResults = methodForRecommendations2(userPreferences, routeResults, city, userVehicle);
               break;                                                                          
-          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, user_id, routeRequest);
+          default: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 
+        		  user_id, routeRequest, city, userVehicle);
               break;                                        
       }
       try{
@@ -419,6 +511,50 @@ public class GetRecommendations{
 	      //for (RecommenderMessages message : listOfRecommenderMessages){
 	     //  messagesAndUtilities.put(message, -1000.0);
 	      //}
+	      
+	      log.warn("some stats on the presented modalities: ");
+	      for (Map.Entry<String, Integer> entry : modalitiesInFinalResults.entrySet()){
+	    	  log.warn(" for modality: " + entry.getKey() + " we have: " + entry.getValue() + " results");
+	      }
+	      
+	      //if we are going to show a route that is not requested then we should information the user here
+	      if (modalitiesInFinalResults.containsKey("walk") && askedForWalk == false){
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){		    	  
+				  if (((JsonTrip) entry.getValue().entrySet().iterator().next()
+						  .getKey()).getModality().matches("walk")){
+					  if (city.matches("vienna")){
+						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForWalk());
+					  }
+					  else if (city.matches("dublin")){
+						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForWalk());
+					  }
+					  log.warn("message added: " + getMessageForWalk() + " city: " + city);
+					  break;
+				  }
+			  }
+	    	  return finalRouteResults;
+	      }
+	      
+	      if (modalitiesInFinalResults.containsKey("pt") && askedForPT == false){
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){		    	  
+				  if (((JsonTrip) entry.getValue().entrySet().iterator().next()
+						  .getKey()).getModality().matches("pt")){
+					  if (city.matches("vienna")){
+						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForPT());
+					  }
+					  else if (city.matches("dublin")){
+						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForPT());
+					  }
+					  log.warn("message added: " + getMessageForWalk() + " city: " + city);
+					  break;
+				  }
+			  }
+	    	  return finalRouteResults;
+	      }
 	      
 	      double[] contextUtilities = new double[9];
 	      
@@ -644,7 +780,9 @@ public class GetRecommendations{
   }
     
     private LinkedHashMap methodForRecommendations1(UserPreferences userPreferences, 
-        ArrayList<JsonResponseRoute> routeResults, long userId, RequestGetRoute routeRequest){
+        ArrayList<JsonResponseRoute> routeResults, long userId, 
+        RequestGetRoute routeRequest, String city, UserVehicle userVehicle){
+    	
     	
 		log.warn("methodForRecommendations1");
         
@@ -661,7 +799,7 @@ public class GetRecommendations{
       		  
       		  log.warn("emissions: " + trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2));
       		  if (trip.getAttribute(AttributeListKeys.KEY_SEGMENT_CO2) == null){
-      			trip.addAttribute(AttributeListKeys.KEY_SEGMENT_CO2, Double.toString(this.getTripTotalEmissions(trip)));
+      			trip.addAttribute(AttributeListKeys.KEY_SEGMENT_CO2, Double.toString(this.getTripTotalEmissions(trip, city, userVehicle)));
       		  }
       		  tripsList.add(trip);
       	  }
@@ -695,11 +833,11 @@ public class GetRecommendations{
                                 break;
                             case 3: tripUtility += routeUtilityCalulationP3(tripResult, userPreferences);
                                 break;
-                            case 4: tripUtility += routeUtilityCalulationP4(tripResult, userPreferences);
+                            case 4: tripUtility += routeUtilityCalulationP4(tripResult, userPreferences, city, userVehicle);
                                 break;
-                            case 5: tripUtility += routeUtilityCalulationP5(tripResult, userPreferences);
+                            case 5: tripUtility += routeUtilityCalulationP5(tripResult, userPreferences, city, userVehicle);
                             break;
-                            case 6: tripUtility += routeUtilityCalulationP6(tripResult, userPreferences);
+                            case 6: tripUtility += routeUtilityCalulationP6(tripResult, userPreferences, city, userVehicle);
                             break;
                             default: tripUtility += routeUtilityCalulation(tripResult, userPreferences);
                                 break;                                        
@@ -952,10 +1090,11 @@ public class GetRecommendations{
         	for (HashMap<JsonTrip, Double> arrayEntry : entry.getValue()){
         		boolean placeEntry = true;
         		if (entry.getKey().matches("walk")){
-        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > this.getWalkingTimeThreshold()){
+        			if (arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > personalizedWalkingTimeThreshold){ //this.getWalkingTimeThreshold()){
         				placeEntry = false;
         				log.warn("ommiting 'walk' based route since its duration is: " +
-        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() +
+        						" and personalizedWalkingTimeThreshold is " + personalizedWalkingTimeThreshold);
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
@@ -967,6 +1106,9 @@ public class GetRecommendations{
         						" maxWalkTimeInExtremeConditions: " + maxWalkTimeInExtremeConditions);        						
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
+        			}
+        			else{
+        				RouteInWalkingDistance = true;
         			}
         		}
         		if (entry.getKey().matches("bike")){
@@ -985,6 +1127,9 @@ public class GetRecommendations{
         						" maxBikeTimeInExtremeConditions: " + maxBikeTimeInExtremeConditions);
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
+        			}
+        			else{
+        				RouteInWalkingDistance = true;
         			}
         		}
         		//some logic on how to re-rank pt options
@@ -1343,14 +1488,24 @@ public class GetRecommendations{
 	    		});
         	for (Map.Entry<Integer, HashMap<JsonTrip, Double>> sortedEntry : entries) {
         		finalTripResults.put(sortedEntry.getKey(), sortedEntry.getValue());
+        		JsonTrip tmpTrip = sortedEntry.getValue().entrySet().iterator().next().getKey();
+        		
+        		if (modalitiesInFinalResults.containsKey(tmpTrip.getModality())){
+        			int tmpValue = modalitiesInFinalResults.get(tmpTrip.getModality());
+        			tmpValue++;
+        			modalitiesInFinalResults.put(tmpTrip.getModality(), tmpValue);
         		}
+        		else{
+        			modalitiesInFinalResults.put(tmpTrip.getModality(), 1);
+        		}
+        	}
         }
         
         return finalTripResults;
   }
    
   private LinkedHashMap methodForRecommendations2(UserPreferences userPreferences, 
-		  ArrayList<JsonResponseRoute> routeResults){
+		  ArrayList<JsonResponseRoute> routeResults, String city, UserVehicle userVehicle){
         
 	  log.warn("methodForRecommendations2");
 	  
@@ -1392,7 +1547,7 @@ public class GetRecommendations{
                         break;
                     case 3: utility += routeUtilityCalulationP3(tripResult, userPreferences);
                         break;
-                    case 4: utility += routeUtilityCalulationP4(tripResult, userPreferences);
+                    case 4: utility += routeUtilityCalulationP4(tripResult, userPreferences, city, null);
                         break;                                        
                     default: utility += routeUtilityCalulation(tripResult, userPreferences);
                         break;                                        
@@ -1585,11 +1740,11 @@ public class GetRecommendations{
 	return totalUtility;
   }
   
-  public double routeUtilityCalulationP4(JsonTrip tripResult, UserPreferences userPreferences){
+  public double routeUtilityCalulationP4(JsonTrip tripResult, UserPreferences userPreferences, String city, UserVehicle userVehicle){
 	double totalUtility = 0;
 	
 	double totalDuration = (double) this.getTripTotalDuration(tripResult);
-        double totalEmissions = this.getTripTotalEmissions(tripResult);
+        double totalEmissions = this.getTripTotalEmissions(tripResult, city, userVehicle);
 	double durationCriterionValue = 0;
 	if (totalDuration <= 10){
 		durationCriterionValue = (Double)userPreferences.getDuration10min();
@@ -1642,11 +1797,11 @@ public class GetRecommendations{
 	return totalUtility;
   }
   
-  public double routeUtilityCalulationP5(JsonTrip tripResult, UserPreferences userPreferences){
+  public double routeUtilityCalulationP5(JsonTrip tripResult, UserPreferences userPreferences, String city, UserVehicle userVehicle){
 	double totalUtility = 0;
 		
 	double totalDuration = (double) this.getTripTotalDuration(tripResult);
-    double totalEmissions = this.getTripTotalEmissions(tripResult);
+    double totalEmissions = this.getTripTotalEmissions(tripResult, city, userVehicle);
     double nominalEmissions = this.getTripNominalEmissions(tripResult);
     
     
@@ -1718,13 +1873,13 @@ public class GetRecommendations{
   }
   
   //routeUtilityCalulationP6
-  public double routeUtilityCalulationP6(JsonTrip tripResult, UserPreferences userPreferences){
+  public double routeUtilityCalulationP6(JsonTrip tripResult, UserPreferences userPreferences, String city, UserVehicle userVehicle){
 		
 	  	log.warn("*** calculating based on routeUtilityCalulationP6 ***");
 	  	double totalUtility = 0;			
 		double totalDuration = (double) this.getTripTotalDuration(tripResult);
 		log.warn("totalDuration: " + totalDuration);
-	    double totalEmissions = this.getTripTotalEmissions(tripResult);
+	    double totalEmissions = this.getTripTotalEmissions(tripResult, city, userVehicle);
 	    log.warn("totalEmissions: " + totalEmissions);
 	    double nominalEmissions = this.getTripNominalEmissions(tripResult);
 	    log.warn("nominalEmissions: " + nominalEmissions);
@@ -1960,10 +2115,11 @@ public class GetRecommendations{
       
   }
   
-  private void updateTotalEmissionStats(ArrayList<JsonResponseRoute> routeResults){      
+  private void updateTotalEmissionStats(ArrayList<JsonResponseRoute> routeResults, String city, 
+		  UserVehicle userVehicle){      
       for(JsonResponseRoute route : routeResults){
     	  for(JsonTrip trip : route.getTrips()){
-	        double totalEmissions = getTripTotalEmissions(trip);
+	        double totalEmissions = getTripTotalEmissions(trip, city, userVehicle);
 	        if (maxValues.containsKey("maxTotalEmissions")){
 	            double currentMaxTotalEmissions = (Double) maxValues.get("maxTotalEmissions");
 	            if (currentMaxTotalEmissions < totalEmissions){
@@ -2018,27 +2174,116 @@ public class GetRecommendations{
   }
   
   //per trip total emissions
-  private double getTripTotalEmissions(JsonTrip trip){
+  private double getTripTotalEmissions(JsonTrip trip, String city, UserVehicle userVehicle){
       double result = 0.0;
-      
       HashMap emissions = new HashMap<String, Double>();
-      emissions.put("ptMetro", 20.0);
-      emissions.put("ptTrainS", 50.0);
-      emissions.put("ptTrainR", 55.5);
-      emissions.put("ptTrain", 55.5);
-      emissions.put("ptTrainAirport", 20.0);
-      emissions.put("ptTrainCog", 20.0);
-      emissions.put("ptCableCar", 20.0);
       
-      emissions.put("ptBusCity", 25.5);
-      emissions.put("ptBusNight", 25.5);
-      emissions.put("ptBusRegion", 25.5);
+      try{
+	      if (userVehicle == null){
+	    	  log.warn("user does not have any vehicles");
+	    	  emissions.put("car", 198.0);
+	      }
+	      else{
+	    	  emissions.put("car", 198.0);
+	    	  if (userVehicle.getFeul_type().matches("Petrol")){
+		    	  if (userVehicle.getVehicle_weight() < 2500){
+		    		  if (userVehicle.getEngine_size()<1400){
+		    			  emissions.put("car", 98.0);
+		    		  }
+		    		  else if (userVehicle.getEngine_size()>1400 && userVehicle.getEngine_size()<2000){
+		    			  emissions.put("car", 109.0);
+		    		  }
+		    		  else if (userVehicle.getEngine_size()>2000){
+		    			  emissions.put("car", 154.0);
+		    		  }
+		    	  }
+		    	  else{
+		    		  emissions.put("car", 241.0);
+		    	  }
+	    	  }
+	    	  else if (userVehicle.getFeul_type().matches("Diesel")){
+	    		  if (userVehicle.getVehicle_weight() < 2500){
+		    		  if (userVehicle.getEngine_size()<1400){
+		    			  emissions.put("car", 72.0);
+		    		  }
+		    		  else if (userVehicle.getEngine_size()>1400 && userVehicle.getEngine_size()<2000){
+		    			  emissions.put("car", 89.0);
+		    		  }
+		    		  else if (userVehicle.getEngine_size()>2000){
+		    			  emissions.put("car", 134.0);
+		    		  }
+		    	  }
+		    	  else{
+		    		  emissions.put("car", 253.0);
+		    	  }
+	    	  }
+	      }
+      }
+      catch (Exception e){
+    	  emissions.put("car", 169.0);
+    	  e.printStackTrace();
+      }
       
-      emissions.put("ptTram", 96.6);
-      emissions.put("ptTaxi", 169.0);
-      emissions.put("car", 169.0);
-      emissions.put("walk", 0.0);
-      emissions.put("bike", 0.0);
+      if (city.matches("vienna")){
+    	  emissions.put("ptMetro", 14.0);
+          emissions.put("ptTrainS", 21.0);
+          emissions.put("ptTrainR", 21.0);
+          emissions.put("ptTrain", 21.0);
+          emissions.put("ptTrainAirport", 21.0);
+          emissions.put("ptTrainCog", 21.0);
+          emissions.put("ptCableCar", 21.0);
+          
+          emissions.put("ptBusCity", 34.0);
+          emissions.put("ptBusNight", 60.0);
+          emissions.put("ptBusRegion", 34.0);
+          
+          emissions.put("ptTram", 21.0);
+          emissions.put("ptTaxi", 198.0);
+          
+          emissions.put("walk", 0.0);
+          emissions.put("bike", 0.0);
+    	  
+      }
+      else if (city.matches("dublin")){
+    	  emissions.put("ptMetro", 29.0);
+          emissions.put("ptTrainS", 128.0);
+          emissions.put("ptTrainR", 128.0);
+          emissions.put("ptTrain", 66.45);
+          emissions.put("ptTrainAirport", 128.0);
+          emissions.put("ptTrainCog", 128.0);
+          emissions.put("ptCableCar", 128.0);
+          
+          emissions.put("ptBusCity", 34.0);
+          emissions.put("ptBusNight", 34.0);
+          emissions.put("ptBusRegion", 34.0);
+          
+          emissions.put("ptTram", 128.0);
+          emissions.put("ptTaxi", 198.0);
+          
+          emissions.put("walk", 0.0);
+          emissions.put("bike", 0.0);
+      }
+      else{
+    	  emissions.put("ptMetro", 20.0);
+          emissions.put("ptTrainS", 50.0);
+          emissions.put("ptTrainR", 55.5);
+          emissions.put("ptTrain", 55.5);
+          emissions.put("ptTrainAirport", 20.0);
+          emissions.put("ptTrainCog", 20.0);
+          emissions.put("ptCableCar", 20.0);
+          
+          emissions.put("ptBusCity", 25.5);
+          emissions.put("ptBusNight", 25.5);
+          emissions.put("ptBusRegion", 25.5);
+          
+          emissions.put("ptTram", 96.6);
+          emissions.put("ptTaxi", 169.0);
+          emissions.put("car", 169.0);
+          emissions.put("walk", 0.0);
+          emissions.put("bike", 0.0);
+      }
+      
+      
       
       List<JsonSegment> segments = trip.getSegments();
       int j = 0;
@@ -2431,6 +2676,76 @@ public class GetRecommendations{
 		this.maxWalkTimeInExtremeConditions = maxWalkTimeInExtremeConditions;
 	}
 	
+	public Integer getWalkingTimeThresholdForCarUsers() {
+		return walkingTimeThresholdForCarUsers;
+	}
+
+	public void setWalkingTimeThresholdForCarUsers(
+			Integer walkingTimeThresholdForCarUsers) {
+		this.walkingTimeThresholdForCarUsers = walkingTimeThresholdForCarUsers;
+	}
+
+	public Integer getWalkingTimeThresholdForPTUsers() {
+		return walkingTimeThresholdForPTUsers;
+	}
+
+	public void setWalkingTimeThresholdForPTUsers(
+			Integer walkingTimeThresholdForPTUsers) {
+		this.walkingTimeThresholdForPTUsers = walkingTimeThresholdForPTUsers;
+	}
+
+	public Integer getWalkingTimeThresholdForBikeUsers() {
+		return walkingTimeThresholdForBikeUsers;
+	}
+
+	public void setWalkingTimeThresholdForBikeUsers(
+			Integer walkingTimeThresholdForBikeUsers) {
+		this.walkingTimeThresholdForBikeUsers = walkingTimeThresholdForBikeUsers;
+	}
+
+	public Integer getWalkingTimeThresholdForWalkUsers() {
+		return walkingTimeThresholdForWalkUsers;
+	}
+
+	public void setWalkingTimeThresholdForWalkUsers(
+			Integer walkingTimeThresholdForWalkUsers) {
+		this.walkingTimeThresholdForWalkUsers = walkingTimeThresholdForWalkUsers;
+	}
+
+	public Integer getBikeTimeThresholdForCarUsers() {
+		return bikeTimeThresholdForCarUsers;
+	}
+
+	public void setBikeTimeThresholdForCarUsers(Integer bikeTimeThresholdForCarUsers) {
+		this.bikeTimeThresholdForCarUsers = bikeTimeThresholdForCarUsers;
+	}
+
+	public Integer getBikeTimeThresholdForPTUsers() {
+		return bikeTimeThresholdForPTUsers;
+	}
+
+	public void setBikeTimeThresholdForPTUsers(Integer bikeTimeThresholdForPTUsers) {
+		this.bikeTimeThresholdForPTUsers = bikeTimeThresholdForPTUsers;
+	}
+
+	public Integer getBikeTimeThresholdForBikeUsers() {
+		return bikeTimeThresholdForBikeUsers;
+	}
+
+	public void setBikeTimeThresholdForBikeUsers(
+			Integer bikeTimeThresholdForBikeUsers) {
+		this.bikeTimeThresholdForBikeUsers = bikeTimeThresholdForBikeUsers;
+	}
+
+	public Integer getBikeTimeThresholdForWalkUsers() {
+		return bikeTimeThresholdForWalkUsers;
+	}
+
+	public void setBikeTimeThresholdForWalkUsers(
+			Integer bikeTimeThresholdForWalkUsers) {
+		this.bikeTimeThresholdForWalkUsers = bikeTimeThresholdForWalkUsers;
+	}
+
 	public boolean checkForExtremeWeather(){
 		try{
 			double temp = 0.0;

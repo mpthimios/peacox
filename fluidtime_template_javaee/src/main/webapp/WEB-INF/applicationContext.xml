@@ -94,6 +94,14 @@
 	<bean id="GetRecommendations"
           class="com.peacox.recommender.GetRecommendations">
         <property name="walkingTimeThreshold" value="#{recommender.walkingTimeThreshold}" />
+        <property name="walkingTimeThresholdForCarUsers" value="#{recommender.walkingTimeThresholdForCarUsers}" />
+        <property name="walkingTimeThresholdForPTUsers" value="#{recommender.walkingTimeThresholdForPTUsers}" />
+        <property name="walkingTimeThresholdForBikeUsers" value="#{recommender.walkingTimeThresholdForBikeUsers}" />
+        <property name="walkingTimeThresholdForWalkUsers" value="#{recommender.walkingTimeThresholdForWalkUsers}" />
+        <property name="bikeTimeThresholdForCarUsers" value="#{recommender.bikeTimeThresholdForCarUsers}" />
+        <property name="bikeTimeThresholdForPTUsers" value="#{recommender.bikeTimeThresholdForPTUsers}" />
+        <property name="bikeTimeThresholdForBikeUsers" value="#{recommender.bikeTimeThresholdForBikeUsers}" />
+        <property name="bikeTimeThresholdForWalkUsers" value="#{recommender.bikeTimeThresholdForWalkUsers}" />
         <property name="bikeTimeThreshold" value="#{recommender.bikeTimeThreshold}"/>
         <property name="maxPTroutesToShow" value="#{recommender.maxPTroutesToShow}"/>
         <property name="timeThresholdCutoff" value="#{recommender.timeThresholdCutoff}"/>
