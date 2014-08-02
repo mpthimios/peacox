@@ -127,6 +127,11 @@ public class GetRecommendations{
   boolean NiceWeather; //OK
   //somthing else about the score?
   
+  boolean askedForCar = false;
+  boolean askedForPT = false;
+  boolean askedForWalk = false;
+  boolean askedForBike = false;
+  
   @Autowired protected UserRouteRequestService routeRequestService;
   
   @Autowired protected StagesService stagesService;
@@ -247,10 +252,10 @@ public class GetRecommendations{
       EmmissionsHighComparedToOtherUsers = false;
       NiceWeather = false;
       
-      boolean askedForCar = false;
-      boolean askedForPT = false;
-      boolean askedForWalk = false;
-      boolean askedForBike = false;
+      askedForCar = false;
+      askedForPT = false;
+      askedForWalk = false;
+      askedForBike = false;
              
       
       String sessionID="";
@@ -537,6 +542,25 @@ public class GetRecommendations{
 	    	  return finalRouteResults;
 	      }
 	      
+	      if (modalitiesInFinalResults.containsKey("bike") && askedForBike == false){
+	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){		    	  
+				  if (((JsonTrip) entry.getValue().entrySet().iterator().next()
+						  .getKey()).getModality().matches("bike")){
+					  if (city.matches("vienna")){
+						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForWalk());
+					  }
+					  else if (city.matches("dublin")){
+						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForWalk());
+					  }
+					  log.warn("message added: " + getMessageForWalk() + " city: " + city);
+					  break;
+				  }
+			  }
+	    	  return finalRouteResults;
+	      }
+	      
 	      if (modalitiesInFinalResults.containsKey("pt") && askedForPT == false){
 	    	  for (Map.Entry<Integer, HashMap<JsonTrip, Double>> entry : finalRouteResults.entrySet()){		    	  
 				  if (((JsonTrip) entry.getValue().entrySet().iterator().next()
@@ -549,7 +573,7 @@ public class GetRecommendations{
 						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
 						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForPT());
 					  }
-					  log.warn("message added: " + getMessageForWalk() + " city: " + city);
+					  log.warn("message added: " + getMessageForPT() + " city: " + city);
 					  break;
 				  }
 			  }
@@ -1107,6 +1131,12 @@ public class GetRecommendations{
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
+        			else if (askedForWalk == false && arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > 30){
+        				log.warn("ommiting 'walk' based route because the user didn't ask for it and the duration is: " +        						
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());        						
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
         			else{
         				RouteInWalkingDistance = true;
         			}
@@ -1125,6 +1155,12 @@ public class GetRecommendations{
         				log.warn("ommiting 'bike' based route because of extreme conditions: " +
         						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() +
         						" maxBikeTimeInExtremeConditions: " + maxBikeTimeInExtremeConditions);
+        				omittedTripResults.put(omittedPosition, arrayEntry);
+        				omittedPosition++;
+        			}
+        			else if (askedForBike == false && arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes() > 60){
+        				log.warn("ommiting 'bike' based route since the user didn;t ask for it and its duration is: " +
+        						arrayEntry.entrySet().iterator().next().getKey().getDurationMinutes());
         				omittedTripResults.put(omittedPosition, arrayEntry);
         				omittedPosition++;
         			}
