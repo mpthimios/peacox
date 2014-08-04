@@ -102,6 +102,8 @@ public class GetRecommendations{
   private double timeThresholdCutoff;
   private String messageForPT = "";
   private String messageForWalk = "";
+  private String messageForPT_De = "";
+  private String messageForWalk_De = "";
   private double thresholdForParkAndRide;
   private double walkBikeThresholdForOmmitingCarParRoutes;
   private double ptChangesFactorThreshold;
@@ -199,6 +201,8 @@ public class GetRecommendations{
 	  log.warn("loaded property timeThresholdCutoff: " + this.getTimeThresholdCutoff());
 	  log.warn("loaded property messageForPT: " + this.getMessageForPT());
 	  log.warn("loaded property messageForWalk: " + this.getMessageForWalk());
+	  log.warn("loaded property messageForPT: " + this.getMessageForPT_De());
+	  log.warn("loaded property messageForWalk: " + this.getMessageForWalk_De());
 	  
 	  LinkedHashMap<Integer, HashMap<JsonTrip, Double>> finalRouteResults;
 	  
@@ -548,7 +552,7 @@ public class GetRecommendations{
 						  .getKey()).getModality().matches("bike")){
 					  if (city.matches("vienna")){
 						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForWalk());
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForWalk_De());
 					  }
 					  else if (city.matches("dublin")){
 						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
@@ -567,7 +571,7 @@ public class GetRecommendations{
 						  .getKey()).getModality().matches("pt")){
 					  if (city.matches("vienna")){
 						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
-						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForPT());
+						  	addAttribute(AttributeListKeys.KEY_TRIP_RECOMMENDATION_DESC,getMessageForPT_De());
 					  }
 					  else if (city.matches("dublin")){
 						  ((JsonTrip) entry.getValue().entrySet().iterator().next().getKey()).
@@ -2780,6 +2784,22 @@ public class GetRecommendations{
 	public void setBikeTimeThresholdForWalkUsers(
 			Integer bikeTimeThresholdForWalkUsers) {
 		this.bikeTimeThresholdForWalkUsers = bikeTimeThresholdForWalkUsers;
+	}
+	
+	public String getMessageForPT_De() {
+		return messageForPT_De;
+	}
+
+	public void setMessageForPT_De(String messageForPT_De) {
+		this.messageForPT_De = messageForPT_De;
+	}
+
+	public String getMessageForWalk_De() {
+		return messageForWalk_De;
+	}
+
+	public void setMessageForWalk_De(String messageForWalk_De) {
+		this.messageForWalk_De = messageForWalk_De;
 	}
 
 	public boolean checkForExtremeWeather(){
