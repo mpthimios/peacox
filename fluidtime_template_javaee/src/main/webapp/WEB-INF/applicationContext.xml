@@ -107,8 +107,8 @@
         <property name="timeThresholdCutoff" value="#{recommender.timeThresholdCutoff}"/>
         <property name="messageForPT" value="#{recommender.messageForPT}"/>
         <property name="messageForWalk" value="#{recommender.messageForWalk}"/>
-        <property name="messageForPT" value="#{recommender.messageForPT_De}"/>
-        <property name="messageForWalk" value="#{recommender.messageForWalk_De}"/>
+        <property name="messageForPT_De" value="#{recommender.messageForPT_De}"/>
+        <property name="messageForWalk_De" value="#{recommender.messageForWalk_De}"/>
         <property name="thresholdForParkAndRide" value="#{recommender.thresholdForParkAndRide}"/>
         <property name="walkBikeThresholdForOmmitingCarParRoutes" value="#{recommender.walkBikeThresholdForOmmitingCarParRoutes}"/>
         <property name="ptChangesFactorThreshold" value="#{recommender.ptChangesFactorThreshold}"/>
