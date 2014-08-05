@@ -1431,7 +1431,7 @@ public class GetRecommendations{
         	ComparableCarAndPTRouteDuration = true;
         }
         //should be parameterized
-        else if (difference != 0 && difference /((MaxDurationForCar + MaxDurationForPT)/2) < 0.2 ){
+        else if (difference != 0 && difference /((MaxDurationForCar + MaxDurationForPT)/2) < 0.1 ){
         	ComparableCarAndPTRouteDuration = true;
         }
         else{
