@@ -43,4 +43,13 @@ public class UserProfileServiceImpl implements UserProfileService {
 	 
 	    return query.getResultList();
 	}
+
+	public UserProfile update(UserProfile userProfile) {
+		repository.updateNbrViewedCar(userProfile.getUser_id(), userProfile.getNbr_viewed_car(),
+				userProfile.getNbr_viewed_pt(), userProfile.getNbr_viewed_bike(),
+				userProfile.getNbr_viewed_walk(), userProfile.getNbr_selected_car(),
+				userProfile.getNbr_selected_pt(), userProfile.getNbr_selected_bike(),
+				userProfile.getNbr_selected_walk());					
+		return userProfile;
+	}
 }

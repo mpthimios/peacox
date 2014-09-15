@@ -9,4 +9,5 @@ public interface CitytempService {
 	public Citytemp findCitytempById(Long id);
 	public Citytemp create(Citytemp citytemp);
 	public List<Citytemp> findCitytempByDate(Date date);
+	public List<Citytemp> findCitytempByDateAndCity(Date date, String city);
 }

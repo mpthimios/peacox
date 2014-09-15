@@ -47,6 +47,8 @@ import com.peacox.recommender.repository.RecommendationsService;
 import com.peacox.recommender.repository.Stages;
 import com.peacox.recommender.repository.StagesService;
 import com.peacox.recommender.repository.User;
+import com.peacox.recommender.repository.UserProfile;
+import com.peacox.recommender.repository.UserProfileService;
 import com.peacox.recommender.repository.UserRouteRequest;
 import com.peacox.recommender.repository.UserTreeScores;
 import com.peacox.recommender.repository.UserTreeScoresService;
@@ -69,6 +71,9 @@ public class ProcessUserDiaries{
 	
 	@Autowired
 	private UserTripService userTripService;
+	
+	@Autowired
+	private UserProfileService userProfileService;
 	
 	public String createDiaryGraph(String fileName){
 		LinkedHashMap<Integer, List<UserDiary>> userDiaries = loadFromFile(fileName);
@@ -361,8 +366,15 @@ public String fetchRequests(){
 	public String printDataForTCD(){
 		StringBuffer buffer = new StringBuffer();
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+		Date date = new Date();
+		try{
+			date = sdf.parse("20.07.2014 00:00:00");
+		}
+		catch(Exception e){
+			log.warn("printDataForTCD could not parse date!");
+		}
 		List<Recommendations> recommendationsList = 
-				recommendationsService.getAll();
+				recommendationsService.getAllByDate(date);
 		
 		for (Recommendations recommendationDetail : recommendationsList){
 			try {
@@ -376,8 +388,8 @@ public String fetchRequests(){
 				
 				
 				
-				for (com.fluidtime.library.model.json.JsonTrip trip : routeResponse.getTrips()){
-					buffer.append("" + recommendationDetail.getUser_id());
+				for (com.fluidtime.library.model.json.JsonTrip trip : routeResponse.getTrips()){					
+					buffer.append("" + routeResponse.getAttribute(AttributeListKeys.KEY_ROUTE_USERID));
 					buffer.append(",");
 					buffer.append("" + requestId);					
 					buffer.append(",");
@@ -410,6 +422,111 @@ public String fetchRequests(){
 				e.printStackTrace();
 			}
 		}
+		return buffer.toString();
+	}
+	
+	public String updatedViewedAndSelectedStats(){
+		StringBuffer buffer = new StringBuffer();
+		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+		Date startDate = new Date();
+		try{
+			startDate = sdf.parse("01.08.2014 00:00:00");
+		}
+		catch(Exception e){
+			log.warn("updatedViewedAndSelectedStats could not parse startdate!");
+		}
+		
+		Date endDate = new Date();
+		try{
+			endDate = sdf.parse("11.08.2014 23:59:59");
+		}
+		catch(Exception e){
+			log.warn("updatedViewedAndSelectedStats could not parse enddate!");
+		}
+		
+		List<Recommendations> recommendationsList = 
+				recommendationsService.getAllByDateRange(startDate, endDate);
+		
+		for (Recommendations recommendationDetail : recommendationsList){
+			try {
+				
+				String decommpressedRecommendation = CompressString.decompress(recommendationDetail.getRecommendations());
+				JsonResponseRoute routeResponse = RouteParser
+		                .routeFromJson(decommpressedRecommendation);
+				int orderId = 1;
+				
+				long requestId =  routeResponse.getId();
+				long userId =  Long.parseLong(routeResponse.getAttribute(AttributeListKeys.KEY_ROUTE_USERID));
+				
+				UserProfile userProfile = userProfileService.findUserProfileByUserId(userId);
+				if (userProfile==null){
+					userProfile = new UserProfile();
+					userProfile.setMobility_behaviour(1);
+					userProfile.setAuthority(2);
+					userProfile.setCommitment(2);
+					userProfile.setLiking(2);
+					userProfile.setReciprocity(2);
+					userProfile.setRewards(2);
+					userProfile.setSocial_comparison(2);
+					userProfile.setUser_id(userId);
+					userProfileService.create(userProfile);
+				}
+				
+				for (com.fluidtime.library.model.json.JsonTrip trip : routeResponse.getTrips()){
+					String modality = trip.getModality();
+					UserTrip userTripResult = 
+							userTripService.getUserTripsForRequestIdAndOrderId(requestId, orderId);
+					if (userTripResult != null){
+						boolean isSelected = userTripResult.getIs_selected();
+						boolean isViewed = userTripResult.getIs_viewed();
+						
+						if (isSelected){
+							log.warn("selected is true " + modality);
+						}
+						
+						if (isSelected && modality.matches("bike")){
+							userProfile.setNbr_selected_bike(userProfile.getNbr_selected_bike()+1.0);
+							
+						}
+						else if (isSelected && modality.matches("pt")){
+							userProfile.setNbr_selected_pt(userProfile.getNbr_selected_pt()+1.0);
+							
+						}
+						else if (isSelected && modality.matches("walk")){
+							userProfile.setNbr_selected_walk(userProfile.getNbr_selected_walk()+1.0);
+							
+						}
+						else if (isSelected && modality.matches("car")){
+							userProfile.setNbr_selected_car(userProfile.getNbr_selected_car()+1.0);
+							
+						}
+						if (isViewed && modality.matches("pt")){
+							userProfile.setNbr_viewed_pt(userProfile.getNbr_viewed_pt()+1.0);
+						}
+						if (isViewed && modality.matches("car")){
+							userProfile.setNbr_viewed_car(userProfile.getNbr_viewed_car()+1.0);
+						}
+						if (isViewed && modality.matches("bike")){
+							userProfile.setNbr_viewed_bike(userProfile.getNbr_viewed_bike()+1.0);
+						}
+						if (isViewed && modality.matches("pt")){
+							userProfile.setNbr_viewed_pt(userProfile.getNbr_viewed_pt()+1.0);
+						}						
+					}
+					else{
+						buffer.append("false");
+						log.warn("user_trip is null");
+					}
+					orderId++;
+				}
+				userProfileService.update(userProfile);
+				
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		buffer.append("DONE");
 		return buffer.toString();
 	}
 	

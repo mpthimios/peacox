@@ -222,7 +222,7 @@ public class Webservice {
 		
         try{
 			Recommendations recommendations = new Recommendations();
-			recommendations.setUser_id(45);
+			recommendations.setUser_id(userId);
 			recommendations.setTimestamp(new Date());
 			recommendations.setRecommendations(CompressString.compress(jsonResponseStr));
 			recommendations.setSessionId(jsonResponse.getRequest().getSessionId());
@@ -595,6 +595,36 @@ public class Webservice {
 			ProcessUserDiaries processUserDiaries = 
 					(ProcessUserDiaries) appContext.getBean("ProcessUserDiaries");
 			result = processUserDiaries.printDataForTCD();
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		response.setContentType("text/csv;charset=utf-8");
+		try{
+			OutputStream resOs= response.getOutputStream();  
+		    OutputStream buffOs= new BufferedOutputStream(resOs);   
+		    OutputStreamWriter outputwriter = new OutputStreamWriter(buffOs);  
+
+		    outputwriter.write(result);
+		    outputwriter.flush();   
+		    outputwriter.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	@RequestMapping(value="updatedViewedAndSelectedStats", method = RequestMethod.GET, produces = "text/csv")
+	public void updatedViewedAndSelectedStats (Locale locale, Model model, HttpServletResponse response) {
+		
+		log.debug("updatedViewedAndSelectedStats");		
+		String result ="";
+		try{
+			ProcessUserDiaries processUserDiaries = 
+					(ProcessUserDiaries) appContext.getBean("ProcessUserDiaries");
+			result = processUserDiaries.updatedViewedAndSelectedStats();
 			
 		}
 		catch(Exception e){

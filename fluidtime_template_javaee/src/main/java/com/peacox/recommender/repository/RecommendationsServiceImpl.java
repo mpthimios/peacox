@@ -1,5 +1,6 @@
 package com.peacox.recommender.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -51,10 +52,35 @@ public class RecommendationsServiceImpl implements RecommendationsService {
 	    return result; 		
 	}
 	
+	public List<Recommendations> getAllByDate(Date date){
+		TypedQuery query = em.createQuery("select r from Recommendations r where r.timestamp > ?1", Recommendations.class);
+		query.setParameter(1, date);
+	    List<Recommendations> result = null;
+	    try{
+	    	result = (List<Recommendations>)query.getResultList();
+	    }catch(IndexOutOfBoundsException e){
+	    	//nothing to do for now
+	    }
+	    return result; 		
+	}
+	
 	public Recommendations update(Recommendations recommendations) {
 		// TODO Auto-generated method stub
 		repository.update(recommendations.getId(), recommendations.getUser_id(), recommendations.getSessionId());
 		
 		return recommendations;
+	}
+
+	public List<Recommendations> getAllByDateRange(Date startDate, Date endDate) {
+		TypedQuery query = em.createQuery("select r from Recommendations r where r.timestamp > ?1 and r.timestamp < ?2", Recommendations.class);
+		query.setParameter(1, startDate);
+		query.setParameter(2, endDate);
+	    List<Recommendations> result = null;
+	    try{
+	    	result = (List<Recommendations>)query.getResultList();
+	    }catch(IndexOutOfBoundsException e){
+	    	//nothing to do for now
+	    }
+	    return result; 
 	}
 }

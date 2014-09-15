@@ -40,5 +40,12 @@ public class CitytempServiceImpl implements CitytempService {
 	    return query.getResultList();
 	}
 
+	public List<Citytemp> findCitytempByDateAndCity(Date date, String city) {
+		TypedQuery query = em.createQuery("select c from Citytemp c where c.city = ?2 c.time > ?1 order by time ASC", Citytemp.class);	    
+	    query.setParameter(1, date);	   	 
+	    query.setParameter(2, city);	   	 
+	    return query.getResultList();
+	}
+
 	
 }

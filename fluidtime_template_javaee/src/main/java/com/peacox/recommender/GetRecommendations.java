@@ -134,6 +134,8 @@ public class GetRecommendations{
   boolean askedForWalk = false;
   boolean askedForBike = false;
   
+  UserProfile userProfile = null;
+  
   @Autowired protected UserRouteRequestService routeRequestService;
   
   @Autowired protected StagesService stagesService;
@@ -209,32 +211,6 @@ public class GetRecommendations{
 	  UserVehicle userVehicle = userVehicleService.findUserVehicleByUserId(user_id);
 	  
 	  
-	  UserProfile userProfile = userProfileService.findUserProfileByUserId(user_id);
-	  
-	  if (userProfile != null){
-		  int mobilityBehaviour = userProfile.getMobility_behaviour();
-		  
-		  switch (mobilityBehaviour){
-		  	case 1:
-		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForCarUsers();
-		  		break;
-		  	case 2:
-		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForPTUsers();
-		  		break;
-		  	case 3:
-		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForBikeUsers();
-		  		break;
-		  	case 4:
-		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForWalkUsers();
-		  		break;
-		  	default:
-		  		personalizedWalkingTimeThreshold = getWalkingTimeThreshold();	  			
-		  }
-	  }
-	  else{
-		  personalizedWalkingTimeThreshold = getWalkingTimeThreshold();
-	  }
-      
       minValues = new LinkedHashMap<String, Double>();
 	  sumValues = new LinkedHashMap<String, Double>();
 	  medianValues = new LinkedHashMap<String, Double>();
@@ -489,6 +465,40 @@ public class GetRecommendations{
 		  log.warn("route request NOT found - askedForPT: " + askedForPT + " askedForWalk: " + askedForWalk +
 	    		  " askedForCar: " + askedForCar + " askedForBike: " + askedForBike);
 	  }
+	  
+	  userProfile = userProfileService.findUserProfileByUserId(user_id);
+	  
+	  if (userProfile != null){
+		  int mobilityBehaviour = userProfile.getMobility_behaviour();
+		  
+		  switch (mobilityBehaviour){
+		  	case 1:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForCarUsers();		  		
+		  		log.warn("user likes taking the car");
+		  		break;
+		  	case 2:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForPTUsers();
+		  		log.warn("user likes taking public transport");
+		  		break;
+		  	case 3:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForBikeUsers();
+		  		log.warn("user likes taking the bike");
+		  		break;
+		  	case 4:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThresholdForWalkUsers();
+		  		log.warn("user likes to walk");
+		  		break;
+		  	default:
+		  		personalizedWalkingTimeThreshold = getWalkingTimeThreshold();	  			
+		  }
+	  }
+	  else{
+		  log.warn("user profile: " + userProfile + " " + askedForWalk);
+		  personalizedWalkingTimeThreshold = getWalkingTimeThreshold();
+	  }
+	  
+	  log.warn("personalizedWalkingTimeThreshold: " + personalizedWalkingTimeThreshold);
+	  
       switch(((Double)userPreferences.getOrderAlgorithm()).intValue()){
           case 1: finalRouteResults = methodForRecommendations1(userPreferences, routeResults, 
         		  user_id, routeRequest, city, userVehicle);
@@ -816,7 +826,7 @@ public class GetRecommendations{
         
     	ArrayList tripsList = new ArrayList<JsonTrip>();
     	
-    	boolean extremeConditions = checkForExtremeWeather();
+    	boolean extremeConditions = checkForExtremeWeather(city);
     	
     	if (!extremeConditions) {
     		NiceWeather = true; 
@@ -945,6 +955,25 @@ public class GetRecommendations{
         	TooManyPTRoutes = true;
         }
         
+        LinkedHashMap<Integer, Double> tmpPreferences = new LinkedHashMap<Integer, Double>();
+        //check if the user likes taking the car
+        if (preferencesPerGroup.entrySet().iterator().next().getKey() == 1){
+        	//if yes then re-arrange like this: 2,1,4,3
+        	tmpPreferences.put(2, preferencesPerGroup.get(2));
+        	tmpPreferences.put(1, preferencesPerGroup.get(1));
+        	tmpPreferences.put(4, preferencesPerGroup.get(4));
+        	tmpPreferences.put(3, preferencesPerGroup.get(3));        
+        }
+        //check if the user likes taking public transportation
+        if (preferencesPerGroup.entrySet().iterator().next().getKey() == 2){
+        	//if yes then re-arrange like this: 2,4,3,1
+        	tmpPreferences.put(2, preferencesPerGroup.get(2));
+        	tmpPreferences.put(4, preferencesPerGroup.get(4));
+        	tmpPreferences.put(3, preferencesPerGroup.get(3));
+        	tmpPreferences.put(1, preferencesPerGroup.get(1));        	        
+        }
+    	preferencesPerGroup.clear();
+    	preferencesPerGroup = new LinkedHashMap<Integer, Double>(tmpPreferences);
         //Group trips by mode of transport:
         //environmental friendly order: walk, bike, bar, bta, pt, par, car
         LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>> groupedTrips = 
@@ -2802,7 +2831,7 @@ public class GetRecommendations{
 		this.messageForWalk_De = messageForWalk_De;
 	}
 
-	public boolean checkForExtremeWeather(){
+	public boolean checkForExtremeWeather(String city){
 		try{
 			double temp = 0.0;
 			double precipitation = 0.0;
@@ -2823,7 +2852,13 @@ public class GetRecommendations{
 				changeParams = true;
 			}
 			else{
-				String url = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=Vienna&num_of_days=2&key=gxytvkzgssj753r6kb3aax68&format=csv";
+				String url ="";
+				if (city.matches("vienna")){
+					url = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=Vienna&num_of_days=2&key=gxytvkzgssj753r6kb3aax68&format=csv";
+				}
+				else{
+					url = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=Dublin&num_of_days=2&key=gxytvkzgssj753r6kb3aax68&format=csv";
+				}
 				URL flu = new URL(url);
 				HttpURLConnection conn = (HttpURLConnection) flu.openConnection();
 		        conn.setRequestMethod( "GET" );
@@ -2849,7 +2884,7 @@ public class GetRecommendations{
 		        	changeParams = true;
 		        	//save
 		        	Citytemp newCitytemp = new Citytemp();
-		        	newCitytemp.setCity("Vienna");
+		        	newCitytemp.setCity(city);
 		        	newCitytemp.setTemp(temp);
 		        	newCitytemp.setPrecipitation(precipitation);
 		        	newCitytemp.setTime((new Date()));

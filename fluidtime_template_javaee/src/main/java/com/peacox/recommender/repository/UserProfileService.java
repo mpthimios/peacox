@@ -7,4 +7,5 @@ public interface UserProfileService {
 	public UserProfile findUserProfileByUserId(Long id);
 	public UserProfile create(UserProfile userProfile);
 	public List<UserProfile> findAllUserProfiles();
+	public UserProfile update(UserProfile userProfile);
 }
