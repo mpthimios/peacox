@@ -965,12 +965,18 @@ public class GetRecommendations{
         	tmpPreferences.put(3, preferencesPerGroup.get(3));        
         }
         //check if the user likes taking public transportation
-        if (preferencesPerGroup.entrySet().iterator().next().getKey() == 2){
+        else if (preferencesPerGroup.entrySet().iterator().next().getKey() == 2){
         	//if yes then re-arrange like this: 2,4,3,1
         	tmpPreferences.put(2, preferencesPerGroup.get(2));
         	tmpPreferences.put(4, preferencesPerGroup.get(4));
         	tmpPreferences.put(3, preferencesPerGroup.get(3));
         	tmpPreferences.put(1, preferencesPerGroup.get(1));        	        
+        }
+        else {
+        	tmpPreferences.put(4, preferencesPerGroup.get(4));
+        	tmpPreferences.put(3, preferencesPerGroup.get(3));
+        	tmpPreferences.put(2, preferencesPerGroup.get(2));
+        	tmpPreferences.put(1, preferencesPerGroup.get(1));
         }
     	preferencesPerGroup.clear();
     	preferencesPerGroup = new LinkedHashMap<Integer, Double>(tmpPreferences);
@@ -978,6 +984,9 @@ public class GetRecommendations{
         //environmental friendly order: walk, bike, bar, bta, pt, par, car
         LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>> groupedTrips = 
         		new LinkedHashMap<String, ArrayList<HashMap<JsonTrip, Double>>>();
+        
+        log.debug("The preferencesPerGroup size is: " + preferencesPerGroup.size());
+        
         
         for(Map.Entry<Integer, Double> entry : preferencesPerGroup.entrySet()){
         	if (entry.getKey() == 4){
